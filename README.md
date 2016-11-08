@@ -1,0 +1,2 @@
+The Calculator is part of the Engineeting Comes Home
+co-design toolkit. It is an interface that allos community members and infrastructure desingers to calculate the feasibility and impact of using technologies at the WEF nexus
