@@ -1,0 +1,39 @@
+{
+  "name": "purescript-datetime",
+  "homepage": "https://github.com/purescript/purescript-datetime",
+  "description": "PureScript library for date and time values",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript/purescript-datetime.git"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "bower.json",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-enums": "^2.0.0",
+    "purescript-functions": "^2.0.0",
+    "purescript-generics": "^3.0.0",
+    "purescript-integers": "^2.0.0",
+    "purescript-math": "^2.0.0"
+  },
+  "devDependencies": {
+    "purescript-assert": "^2.0.0",
+    "purescript-console": "^2.0.0"
+  },
+  "version": "2.0.0",
+  "_release": "2.0.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.0",
+    "commit": "dae2536503472f7e65a995aab71ff9e0291b1765"
+  },
+  "_source": "https://github.com/purescript/purescript-datetime.git",
+  "_target": "^2.0.0",
+  "_originalSource": "purescript-datetime"
+}

@@ -1,0 +1,40 @@
+{
+  "name": "purescript-canvas",
+  "authors": [
+    "Phil Freeman <paf31@cantab.net>"
+  ],
+  "description": "Canvas bindings",
+  "keywords": [
+    "purescript"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/paf31/purescript-canvas.git"
+  },
+  "dependencies": {
+    "purescript-eff": "^2.0.0",
+    "purescript-functions": "^2.0.0",
+    "purescript-maybe": "^2.0.0",
+    "purescript-exceptions": "^2.0.0",
+    "purescript-arraybuffer-types": "^0.2.0"
+  },
+  "homepage": "https://github.com/purescript/purescript-canvas",
+  "version": "2.0.0",
+  "_release": "2.0.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.0",
+    "commit": "a18277687a4ba2d6b1dfc0dc63d3f5ad507c8c0c"
+  },
+  "_source": "https://github.com/purescript/purescript-canvas.git",
+  "_target": "^2.0.0",
+  "_originalSource": "purescript-canvas"
+}

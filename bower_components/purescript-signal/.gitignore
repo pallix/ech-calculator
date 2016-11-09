@@ -1,0 +1,6 @@
+/bower_components/
+/output/
+/.psci
+/.browserify-cache.json
+/.psci_modules/
+*.tix

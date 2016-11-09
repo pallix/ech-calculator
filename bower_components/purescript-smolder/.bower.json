@@ -1,0 +1,41 @@
+{
+  "name": "purescript-smolder",
+  "version": "6.0.0",
+  "authors": [
+    "Bodil Stokke <bodil@bodil.org>"
+  ],
+  "description": "A combinator library for generating markup",
+  "license": "LGPL-3.0+",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bodil/purescript-smolder.git"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-monoid": "^2.0.0",
+    "purescript-maps": "^2.0.0",
+    "purescript-strings": "^2.0.1",
+    "purescript-catenable-lists": "^3.0.0",
+    "purescript-tuples": "^3.0.0"
+  },
+  "devDependencies": {
+    "purescript-console": "^2.0.0"
+  },
+  "homepage": "https://github.com/bodil/purescript-smolder",
+  "_release": "6.0.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v6.0.0",
+    "commit": "b499f262e5e540619aba09b97809a17ee5b73a12"
+  },
+  "_source": "https://github.com/bodil/purescript-smolder.git",
+  "_target": "^6.0.0",
+  "_originalSource": "purescript-smolder"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "flare-example",
+  "dependencies": {
+    "purescript-flare": "^2.0.0"
+  }
+}

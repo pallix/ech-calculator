@@ -1,0 +1,45 @@
+{
+  "name": "purescript-transformers",
+  "homepage": "https://github.com/purescript/purescript-transformers",
+  "description": "PureScript monad and comonad transformers library",
+  "authors": [
+    "Gary Burgess <gary.burgess@gmail.com>",
+    "Hardy Jones <jones3.hardy@gmail.com>",
+    "Eric Thul <thul.eric@gmail.com>",
+    "Phil Freeman <paf31@cantab.net>",
+    "Brian McKenna <brian@brianmckenna.org>"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript/purescript-transformers.git"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "test",
+    "bower.json",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-arrays": "^3.0.0",
+    "purescript-lazy": "^2.0.0",
+    "purescript-distributive": "^2.0.0",
+    "purescript-tuples": "^3.0.0"
+  },
+  "devDependencies": {
+    "purescript-console": "^2.0.0"
+  },
+  "version": "2.0.1",
+  "_release": "2.0.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.1",
+    "commit": "ad6f9127c079649fa16a71d2a3b8091b3ee26b52"
+  },
+  "_source": "https://github.com/purescript/purescript-transformers.git",
+  "_target": "^2.0.0",
+  "_originalSource": "purescript-transformers"
+}

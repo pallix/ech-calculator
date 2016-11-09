@@ -1,0 +1,37 @@
+{
+  "name": "purescript-js-timers",
+  "homepage": "https://github.com/purescript-contrib/purescript-js-timers",
+  "description": "PureScript library for native JavaScript timers",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/purescript-contrib/purescript-js-timers.git"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "test",
+    "bower.json",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-eff": "^2.0.0"
+  },
+  "devDependencies": {
+    "purescript-assert": "^2.0.0",
+    "purescript-refs": "^2.0.0",
+    "purescript-console": "^2.0.0"
+  },
+  "version": "2.0.0",
+  "_release": "2.0.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.0",
+    "commit": "9614027cb94d4c6bad0a1f0ef01209ebfb6848f7"
+  },
+  "_source": "https://github.com/purescript-contrib/purescript-js-timers.git",
+  "_target": "^2.0.0",
+  "_originalSource": "purescript-js-timers"
+}

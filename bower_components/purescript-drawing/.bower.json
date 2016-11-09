@@ -1,0 +1,36 @@
+{
+  "name": "purescript-drawing",
+  "authors": [
+    "Phil Freeman <paf31@cantab.net>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/paf31/purescript-drawing.git"
+  },
+  "dependencies": {
+    "purescript-canvas": "^2.0.0",
+    "purescript-lists": "^3.0.0",
+    "purescript-math": "^2.0.0",
+    "purescript-integers": "^2.0.0",
+    "purescript-colors": "^2.0.0"
+  },
+  "homepage": "https://github.com/paf31/purescript-drawing",
+  "version": "2.0.0",
+  "_release": "2.0.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.0.0",
+    "commit": "112fcb29a2917c83b4622b6ea6b7e2360d7156cd"
+  },
+  "_source": "https://github.com/paf31/purescript-drawing.git",
+  "_target": "^2.0.0",
+  "_originalSource": "purescript-drawing"
+}
