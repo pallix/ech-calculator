@@ -1,0 +1,167 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: rgb(123, 158, 158);
+    font-size: 1em;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Raleway', sans-serif;
+}
+
+#hexGrid {
+    overflow: hidden;
+    width: 90%;
+    margin: 0 auto;
+    padding:0.866% 0;
+    font-family: 'Raleway', sans-serif;
+    font-size: 1.2em;
+}
+#hexGrid:after {
+    content: "";
+    display: block;
+    clear: both;
+}
+.hex {
+    position: relative;
+    list-style-type: none;
+    float: left;
+    overflow: hidden;
+    visibility: hidden;
+    outline:1px solid transparent; /* fix for jagged edges in FF on hover transition */
+    -webkit-transform: rotate(-60deg) skewY(30deg) translatez(-1px);
+        -ms-transform: rotate(-60deg) skewY(30deg) translatez(-1px);
+            transform: rotate(-60deg) skewY(30deg) translatez(-1px);
+}
+.hex * {
+    position: absolute;
+    visibility: visible;
+    outline:1px solid transparent; /* fix for jagged edges in FF on hover transition */
+}
+.hexIn {
+    display:block;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    color: #fff;
+    overflow: hidden;
+    -webkit-transform: skewY(-30deg) rotate(60deg);
+        -ms-transform: skewY(-30deg) rotate(60deg);
+            transform: skewY(-30deg) rotate(60deg);
+}
+
+/*** HEX CONTENT **********************************************************************/
+.hex img {
+    left: -100%;
+    right: -100%;
+    width: auto;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.hex h1, .hex p {
+    width: 102%;
+    left:-1%; /* prevent line on the right where background doesn't cover image */
+    padding: 5%;
+    box-sizing:border-box;
+    background-color: rgba(0, 128, 128, 0.8);
+    font-weight: 300;
+    -webkit-transition:  -webkit-transform .2s ease-out, opacity .3s ease-out;
+            transition:          transform .2s ease-out, opacity .3s ease-out;
+}
+.hex h1 {
+    bottom: 50%;
+    padding-top:50%;
+    font-size: 1.5em;
+    z-index: 1;
+    -webkit-transform:translateY(-100%) translatez(-1px);
+        -ms-transform:translateY(-100%) translatez(-1px);
+            transform:translateY(-100%) translatez(-1px);
+}
+.hex h1:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 45%;
+    width: 10%;
+    text-align: center;
+    border-bottom: 1px solid #fff;
+}
+.hex p {
+    top: 50%;
+    padding-bottom:50%;
+    -webkit-transform:translateY(100%) translatez(-1px);
+        -ms-transform:translateY(100%) translatez(-1px);
+            transform:translateY(100%) translatez(-1px);
+}
+
+
+/*** HOVER EFFECT  **********************************************************************/
+.hexIn:hover h1, .hexIn:focus h1, .hexIn.hover h1, .hexIn.focus h1,
+.hexIn:hover p, .hexIn:focus p, .hexIn.hover p, .hexIn.focus p {
+    -webkit-transform:translateY(0%) translatez(-1px);
+        -ms-transform:translateY(0%) translatez(-1px);
+            transform:translateY(0%) translatez(-1px);
+}
+
+/*** SPACING AND SIZING *****************************************************************/
+/* <- 10-9  hexagons per row */
+.hex {
+    width: 8%; /* = (100-4) / 5 */
+    padding-bottom: 9.392%; /* =  width / sin(60deg) */
+}
+.hex:nth-child(19n+11),
+.hex:nth-child(19n+12),
+.hex:nth-child(19n+13),
+.hex:nth-child(19n+14),
+.hex:nth-child(19n+15),
+.hex:nth-child(19n+16),
+.hex:nth-child(19n+17),
+.hex:nth-child(19n+18),
+.hex:nth-child(19n+19) {
+    margin-top: -1.676%;
+    margin-bottom: -1.676%;
+    -webkit-transform: translateX(50%) rotate(-60deg) skewY(30deg);
+        -ms-transform: translateX(50%) rotate(-60deg) skewY(30deg);
+            transform: translateX(50%) rotate(-60deg) skewY(30deg);
+}
+.hex:nth-child(19n+11):last-child,
+.hex:nth-child(19n+12):last-child,
+.hex:nth-child(19n+13):last-child,
+.hex:nth-child(19n+14):last-child,
+.hex:nth-child(19n+15):last-child,
+.hex:nth-child(19n+16):last-child,
+.hex:nth-child(19n+17):last-child,
+.hex:nth-child(19n+18):last-child,
+.hex:nth-child(19n+19):last-child {
+    margin-bottom: 0;
+}
+.hex:nth-child(19n+11) {
+    margin-left: 0.5%;
+    clear: left;
+}
+.hex:nth-child(19n+20) {
+    clear: left;
+}
+.hex:nth-child(19n+2),
+.hex:nth-child(19n+12) {
+    margin-left: 1%;
+    margin-right: 1%;
+}
+.hex:nth-child(19n+3),
+.hex:nth-child(19n+4),
+.hex:nth-child(19n+5),
+.hex:nth-child(19n+6),
+.hex:nth-child(19n+7),
+.hex:nth-child(19n+8),
+.hex:nth-child(19n+9),
+.hex:nth-child(19n+13),
+.hex:nth-child(19n+14),
+.hex:nth-child(19n+15),
+.hex:nth-child(19n+16),
+.hex:nth-child(19n+17),
+.hex:nth-child(19n+18) {
+    margin-right: 1%;
+}

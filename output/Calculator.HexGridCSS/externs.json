@@ -1,0 +1,1 @@
+{"efVersion":"0.10.1","efModuleName":["Calculator","HexGridCSS"],"efExports":[{"ValueRef":{"Ident":"main"}}],"efImports":[{"eiModule":["Prim"],"eiImportType":{"Implicit":[]},"eiImportedAs":null}],"efFixities":[],"efTypeFixities":[],"efDeclarations":[{"EDValue":{"edValueName":{"Ident":"main"},"edValueType":{"tag":"TypeConstructor","contents":[["Prim"],"String"]}}}]}

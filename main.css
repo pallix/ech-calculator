@@ -1,3 +1,9 @@
+
+h1, h2, h3, h4 {
+  font-family: 'Raleway', sans-serif;
+}
+
+
 .flare-input > label {
     display: inline-block;
     width: 100px;
@@ -33,4 +39,15 @@ fieldset label {
 
 #output {
     margin-top: 20px;
+}
+
+#output > div {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: #ccc;
+}
+
+#output > div.on {
+    background-color: #ebdd13;
 }
