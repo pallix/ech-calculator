@@ -1,12 +1,47 @@
-
-h1, h2, h3, h4 {
-  font-family: 'Raleway', sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: rgb(123, 158, 158);
+    font-size: 1em;
 }
 
+h1 {
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+p {
+  font-size: 0.6em;
+}
+
+#output .hex h2 {
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: 1em;
+}
 
 .flare-input > label {
     display: inline-block;
     width: 100px;
+}
+
+#controls {
+  text-align: center;
+}
+
+.center {
+  margin: 0 auto;
+  width: 200px;
+}
+
+#controls .flare-input {
+  display: inline;
 }
 
 .flare-input {
@@ -41,6 +76,37 @@ fieldset label {
     margin-top: 20px;
 }
 
+/*div.arrow-css {
+ display: flex;
+ margin: 2em auto 0;
+}
+
+.arrow-css {
+  transform: translateZ(0) rotate(90deg) translateX(30px) translateY(-56px);
+	border-style: solid;
+}*/
+
+.top {
+	border-width: 5px 20px 20px 5px;
+	border-color: #fff transparent transparent #fff;
+}
+
+.right {
+	border-width: 5px 5px 20px 20px;
+	border-color: #fff #fff transparent transparent;
+}
+
+.bottom {
+	border-width: 20px 5px 5px 20px;
+	border-color: transparent #fff #fff transparent;
+}
+
+.left {
+	border-width: 20px 20px 5px 5px;
+	border-color: transparent transparent #fff #fff;
+}
+
+/*
 #output > div {
     width: 50px;
     height: 50px;
@@ -50,4 +116,4 @@ fieldset label {
 
 #output > div.on {
     background-color: #ebdd13;
-}
+}*/

@@ -1,7 +1,13 @@
-module Calculator.Model (system)  where
+module Calculator.Model (system, Token, Flow, Tok)  where
 
 import Unsafe.Coerce (unsafeCoerce)
 import Control.Semigroupoid ((>>>))
+
+
+type Tok t = { title :: String | t }
+
+type Token = Tok ()
+type Flow = Tok ( quantity :: Number )
 
 --
 -- Specs / Tests
@@ -28,8 +34,8 @@ import Control.Semigroupoid ((>>>))
 id :: forall a. a -> a
 id a = a
 
--- Kg / Day
-type Volume = Int
+-- Kg / Person / Day
+type Volume = Number
 
 -- Qualitative Categories
 

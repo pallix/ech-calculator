@@ -1,0 +1,65 @@
+module Calculator.Drawing where
+
+
+--
+-- center :: Point
+-- center = { x : 400.0, y: 300.0 }
+--
+-- delta :: Point
+-- delta = { x : 200.0, y: 0.0 }
+--
+-- blue :: Color
+-- blue = rgb 0 0 255
+--
+-- polygon :: Int -> Color -> Drawing
+-- polygon sides col =
+--   filled (fillColor col) $
+--     closed $ poly sides
+--
+--   where poly n = do
+--                     i <- 0..n
+--                     let theta = pi / ( toNumber n / 2.0 ) * toNumber i
+--                     pure { x: 50.0 * sin theta, y: 50.0 * cos theta }
+--
+-- hexagon :: Color -> Drawing
+-- hexagon col = polygon 6 col
+--
+-- token :: String -> Color -> Drawing
+-- token t col = hexagon col <> text ( font sansSerif 16 bold ) 0.0 0.0 (fillColor white) t
+--
+-- arrow :: Number -> Number -> Drawing
+-- arrow v t = outlined (outlineColor (rgba 0 0 255 opacity) <> (lineWidth v )) (
+--               path [ { x: arrowBegin.x , y: arrowBegin.y },
+--                      { x: arrowEnd.x   , y: arrowEnd.y } ])
+--            <> outlined (outlineColor (rgba 0 0 255 opacity) <> (lineWidth v )) (
+--                 path [ { x: arrowEnd.x - arrowSize  , y: arrowEnd.y - arrowSize },
+--                        { x: arrowEnd.x   , y: arrowEnd.y } ])
+--            <> outlined (outlineColor (rgba 0 0 255 opacity) <> (lineWidth v )) (
+--                 path [ { x: arrowEnd.x - arrowSize , y: arrowEnd.y + arrowSize },
+--                        { x: arrowEnd.x , y: arrowEnd.y } ])
+--               where
+--                 opacity = ( cos ( t / 300.0 ) / 2.0 ) + 1.0
+--                 arrowBegin = { x: (center.x - delta.x + ( delta.x / 4.0 ) ), y: ( center.y - delta.y + ( delta.y / 4.0 ) ) }
+--                 arrowEnd = { x: (center.x + delta.x - ( delta.x / 4.0 ) ), y: ( center.y + delta.y - ( delta.y / 4.0 ) ) }
+--                 arrowSize = 20.0
+--
+--
+-- foodToBin :: Number -> Number -> Drawing
+-- foodToBin v t = ( translateLeft ( token "Food" blue ) )
+--              <> ( translateRight ( token "Bin" blue ) )
+--              <> ( arrow v t )
+--              <> ( text ( font sansSerif 16 bold ) center.x ( center.y - 10.0 )  (fillColor blue) (show v) )
+--               where
+--                 translateRight = translate ( center.x + delta.x ) ( center.y + delta.y )
+--                 translateLeft = translate ( center.x - delta.x ) ( center.y - delta.y )
+--
+-- uidrawing :: forall e. UI (timer :: TIMER | e) Drawing
+-- uidrawing = foodToBin <$> (numberSlider "value"  0.0 10.0 1.0  7.0)
+--                <*> lift animationFrame
+--
+
+
+-- test :: forall a e. Markup (a -> Eff (console :: CONSOLE | e) Unit)
+-- test = with div (className "on") $ do
+--               h1 #! on "click" (\_ -> log "click") $ text "OMG HAI LOL"
+--               p $ text "This is clearly the best HTML DSL ever invented.<script>alert(\"lol pwned\");</script>"
