@@ -35,7 +35,7 @@ id :: forall a. a -> a
 id a = a
 
 -- Kg / Person / Day
-type Volume = Number
+type Volume = Int
 
 -- Qualitative Categories
 
