@@ -33,7 +33,7 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 
-import Flare (UI, lift, fieldset, numberSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>))
+import Flare (UI, lift, fieldset, numberSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
 
 -- import Flare.Drawing (Drawing, Color, runFlareDrawing, fillColor,outlineColor, filled, closed, outlined, lineWidth, path)
 
@@ -78,8 +78,9 @@ optionsLabel CompostingGarden = "Composting & Garden"
 optionsLabel CompostingFoodGarden = "Composting & Food Garden"
 optionsLabel WateringGarden = "Watering Garden"
 optionsLabel RainwaterWateringGarden = "Rainwater Collection & Garden"
+optionsLabel NotImplemented = "Not Implemented Yet"
 
-options = select "Options" (Eating :| [ EatingBinning, Composting, CompostingGarden, CompostingFoodGarden, WateringGarden, RainwaterWateringGarden ] ) optionsLabel
+nexusOptions = select "Options" (Eating :| [ EatingBinning, Composting, CompostingGarden, CompostingFoodGarden, WateringGarden, RainwaterWateringGarden ] ) optionsLabel
 
 systemParamWithConstants = SystemParam <$> { houseHoldSize: _
                                            , estatePopulation : 200
@@ -115,17 +116,24 @@ scaleToString EstateScale  = "Estate"
 
 controllableParam eatedFoodRatio = flowParams { eatingParam = eatingParam { eatedFoodRatio = Ratio AnyFood { ratio: eatedFoodRatio } } }
 
-nexusSystemUI = nexusSystem
-              <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
-              <*> pure systemParam
-              <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
-              <*> options
-              <*> pure eatingInitState
+-- ui :: forall e e'. UI e (Markup e')
+ui Eating = interface <$> ( boolean "Info" true )
+                       <*> ( boolean "Grid" false )
+                       <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+                                          <*> pure systemParam
+                                          <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+                                          <*> pure eatingInitState
+                                          <*> pure Eating )
 
-ui :: forall e e'. UI e (Markup e')
-ui = interface <$> ( boolean "Info" true )
-               <*> ( boolean "Grid" false )
-               <*> ( nexusSystemUI )
+ui _ = interface <$> ( boolean "Info" true )
+                 <*> ( boolean "Grid" false )
+                 <*> ( nexusSystem <$> pure PersonScale
+                                   <*> pure systemParam
+                                   <*> pure ( controllableParam 0.0 )
+                                   <*> pure eatingInitState
+                                   <*> pure NotImplemented )
+
+inner = runFlareHTML "controls" "output" <<< ui
 
 -- <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
 
@@ -146,8 +154,10 @@ ui = interface <$> ( boolean "Info" true )
 --     test = boolean "Test" false
 --
 
+nexus = nexusOptions
+
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit
-main = do
-  runFlareHTML    "controls"  "output"  ui
+main = runFlareWith "select" inner nexus
+
   -- runFlareWith "controls" "output" ui2
   -- runFlareDrawing "controls1" "output1" uidrawing

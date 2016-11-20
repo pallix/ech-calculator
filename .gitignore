@@ -1,4 +1,5 @@
 .psci_modules
+.psc-ide-port
 .pulp-cache
 output
 bower_components

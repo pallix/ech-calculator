@@ -1,7 +1,7 @@
 module Calculator.Layout (interface) where
 
 import Calculator.Model (Food, Waste, Token, Flow2,
-  Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning),
+  Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning, NotImplemented),
   Quantity(IncompatibleQuantity, Volume, Weight),
   State(State), Stock(Stock), Food(..), Waste(..))
 
@@ -189,6 +189,7 @@ optionsTokens CompostingGarden = [ { title : "Eating" }, { title: "Binning"}, {t
 optionsTokens CompostingFoodGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Food Garden"} ]
 optionsTokens WateringGarden = [ { title : "Garden" }]
 optionsTokens RainwaterWateringGarden = [ { title : "Collecting" }, { title : "Garden" }]
+optionsTokens NotImplemented = [ { title : "NotImplemented" }]
 
 -- flowsSystem sys =
 -- tokenSystem sys =

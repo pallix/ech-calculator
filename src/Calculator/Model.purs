@@ -138,6 +138,7 @@ data Options = Eating
              | CompostingFoodGarden
              | WateringGarden
              | RainwaterWateringGarden
+             | NotImplemented
 
 data FlowType = EatingFlow
               | BinningFlow
@@ -323,51 +324,57 @@ binning _ (State state) = State state
 -- result = eatingOutput <> compostingOutput <> binningOutput
 --
 
-nexusSystem :: Scale -> SystemParam -> FlowParams -> Options -> State -> State
-nexusSystem scale systemP { eatingParam: eatingP } Eating input = eatingOutput
+nexusSystem :: Scale -> SystemParam -> FlowParams -> State -> Options -> State
+nexusSystem scale systemP { eatingParam: eatingP } input Eating = eatingOutput
   where
     eatingOutput = eating eatingP input
 
-nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } EatingBinning input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } input EatingBinning = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput <> binningOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } Composting input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } input Composting = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } CompostingGarden input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } input CompostingGarden = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } CompostingFoodGarden input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } input CompostingFoodGarden = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } WateringGarden input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } input WateringGarden = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP }  RainwaterWateringGarden input = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } input RainwaterWateringGarden = eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
+
+nexusSystem scale systemP { eatingParam: eatingP } input NotImplemented = State { shoppedFood: Stock ( Weight ShoppedFood 0.0 ) ( Weight ShoppedFood 0.0 )
+                                                                                , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
+                                                                                , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
+                                                                                , sharedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
+                                                                                }
 
 
 -- eatingBinning systemP eatingP compostingP binningP input = do
