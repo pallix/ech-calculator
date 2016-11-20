@@ -1,13 +1,18 @@
 module Calculator.Layout (interface) where
 
-import Calculator.Model (Token, Flow)
+import Calculator.Model (Food, Waste, Token, Flow2,
+  Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning),
+  Quantity(IncompatibleQuantity, Volume, Weight),
+  State(State), Stock(Stock), Food(..), Waste(..))
 
+import Math (trunc)
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
 import DOM.Node.Types (documentTypeToNode)
 import Data.Array (replicate, singleton)
 import Data.Foldable (foldMap)
 import Data.Maybe (Maybe(Nothing, Just))
 import Data.Monoid (mempty)
+import Data.Generic
 import Text.Smolder.HTML (div, li, ul, table, td, tr, ul, li, p, h2, a, img, style)
 import Text.Smolder.HTML.Attributes (lang, charset, httpEquiv, content, name, rel, href, className, src)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
@@ -51,8 +56,8 @@ hex hover grid item = li ! className "hex" $ do
                                      p $ text "Details"
                         tokenToHex _  = a ! hoverClass hover grid $ do
                                      img ! src ( image item.title )
-                        image "Food" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
-                        image "Bin" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
+                        image "Eating" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
+                        image "Binning" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
                         image "Compost" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
                         image "Garden" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
                         image "Food Garden" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
@@ -60,7 +65,7 @@ hex hover grid item = li ! className "hex" $ do
                         image "_" = "https://dummyimage.com/200x200&text=+"
                         image _ = ""
 
-flow :: forall e. Flow -> Markup e
+flow :: forall e. Flow2 -> Markup e
 flow item = tokenToHex item
             where
               tokenToHex { title: "_", quantity: n } = li ! className "hex" $ do
@@ -123,7 +128,7 @@ hexes hover grid arr = do
 
 emptyArrow = { title: "", quantity: 0.0 }
 
-arrayArrow :: Array Token -> Array Flow
+arrayArrow :: Array Token -> Array Flow2
 arrayArrow [ _ ]  = ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
@@ -177,9 +182,33 @@ arrows hover grid arr = do
 tokenList :: forall e. Array Token -> Markup e
 tokenList = (ul <<< foldMap (li <<< text <<< _.title ))
 
-interface :: forall e. Boolean -> Boolean -> Array Token -> Markup e
-interface hover grid arr = do
-                      arrows true false arr
-                      hexes hover grid arr
+optionsTokens Eating = [ { title : "Eating" } ]
+optionsTokens EatingBinning = [ { title : "Eating" }, { title: "Binning"} ]
+optionsTokens Composting = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"} ]
+optionsTokens CompostingGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Garden"} ]
+optionsTokens CompostingFoodGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Food Garden"} ]
+optionsTokens WateringGarden = [ { title : "Garden" }]
+optionsTokens RainwaterWateringGarden = [ { title : "Collecting" }, { title : "Garden" }]
+
+-- flowsSystem sys =
+-- tokenSystem sys =
+
+interface :: forall e. Boolean -> Boolean -> State -> Markup e
+interface hover grid ( State { shoppedFood : ( Stock availableFood consumedFood ) } ) = do
+                      div ! className "center" $ do
+                        text $ ( showAvailableFood availableFood)
+                      div ! className "center" $ do
+                        text $ ( showConsumedFood consumedFood)
+                        -- text $ ( "Binned Food: " <> show ( state.binnedFood ) )
+                        -- text $ ( "Managed Waste: " <> show ( state.managedWaste ) )
+                      arrows true false $ optionsTokens Eating
+                      hexes hover grid $ optionsTokens Eating
                       -- div ! className "center" $ do
                       --   tokenList arr
+    where
+      showAvailableFood ( Weight _ a ) = "Available Food: " <> ( show $ trunc a ) <> "kg"
+      showAvailableFood ( Volume _ a ) = "Available Food: " <> ( show $ trunc a ) <> "kg"
+      showAvailableFood ( IncompatibleQuantity ) = "Incompatible Quantity"
+      showConsumedFood ( Weight _ a ) = "Consumed Food: " <> ( show $ trunc a ) <> "kg"
+      showConsumedFood ( Volume _ a ) = "Consumed Food: " <> ( show $ trunc a ) <> "kg"
+      showConsumedFood ( IncompatibleQuantity ) = "Incompatible Quantity"

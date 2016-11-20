@@ -1,13 +1,16 @@
-module Calculator.Model (system, Token, Flow, Tok)  where
+module Calculator.Model (Token, Flow2, Tok, Flow(Flow), nexusSystem, flowParams, Stock(..), Food(..), Waste(..), Ratio(..), Quantity(..), Scale(..), SystemParam(..), Options(..), State(..))  where
 
-import Unsafe.Coerce (unsafeCoerce)
-import Control.Semigroupoid ((>>>))
+import Prelude
+-- import Boolean (and)
+import Data.Tuple (Tuple(..))
+import Data.Generic
+-- import Data.Control.Monad (return)
 
 
 type Tok t = { title :: String | t }
 
 type Token = Tok ()
-type Flow = Tok ( quantity :: Number )
+type Flow2 = Tok ( quantity :: Number )
 
 --
 -- Specs / Tests
@@ -34,9 +37,6 @@ type Flow = Tok ( quantity :: Number )
 id :: forall a. a -> a
 id a = a
 
--- Kg / Person / Day
-type Volume = Int
-
 -- Qualitative Categories
 
 data Maintenability = LowMaintenance | SomeMaintenance | MediumMaintenance | TrainingMaintenance | HighMaintenance
@@ -47,41 +47,52 @@ data Usability = Hard | Medium | Easy
 data Happinness = Unhappy | Happy
 data Stress = Stressful | NotStressful
 
+
 --
 -- Stocks
 --
 
-type Food =  { input:: Volume,
-               output:: Volume,
-               stock:: Volume
-             }
-
-type Waste =  { input:: Volume,
-                output:: Volume,
-                stock:: Volume
-              }
-
-type Water =  { input:: Volume,
-                output:: Volume,
-                stock:: Volume
-              }
-
-type Fertiliser =  { stock:: Volume
-                    }
-
-type Life =  { stock:: Volume
-                    }
+-- type Food =  { input:: Volume,
+--                output:: Volume,
+--                stock:: Volume
+--              }
+--
+-- type Waste =  { input:: Volume,
+--                 output:: Volume,
+--                 stock:: Volume
+--               }
+--
+-- type Water =  { input:: Volume,
+--                 output:: Volume,
+--                 stock:: Volume
+--               }
+--
+-- type Fertiliser =  { input:: Volume,
+--                      output:: Volume,
+--                      stock:: Volume
+--                    }
+--
+-- type Life =  { stock:: Volume
+--                     }
 
 
 -- Sources
 
-type ShoppedFood =  { output:: Volume }
-type GardenFood =  { output:: Volume }
+-- type ShoppedFood =  { output:: Volume }
+-- type GardenFood =  { output:: Volume }
 
 -- Sink
 
-type WasteManagement =  { input :: Volume }
-type GreenhouseGases =  { input :: Volume }
+-- type WasteManagement =  { input:: Volume,
+--                          output:: Volume,
+--                          stock:: Volume
+--                        }
+--
+-- type GreenhouseGases =  { input:: Volume,
+--                          output:: Volume,
+--                          stock:: Volume
+--                        }
+
 
 --
 -- Flows
@@ -89,17 +100,198 @@ type GreenhouseGases =  { input :: Volume }
 
 -- comsumption is individual level.
 
-shopping :: ShoppedFood -> Food
-shopping shoppedFood = { input: shoppedFood.output, output: 0, stock: 0 }
+-- shopping :: ShoppedFood -> Food
+-- shopping shoppedFood = { input: shoppedFood.output, output: 0, stock: 0 }
+--
+-- harvesting :: GardenFood -> Food
+-- harvesting gardenedFood = { input: gardenedFood.output, output: 0, stock: 0 }
 
-harvesting :: GardenFood -> Food
-harvesting gardenedFood = { input: gardenedFood.output, output: 0, stock: 0 }
+data Flow a = Flow { input:: a,
+                     output:: a,
+                     stock:: a
+                   }
 
-cooking :: Food -> Waste
-cooking cook = { input: cook.output, output: 0, stock: 0 }
+-- instance showQuantity :: Show ( Quantity a ) where
+--   show ( Volume _ v ) = show v
+--   show ( Weight _ w ) = show w
+--   show ( IncompatibleQuantity ) = show "Incompatible Quantities"
 
-binning :: Waste -> WasteManagement
-binning waste = { input: waste.output }
+-- instance showFlow :: Show a => Show ( Flow ( Quantity a ) ) where
+--   show ( Flow { input: i, output: o, stock: s } ) = "input: "
+--                                                   <> show i
+--                                                   <> "\noutput: "
+--                                                   <> show o
+--                                                   <> "\nstock: "
+--                                                   <> show s
+
+data SystemParam = SystemParam { houseHoldSize :: Int
+                                , estatePopulation :: Int
+                                , estateFlatsOneBedroom :: Int
+                                , estateFlatsTwoBedroom :: Int
+                                , estateFlatsThreeBedroom :: Int
+                                }
+
+data Options = Eating
+             | EatingBinning
+             | Composting
+             | CompostingGarden
+             | CompostingFoodGarden
+             | WateringGarden
+             | RainwaterWateringGarden
+
+data FlowType = EatingFlow
+              | BinningFlow
+              | CompostingFlow
+              | WateringFlow
+              | RainwaterCollectingFlow
+
+data Food = AnyFood | ShoppedFood | EdibleFoodWaste | SharedFood
+data Waste = AnyWaste | FoodWaste | NonEdibleFoodWaste | ManagedWaste
+
+data Life = Life
+
+-- Units
+
+data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity
+
+-- -- Kg / Person / Day
+-- data Weight a =
+-- -- L / Person / Day
+-- data Volume a =
+
+data Stock a = Stock a a
+
+data Scale = PersonScale | HouseholdScale | EstateScale
+
+data Ratio a = Ratio a { ratio :: Number }
+
+data State = State { shoppedFood :: Stock ( Quantity Food )
+                   , binnedFoodWaste :: Stock ( Quantity Waste )
+                   , sharedFood :: Stock ( Quantity Food )
+                   , managedWaste:: Stock ( Quantity Waste )
+                   }
+
+derive instance genericFood :: Generic Food
+instance showFood :: Show Food where
+   show _ = "Food"
+
+derive instance genericWaste :: Generic Waste
+instance showWaste :: Show Waste where
+   show _ = "Waste"
+
+derive instance genericQuantityFood :: ( Generic a ) => Generic ( Quantity a )
+instance showQuantityFood :: ( Show a ) => Show ( Quantity a ) where
+    show ( Weight _ a ) = "Weight: " <> show a
+    show ( Volume _ a ) = "Volume: " <> show a
+    show ( IncompatibleQuantity ) = "IncompatibleQuantity"
+
+derive instance genericStockFood :: Generic ( Stock ( Quantity Food ) )
+instance showStockFood :: ( Show a ) => Show ( Stock ( Quantity Food ) ) where
+    show ( Stock a b ) = "Available stock: " <> ( show a ) <> "\nConsumed stock: " <> ( show b )
+
+derive instance genericStockWaste :: Generic ( Stock ( Quantity Waste ) )
+instance showStockWaste :: ( Show a ) => Show ( Stock ( Quantity Waste ) ) where
+    show ( Stock a b ) = "Available stock: " <> ( show a ) <> "\nConsumed stock: " <> ( show b )
+
+derive instance genericState :: Generic State
+
+instance showState :: Show State where
+    show = gShow
+
+systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
+                        , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
+                        , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
+                        , sharedFood: _
+                        }
+
+type FlowParams = { eatingParam ::
+                     { title :: String
+                     , eatedFoodRatio :: Ratio Food
+                     , allFoodWasteRatio :: Ratio Food
+                     , edibleWasteRatio :: Ratio Food
+                     , nonedibleFoodWasteRatio :: Ratio Food
+                     }
+                  , binningParam :: { title :: String
+                      , inputRatio :: Ratio Waste
+                      }
+                  }
+
+instance mergeQty :: Semigroup ( Quantity a ) where
+  append ( Volume t a ) ( Volume t' b ) = Volume t ( a + b )
+  append ( Weight t a ) ( Weight t' b ) = Weight t ( a + b )
+  append _ _ = IncompatibleQuantity
+
+instance mergeStock :: Semigroup ( Stock ( Quantity Food ) ) where
+  append ( Stock qtyAvailable qtyConsumed ) ( Stock qtyAvailable' qtyConsumed' ) = Stock (qtyAvailable <> qtyAvailable') (qtyConsumed' <> qtyConsumed')
+
+instance mergeState :: Semigroup State where
+  append s1 s2 = s1
+  --  State { shoppedFood : append s1.shoppedFood s2.shoppedFood
+  --                      , binnedFoodWaste: s1.binnedFoodWaste <> s2.binnedFoodWaste
+  --                      , managedWaste: s1.managedWaste <> s2.managedWaste
+  --                      , sharedFood: s1.sharedFood <> s2.sharedFood
+  --                      }
+
+type FlowParam = Record
+
+-- systemFlows :: forall r. FlowType -> Record ( title :: String | r )
+
+
+eatingParam =  { title: "Eating"
+               , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
+               , allFoodWasteRatio: Ratio AnyFood { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteRatio: Ratio AnyFood { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+               , nonedibleFoodWasteRatio: Ratio AnyFood { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+               }
+
+
+binningParam = { title: "Binning"
+               , inputRatio: Ratio AnyWaste { ratio: 1.0 }
+               }
+
+-- TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
+--       The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
+--       Currently doing this with the process functions (`eating`,...) should be enough.
+--
+-- Process a b = Process a b { ratio :: Number }
+--
+-- eatingParam =  { title: "Eating"
+--                , eatedFoodProcess: Process ( Food Any ) Life { ratio: 0.81 } -- ( 1 - allFoodWasteProcess
+--                , allFoodProcess: Process ( Food Any ) ( Waste FoodWaste ) { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+--                , edibleWasteProcess: Process ( Food Any ) ( Food EdibleFoodWaste ) { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+--                , nonedibleFoodWasteProcess: Process ( Food Any ) ( Waste NonEdibleFoodWaste ) { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+--                }
+--
+-- binningParam = { title: "Binning"
+--                , inputProcess: Process ( Waste Any ) ManagedWaste { ratio: 1.0 }
+--                }
+
+flowParams :: FlowParams
+flowParams = { eatingParam : eatingParam
+             , binningParam : binningParam
+             }
+
+-- systemFlows CompostingFlow = unsafeCoerce
+-- systemFlows WateringFlow = unsafeCoerce
+-- systemFlows RainwaterCollectingFlow = unsafeCoerce
+--
+
+applyRatio :: forall a. Ratio a -> Stock ( Quantity a ) -> Stock ( Quantity a )
+applyRatio ( Ratio _ { ratio: ratio } ) = updateQty
+  where
+    updateQty ( Stock ( Weight a qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Volume a qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock _ _ ) = Stock IncompatibleQuantity IncompatibleQuantity
+
+eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
+eating { eatedFoodRatio: eatedFoodRatio }
+        ( State state@{ shoppedFood: shoppedFoodStock } ) = State ( state { shoppedFood = ( applyRatio eatedFoodRatio shoppedFoodStock ) } )
+
+composting :: forall r. FlowParam ( r ) -> State -> State
+composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
+
+binning :: forall r. FlowParam ( r ) -> State -> State
+binning _ (State state) = State state
 
 --
 -- Living Flows
@@ -109,16 +301,77 @@ binning waste = { input: waste.output }
 -- System
 --
 
-system :: { output:: Volume } -> { input :: Volume }
--- system o = shopping o
-system = shopping >>> cooking >>> binning
+-- system :: { output:: Volume } -> { input :: Volume }
+-- -- system o = shopping o
+-- -- system = shopping >>> eating >>> binning
+-- system = eating >>> composting >>> binning
 
 -- Have needs
-person :: Food -> Water -> Life
-person = unsafeCoerce
+-- person :: Flow -> Flow -> Life
+-- person = unsafeCoerce
+--
+-- garden :: Flow -> Flow -> Life
+-- garden = unsafeCoerce
 
-garden :: Water -> Fertiliser -> Life
-garden = unsafeCoerce
+-- eatingBinning systemP eatingP compostingP binningP input = result
 
--- Number of individuals
-data Scale = Scale Int
+-- eatingBinning :: Scale -> SystemParam -> Param -> Flow -> Flow
+-- eatingBinning scale systemP eatingP input = result
+
+
+-- binningOutput = binning binningP (eatingOutput <> compostingOutput)
+-- result = eatingOutput <> compostingOutput <> binningOutput
+--
+
+nexusSystem :: Scale -> SystemParam -> FlowParams -> Options -> State -> State
+nexusSystem scale systemP { eatingParam: eatingP } Eating input = eatingOutput
+  where
+    eatingOutput = eating eatingP input
+
+nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } EatingBinning input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput <> binningOutput
+
+nexusSystem scale systemP { eatingParam: eatingP } Composting input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    -- compostingOutput = composting compostingP eatingOutput
+    -- binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput
+
+nexusSystem scale systemP { eatingParam: eatingP } CompostingGarden input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    -- compostingOutput = composting compostingP eatingOutput
+    -- binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput
+
+nexusSystem scale systemP { eatingParam: eatingP } CompostingFoodGarden input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    -- compostingOutput = composting compostingP eatingOutput
+    -- binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput
+
+nexusSystem scale systemP { eatingParam: eatingP } WateringGarden input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    -- compostingOutput = composting compostingP eatingOutput
+    -- binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput
+
+nexusSystem scale systemP { eatingParam: eatingP }  RainwaterWateringGarden input = eatingBinningOutput
+  where
+    eatingOutput = eating eatingP input
+    -- compostingOutput = composting compostingP eatingOutput
+    -- binningOutput = binning binningP eatingOutput
+    eatingBinningOutput = eatingOutput
+
+
+-- eatingBinning systemP eatingP compostingP binningP input = do
+--                         eatingOutput <- eating eatingP input
+--                         compostingOutput <- composting compostingP eatingOutput
+--                         binningOutput <- binning binningP (eatingOutput <> compostingOutput)
+--                         pure eatingOutput <> compostingOutput <> binningOutput
