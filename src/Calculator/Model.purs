@@ -1,4 +1,4 @@
-module Calculator.Model (Token, Flow2, Tok, Flow(Flow), nexusSystem, flowParams, Stock(..), Food(..), Waste(..), Ratio(..), Quantity(..), Scale(..), SystemParam(..), Options(..), State(..))  where
+module Calculator.Model (Token, Flow2, Tok, Flow(Flow), nexusSystem, flowParams, Stock(..), Food(..), Waste(..), Ratio(..), Process(..), Quantity(..), Scale(..), SystemParam(..), Options(..), State(..))  where
 
 import Prelude
 -- import Boolean (and)
@@ -146,8 +146,39 @@ data FlowType = EatingFlow
               | WateringFlow
               | RainwaterCollectingFlow
 
-data Food = AnyFood | ShoppedFood | EdibleFoodWaste | SharedFood
+data Food = AnyFood | ShoppedFood | CookedFood | EdibleFoodWaste | SharedFood
 data Waste = AnyWaste | FoodWaste | NonEdibleFoodWaste | ManagedWaste
+
+
+--
+-- Living Flows
+--
+
+--
+-- System
+--
+
+-- system :: { output:: Volume } -> { input :: Volume }
+-- -- system o = shopping o
+-- -- system = shopping >>> eating >>> binning
+-- system = eating >>> composting >>> binning
+
+-- Have needs
+-- person :: Flow -> Flow -> Life
+-- person = unsafeCoerce
+--
+-- garden :: Flow -> Flow -> Life
+-- garden = unsafeCoerce
+
+-- eatingBinning systemP eatingP compostingP binningP input = result
+
+-- eatingBinning :: Scale -> SystemParam -> Param -> Flow -> Flow
+-- eatingBinning scale systemP eatingP input = result
+
+
+-- binningOutput = binning binningP (eatingOutput <> compostingOutput)
+-- result = eatingOutput <> compostingOutput <> binningOutput
+--
 
 data Life = Life
 
@@ -167,6 +198,7 @@ data Scale = PersonScale | HouseholdScale | EstateScale
 data Ratio a = Ratio a { ratio :: Number }
 
 data State = State { shoppedFood :: Stock ( Quantity Food )
+                   , cookedFood :: Stock ( Quantity Food )
                    , binnedFoodWaste :: Stock ( Quantity Waste )
                    , sharedFood :: Stock ( Quantity Food )
                    , managedWaste:: Stock ( Quantity Waste )
@@ -200,6 +232,7 @@ instance showState :: Show State where
     show = gShow
 
 systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
+                        , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
                         , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
                         , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
                         , sharedFood: _
@@ -208,9 +241,9 @@ systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weig
 type FlowParams = { eatingParam ::
                      { title :: String
                      , eatedFoodRatio :: Ratio Food
-                     , allFoodWasteRatio :: Ratio Food
-                     , edibleWasteRatio :: Ratio Food
-                     , nonedibleFoodWasteRatio :: Ratio Food
+                     , allFoodWasteProcess :: Process Food Waste
+                     , edibleWasteRatio :: Ratio Waste
+                     , nonedibleFoodWasteRatio :: Ratio Waste
                      }
                   , binningParam :: { title :: String
                       , inputRatio :: Ratio Waste
@@ -240,9 +273,9 @@ type FlowParam = Record
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
-               , allFoodWasteRatio: Ratio AnyFood { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteRatio: Ratio AnyFood { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteRatio: Ratio AnyFood { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+               , allFoodWasteProcess: Process AnyFood AnyWaste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteRatio: Ratio AnyWaste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+               , nonedibleFoodWasteRatio: Ratio AnyWaste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
 
 
@@ -254,7 +287,17 @@ binningParam = { title: "Binning"
 --       The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
 --       Currently doing this with the process functions (`eating`,...) should be enough.
 --
--- Process a b = Process a b { ratio :: Number }
+
+data Process a b = Process a b { ratio :: Number }
+
+applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
+applyProcess ( Process a b { ratio: ratio }) = updateQty
+  where
+    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock _ _ ) = Stock IncompatibleQuantity IncompatibleQuantity
+
+
 --
 -- eatingParam =  { title: "Eating"
 --                , eatedFoodProcess: Process ( Food Any ) Life { ratio: 0.81 } -- ( 1 - allFoodWasteProcess
@@ -278,51 +321,25 @@ flowParams = { eatingParam : eatingParam
 --
 
 applyRatio :: forall a. Ratio a -> Stock ( Quantity a ) -> Stock ( Quantity a )
-applyRatio ( Ratio _ { ratio: ratio } ) = updateQty
+applyRatio ( Ratio a { ratio: ratio } ) = updateQty
   where
-    updateQty ( Stock ( Weight a qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
-    updateQty ( Stock ( Volume a qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
     updateQty ( Stock _ _ ) = Stock IncompatibleQuantity IncompatibleQuantity
 
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
 eating { eatedFoodRatio: eatedFoodRatio }
-        ( State state@{ shoppedFood: shoppedFoodStock } ) = State ( state { shoppedFood = ( applyRatio eatedFoodRatio shoppedFoodStock ) } )
+        ( State state@{ shoppedFood: shoppedFoodStock } ) = State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock } )
+
+binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
+binning { allFoodWasteProcess : allFoodWasteProcess }
+        ( State state@{ shoppedFood: shoppedFood } ) = State ( state { binnedFoodWaste = ( applyProcess allFoodWasteProcess shoppedFood ) } )
+
 
 composting :: forall r. FlowParam ( r ) -> State -> State
 composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
 
-binning :: forall r. FlowParam ( r ) -> State -> State
-binning _ (State state) = State state
 
---
--- Living Flows
---
-
---
--- System
---
-
--- system :: { output:: Volume } -> { input :: Volume }
--- -- system o = shopping o
--- -- system = shopping >>> eating >>> binning
--- system = eating >>> composting >>> binning
-
--- Have needs
--- person :: Flow -> Flow -> Life
--- person = unsafeCoerce
---
--- garden :: Flow -> Flow -> Life
--- garden = unsafeCoerce
-
--- eatingBinning systemP eatingP compostingP binningP input = result
-
--- eatingBinning :: Scale -> SystemParam -> Param -> Flow -> Flow
--- eatingBinning scale systemP eatingP input = result
-
-
--- binningOutput = binning binningP (eatingOutput <> compostingOutput)
--- result = eatingOutput <> compostingOutput <> binningOutput
---
 
 nexusSystem :: Scale -> SystemParam -> FlowParams -> State -> Options -> State
 nexusSystem scale systemP { eatingParam: eatingP } input Eating = eatingOutput

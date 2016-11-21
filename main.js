@@ -824,6 +824,28 @@ var PS = {};
       IncompatibleQuantity.value = new IncompatibleQuantity();
       return IncompatibleQuantity;
   })();
+
+  /**
+ *  TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
+ *        The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
+ *        Currently doing this with the process functions (`eating`,...) should be enough.
+ * 
+ */  
+  var Process = (function () {
+      function Process(value0, value1, value2) {
+          this.value0 = value0;
+          this.value1 = value1;
+          this.value2 = value2;
+      };
+      Process.create = function (value0) {
+          return function (value1) {
+              return function (value2) {
+                  return new Process(value0, value1, value2);
+              };
+          };
+      };
+      return Process;
+  })();
   var Eating = (function () {
       function Eating() {
 
@@ -983,13 +1005,13 @@ var PS = {};
       eatedFoodRatio: new Ratio(AnyFood.value, {
           ratio: 0.81
       }), 
-      allFoodWasteRatio: new Ratio(AnyFood.value, {
+      allFoodWasteProcess: new Process(AnyFood.value, AnyWaste.value, {
           ratio: 0.19
       }), 
-      edibleWasteRatio: new Ratio(AnyFood.value, {
+      edibleWasteRatio: new Ratio(AnyWaste.value, {
           ratio: 0.114
       }), 
-      nonedibleFoodWasteRatio: new Ratio(AnyFood.value, {
+      nonedibleFoodWasteRatio: new Ratio(AnyWaste.value, {
           ratio: 7.6e-2
       })
   };
@@ -1001,11 +1023,6 @@ var PS = {};
   };
 
   /**
- *  TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
- *        The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
- *        Currently doing this with the process functions (`eating`,...) should be enough.
- * 
- *  Process a b = Process a b { ratio :: Number }
  * 
  *  eatingParam =  { title: "Eating"
  *                 , eatedFoodProcess: Process ( Food Any ) Life { ratio: 0.81 } -- ( 1 - allFoodWasteProcess
@@ -1037,10 +1054,22 @@ var PS = {};
   var applyRatio = function (v) {
       var updateQty = function (v1) {
           if (v1.value0 instanceof Weight && v1.value1 instanceof Weight) {
-              return new Stock(new Weight(v1.value0.value0, v1.value0.value1 - v1.value0.value1 * v.value1.ratio), new Weight(v1.value0.value0, v1.value1.value1 + v1.value0.value1 * v.value1.ratio));
+              return new Stock(new Weight(v.value0, v1.value0.value1 - v1.value0.value1 * v.value1.ratio), new Weight(v.value0, v1.value1.value1 + v1.value0.value1 * v.value1.ratio));
           };
           if (v1.value0 instanceof Volume && v1.value1 instanceof Volume) {
-              return new Stock(new Volume(v1.value0.value0, v1.value0.value1 - v1.value0.value1 * v.value1.ratio), new Volume(v1.value0.value0, v1.value1.value1 + v1.value0.value1 * v.value1.ratio));
+              return new Stock(new Volume(v.value0, v1.value0.value1 - v1.value0.value1 * v.value1.ratio), new Volume(v.value0, v1.value1.value1 + v1.value0.value1 * v.value1.ratio));
+          };
+          return new Stock(IncompatibleQuantity.value, IncompatibleQuantity.value);
+      };
+      return updateQty;
+  };
+  var applyProcess = function (v) {
+      var updateQty = function (v1) {
+          if (v1.value0 instanceof Weight && v1.value1 instanceof Weight) {
+              return new Stock(new Weight(v.value1, v1.value0.value1 - v1.value0.value1 * v.value2.ratio), new Weight(v.value1, v1.value1.value1 + v1.value0.value1 * v.value2.ratio));
+          };
+          if (v1.value0 instanceof Volume && v1.value1 instanceof Volume) {
+              return new Stock(new Volume(v.value1, v1.value0.value1 - v1.value0.value1 * v.value2.ratio), new Volume(v.value1, v1.value1.value1 + v1.value0.value1 * v.value2.ratio));
           };
           return new Stock(IncompatibleQuantity.value, IncompatibleQuantity.value);
       };
@@ -1048,43 +1077,20 @@ var PS = {};
   };
   var eating = function (v) {
       return function (v1) {
+          var foodLeft = applyRatio(v.eatedFoodRatio)(v1.value0.shoppedFood);
           return new State((function () {
-              var $176 = {};
-              for (var $177 in v1.value0) {
-                  if (v1.value0.hasOwnProperty($177)) {
-                      $176[$177] = v1.value0[$177];
+              var $198 = {};
+              for (var $199 in v1.value0) {
+                  if (v1.value0.hasOwnProperty($199)) {
+                      $198[$199] = v1.value0[$199];
                   };
               };
-              $176.shoppedFood = applyRatio(v.eatedFoodRatio)(v1.value0.shoppedFood);
-              return $176;
+              $198.shoppedFood = foodLeft;
+              $198.binnedFoodWaste = applyProcess(v.allFoodWasteProcess)(foodLeft);
+              return $198;
           })());
       };
   };
-
-  /**
- * 
- *  Living Flows
- * 
- * 
- *  System
- * 
- *  system :: { output:: Volume } -> { input :: Volume }
- *  -- system o = shopping o
- *  -- system = shopping >>> eating >>> binning
- *  system = eating >>> composting >>> binning
- *  Have needs
- *  person :: Flow -> Flow -> Life
- *  person = unsafeCoerce
- * 
- *  garden :: Flow -> Flow -> Life
- *  garden = unsafeCoerce
- *  eatingBinning systemP eatingP compostingP binningP input = result
- *  eatingBinning :: Scale -> SystemParam -> Param -> Flow -> Flow
- *  eatingBinning scale systemP eatingP input = result
- *  binningOutput = binning binningP (eatingOutput <> compostingOutput)
- *  result = eatingOutput <> compostingOutput <> binningOutput
- * 
- */  
   var nexusSystem = function (scale) {
       return function (systemP) {
           return function (v) {
@@ -1153,7 +1159,7 @@ var PS = {};
                               sharedFood: new Stock(new Weight(SharedFood.value, 0.0), new Weight(SharedFood.value, 0.0))
                           });
                       };
-                      throw new Error("Failed pattern match at Calculator.Model line 328, column 1 - line 330, column 40: " + [ scale.constructor.name, systemP.constructor.name, v.constructor.name, input.constructor.name, v1.constructor.name ]);
+                      throw new Error("Failed pattern match at Calculator.Model line 344, column 1 - line 346, column 40: " + [ scale.constructor.name, systemP.constructor.name, v.constructor.name, input.constructor.name, v1.constructor.name ]);
                   };
               };
           };
@@ -1171,6 +1177,7 @@ var PS = {};
   exports["WateringGarden"] = WateringGarden;
   exports["RainwaterWateringGarden"] = RainwaterWateringGarden;
   exports["NotImplemented"] = NotImplemented;
+  exports["Process"] = Process;
   exports["Weight"] = Weight;
   exports["Volume"] = Volume;
   exports["IncompatibleQuantity"] = IncompatibleQuantity;
@@ -2021,7 +2028,8 @@ var PS = {};
   exports["src"] = src;
 })(PS["Text.Smolder.HTML.Attributes"] = PS["Text.Smolder.HTML.Attributes"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.1
+  "use strict";
   var Calculator_Model = PS["Calculator.Model"];
   var $$Math = PS["Math"];
   var CSS = PS["CSS"];
@@ -2111,13 +2119,6 @@ var PS = {};
       };
       throw new Error("Failed pattern match at Calculator.Layout line 185, column 1 - line 185, column 48: " + [ v.constructor.name ]);
   };
-
-  /**
- *  light :: forall e. Boolean -> Markup e
- *  light on = div ! arg $ mempty
- *    where arg | on = className "on"
- *              | otherwise = mempty
- */  
   var hex = function (hover) {
       return function (grid) {
           return function (item) {
@@ -2196,12 +2197,42 @@ var PS = {};
   var emptyArrow = {
       title: "", 
       quantity: 0.0
+  };
+  var displayState = function (title) {
+      return function (available) {
+          return function (consumed) {
+              var showConsumed = function (v) {
+                  if (v instanceof Calculator_Model.Weight) {
+                      return "Consumed : " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v.value1)) + "kg");
+                  };
+                  if (v instanceof Calculator_Model.Volume) {
+                      return "Consumed : " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v.value1)) + "kg");
+                  };
+                  if (v instanceof Calculator_Model.IncompatibleQuantity) {
+                      return "Incompatible Quantity";
+                  };
+                  throw new Error("Failed pattern match at Calculator.Layout line 204, column 7 - line 205, column 7: " + [ v.constructor.name ]);
+              };
+              var showAvailable = function (v) {
+                  if (v instanceof Calculator_Model.Weight) {
+                      return "Available : " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v.value1)) + "kg");
+                  };
+                  if (v instanceof Calculator_Model.Volume) {
+                      return "Available : " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v.value1)) + "kg");
+                  };
+                  if (v instanceof Calculator_Model.IncompatibleQuantity) {
+                      return "Incompatible Quantity";
+                  };
+                  throw new Error("Failed pattern match at Calculator.Layout line 197, column 1 - line 212, column 1: " + [ v.constructor.name ]);
+              };
+              return Text_Smolder_Markup["with"](Text_Smolder_Markup.attributableMarkupMF)(Text_Smolder_HTML.div)(Text_Smolder_HTML_Attributes.className("center"))(Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(Text_Smolder_Markup.text(title))(function () {
+                  return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(Text_Smolder_Markup["with"](Text_Smolder_Markup.attributableMarkupMF)(Text_Smolder_HTML.div)(Text_Smolder_HTML_Attributes.className("center"))(Text_Smolder_Markup.text(showAvailable(available))))(function () {
+                      return Text_Smolder_Markup["with"](Text_Smolder_Markup.attributableMarkupMF)(Text_Smolder_HTML.div)(Text_Smolder_HTML_Attributes.className("center"))(Text_Smolder_Markup.text(showConsumed(consumed)));
+                  });
+              }));
+          };
+      };
   };                                                                  
-
-  /**
- *  $ do
- *   img ! src "https://dummyimage.com/200x200&text=+"
- */  
   var arrayHex = function (v) {
       if (v.length === 1) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)({
@@ -2338,40 +2369,11 @@ var PS = {};
           };
       };
   };
-
-  /**
- *  flowsSystem sys =
- *  tokenSystem sys =
- */  
   var $$interface = function (hover) {
       return function (grid) {
           return function (v) {
-              var showConsumedFood = function (v1) {
-                  if (v1 instanceof Calculator_Model.Weight) {
-                      return "Consumed Food: " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v1.value1)) + "kg");
-                  };
-                  if (v1 instanceof Calculator_Model.Volume) {
-                      return "Consumed Food: " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v1.value1)) + "kg");
-                  };
-                  if (v1 instanceof Calculator_Model.IncompatibleQuantity) {
-                      return "Incompatible Quantity";
-                  };
-                  throw new Error("Failed pattern match at Calculator.Layout line 210, column 7 - line 211, column 7: " + [ v1.constructor.name ]);
-              };
-              var showAvailableFood = function (v1) {
-                  if (v1 instanceof Calculator_Model.Weight) {
-                      return "Available Food: " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v1.value1)) + "kg");
-                  };
-                  if (v1 instanceof Calculator_Model.Volume) {
-                      return "Available Food: " + (Data_Show.show(Data_Show.showNumber)($$Math.trunc(v1.value1)) + "kg");
-                  };
-                  if (v1 instanceof Calculator_Model.IncompatibleQuantity) {
-                      return "Incompatible Quantity";
-                  };
-                  throw new Error("Failed pattern match at Calculator.Layout line 198, column 1 - line 215, column 51: " + [ v1.constructor.name ]);
-              };
-              return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(Text_Smolder_Markup["with"](Text_Smolder_Markup.attributableMarkupMF)(Text_Smolder_HTML.div)(Text_Smolder_HTML_Attributes.className("center"))(Text_Smolder_Markup.text(showAvailableFood(v.value0.shoppedFood.value0))))(function () {
-                  return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(Text_Smolder_Markup["with"](Text_Smolder_Markup.attributableMarkupMF)(Text_Smolder_HTML.div)(Text_Smolder_HTML_Attributes.className("center"))(Text_Smolder_Markup.text(showConsumedFood(v.value0.shoppedFood.value1))))(function () {
+              return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(displayState("Food: ")(v.value0.shoppedFood.value0)(v.value0.shoppedFood.value1))(function () {
+                  return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(displayState("FoodWaste: ")(v.value0.binnedFoodWaste.value0)(v.value0.binnedFoodWaste.value1))(function () {
                       return Control_Bind.bind(Text_Smolder_Markup.bindMarkupM)(arrows(true)(false)(optionsTokens(Calculator_Model.Eating.value)))(function () {
                           return hexes(hover)(grid)(optionsTokens(Calculator_Model.Eating.value));
                       });
@@ -3206,33 +3208,34 @@ var PS = {};
   exports["runFlareHTML"] = runFlareHTML;
 })(PS["Flare.Smolder"] = PS["Flare.Smolder"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.1
+  "use strict";
   var Prelude = PS["Prelude"];
-  var Calculator_Model = PS["Calculator.Model"];
   var Calculator_Layout = PS["Calculator.Layout"];
+  var Calculator_Model = PS["Calculator.Model"];
   var Control_Monad_Eff = PS["Control.Monad.Eff"];
   var Control_Monad_Eff_Console = PS["Control.Monad.Eff.Console"];
-  var $$Math = PS["Math"];
+  var Control_Monad_Eff_Timer = PS["Control.Monad.Eff.Timer"];
+  var DOM = PS["DOM"];
   var Data_Array = PS["Data.Array"];
+  var Data_Foldable = PS["Data.Foldable"];
   var Data_Int = PS["Data.Int"];
-  var Data_NonEmpty = PS["Data.NonEmpty"];
+  var Data_Maybe = PS["Data.Maybe"];
   var Data_Monoid = PS["Data.Monoid"];
   var Data_Monoid_Additive = PS["Data.Monoid.Additive"];
   var Data_Monoid_Multiplicative = PS["Data.Monoid.Multiplicative"];
-  var Data_Maybe = PS["Data.Maybe"];
-  var Data_Foldable = PS["Data.Foldable"];
+  var Data_NonEmpty = PS["Data.NonEmpty"];
   var Data_Traversable = PS["Data.Traversable"];
-  var DOM = PS["DOM"];
-  var Signal_Channel = PS["Signal.Channel"];
-  var Graphics_Canvas = PS["Graphics.Canvas"];
-  var Control_Monad_Eff_Timer = PS["Control.Monad.Eff.Timer"];
-  var Graphics_Drawing = PS["Graphics.Drawing"];
-  var Graphics_Drawing_Font = PS["Graphics.Drawing.Font"];
-  var Text_Smolder_Markup = PS["Text.Smolder.Markup"];
-  var Signal_DOM = PS["Signal.DOM"];
-  var Signal_Time = PS["Signal.Time"];
   var Flare = PS["Flare"];
   var Flare_Smolder = PS["Flare.Smolder"];
+  var Graphics_Canvas = PS["Graphics.Canvas"];
+  var Graphics_Drawing = PS["Graphics.Drawing"];
+  var Graphics_Drawing_Font = PS["Graphics.Drawing.Font"];
+  var $$Math = PS["Math"];
+  var Signal_Channel = PS["Signal.Channel"];
+  var Signal_DOM = PS["Signal.DOM"];
+  var Signal_Time = PS["Signal.Time"];
+  var Text_Smolder_Markup = PS["Text.Smolder.Markup"];
   var Data_Functor = PS["Data.Functor"];
   var Control_Apply = PS["Control.Apply"];
   var Control_Applicative = PS["Control.Applicative"];
@@ -3299,24 +3302,8 @@ var PS = {};
       if (v instanceof Calculator_Model.EstateScale) {
           return "Estate";
       };
-      throw new Error("Failed pattern match at Main line 113, column 1 - line 114, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 101, column 1 - line 102, column 1: " + [ v.constructor.name ]);
   };
-
-  /**
- *  type State = Array Token
- *  perform :: Action -> State -> State
- *  perform Food = flip snoc { title: "Food" }
- *  perform Bin = flip snoc { title: "Bin" }
- *  perform Compost = flip snoc { title: "Compost" }
- *  perform Garden = flip snoc { title: "Garden" }
- *  perform FoodGarden = flip snoc { title: "Food Garden" }
- *  perform Reset     = const []
- *  TODO: Reuse this traverseable approach to create `optionals` and `booleans` functions
- *  controls = foldp (maybe id perform) [ { title: "Food" } ] $
- *              buttons [Food, Bin, Compost, Garden, FoodGarden, Reset] label
- *  actions = string "Add item:" "Bin" <**> button "Add" (flip const) cons
- *  list = foldp id ["Food"] actions
- */  
   var optionsLabel = function (v) {
       if (v instanceof Calculator_Model.Eating) {
           return "Food";
@@ -3342,28 +3329,9 @@ var PS = {};
       if (v instanceof Calculator_Model.NotImplemented) {
           return "Not Implemented Yet";
       };
-      throw new Error("Failed pattern match at Main line 74, column 1 - line 75, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 62, column 1 - line 63, column 1: " + [ v.constructor.name ]);
   };
   var nexusOptions = Flare.select(Data_Foldable.foldableArray)("Options")(new Data_NonEmpty.NonEmpty(Calculator_Model.Eating.value, [ Calculator_Model.EatingBinning.value, Calculator_Model.Composting.value, Calculator_Model.CompostingGarden.value, Calculator_Model.CompostingFoodGarden.value, Calculator_Model.WateringGarden.value, Calculator_Model.RainwaterWateringGarden.value ]))(optionsLabel);
-
-  /**
- *  <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
- *  ui = token <$> string_ "Yo"
- *             <*> (color "Color" (hsl 333.0 0.6 0.5))
- *  Below is an example of what I think the applicative interface results in
- *  where test is instantiated twice with both instance being completely independent.
- * 
- *  ui :: forall e e'. UI e (Markup e')
- *  ui = ( interface <$> ( boolean "Info" true )
- *                 <*> ( test )
- *                 <*> ( eatingBinningUI )
- *                 <*> ( optionsTokens <$> options ) )
- *    <> ( text <$>
- *          ( show <$> test ) )
- *    where
- *      test = boolean "Test" false
- * 
- */  
   var nexus = nexusOptions;
   var label = function (v) {
       if (v instanceof Food) {
@@ -3384,20 +3352,20 @@ var PS = {};
       if (v instanceof Reset) {
           return "Reset";
       };
-      throw new Error("Failed pattern match at Main line 50, column 1 - line 51, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 38, column 1 - line 39, column 1: " + [ v.constructor.name ]);
   };
   var eatingParam = {
       title: "Eating", 
       eatedFoodRatio: new Calculator_Model.Ratio(Calculator_Model.AnyFood.value, {
           ratio: 0.81
       }), 
-      allFoodWasteRatio: new Calculator_Model.Ratio(Calculator_Model.AnyFood.value, {
+      allFoodWasteProcess: new Calculator_Model.Process(Calculator_Model.AnyFood.value, Calculator_Model.AnyWaste.value, {
           ratio: 0.19
       }), 
-      edibleWasteRatio: new Calculator_Model.Ratio(Calculator_Model.AnyFood.value, {
+      edibleWasteRatio: new Calculator_Model.Ratio(Calculator_Model.AnyWaste.value, {
           ratio: 0.114
       }), 
-      nonedibleFoodWasteRatio: new Calculator_Model.Ratio(Calculator_Model.AnyFood.value, {
+      nonedibleFoodWasteRatio: new Calculator_Model.Ratio(Calculator_Model.AnyWaste.value, {
           ratio: 7.6e-2
       })
   };
@@ -3433,10 +3401,6 @@ var PS = {};
       })();
       return $11;
   };
-
-  /**
- *  ui :: forall e e'. UI e (Markup e')
- */  
   var ui = function (v) {
       if (v instanceof Calculator_Model.Eating) {
           return Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Model.nexusSystem)(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty(Calculator_Model.PersonScale.value, [ Calculator_Model.HouseholdScale.value, Calculator_Model.EstateScale.value ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParam)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(0.81)))))(Control_Applicative.pure(Flare.applicativeUI)(eatingInitState)))(Control_Applicative.pure(Flare.applicativeUI)(Calculator_Model.Eating.value)));

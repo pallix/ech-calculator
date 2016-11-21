@@ -1,43 +1,31 @@
 module Main where
 
 import Prelude
-
-import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), Scale(..), Quantity(..), Ratio(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
 import Calculator.Layout (interface)
-
+import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-
-import Math (cos, sin, pi)
+import Control.Monad.Eff.Timer (TIMER)
+import DOM (DOM)
 import Data.Array (cons, snoc)
+import Data.Foldable (foldMap)
 import Data.Int (toNumber)
-import Data.NonEmpty ((:|))
+import Data.Maybe (maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
-import Data.Maybe (maybe)
-import Data.Foldable (foldMap)
+import Data.NonEmpty ((:|))
 import Data.Traversable (traverse)
-
-import DOM (DOM)
-import Signal.Channel (CHANNEL)
+import Flare (UI, lift, fieldset, numberSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
+import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
-
-import Control.Monad.Eff.Timer (TIMER)
-
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
 import Graphics.Drawing.Font (font, sansSerif, bold)
-
-import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-
+import Math (cos, sin, pi)
+import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
-
-import Flare (UI, lift, fieldset, numberSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
-
--- import Flare.Drawing (Drawing, Color, runFlareDrawing, fillColor,outlineColor, filled, closed, outlined, lineWidth, path)
-
-import Flare.Smolder (runFlareHTML)
+import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 
 data Action = Food
             | Bin
@@ -100,9 +88,9 @@ eatingInitState = State { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weig
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
-               , allFoodWasteRatio: Ratio AnyFood { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteRatio: Ratio AnyFood { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteRatio: Ratio AnyFood { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+               , allFoodWasteProcess: Process AnyFood AnyWaste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteRatio: Ratio AnyWaste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+               , nonedibleFoodWasteRatio: Ratio AnyWaste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
 
 eatingBinningInput = Flow { input : 0

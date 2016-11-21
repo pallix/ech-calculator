@@ -194,22 +194,29 @@ optionsTokens NotImplemented = [ { title : "NotImplemented" }]
 -- flowsSystem sys =
 -- tokenSystem sys =
 
+displayState title available consumed = div ! className "center" $ do
+                        text title
+                        div ! className "center" $ do
+                          text $ ( showAvailable available)
+                        div ! className "center" $ do
+                          text $ ( showConsumed consumed)
+    where
+      showAvailable ( Weight _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
+      showAvailable ( Volume _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
+      showAvailable ( IncompatibleQuantity ) = "Incompatible Quantity"
+      showConsumed ( Weight _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
+      showConsumed ( Volume _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
+      showConsumed ( IncompatibleQuantity ) = "Incompatible Quantity"
+
+
 interface :: forall e. Boolean -> Boolean -> State -> Markup e
-interface hover grid ( State { shoppedFood : ( Stock availableFood consumedFood ) } ) = do
-                      div ! className "center" $ do
-                        text $ ( showAvailableFood availableFood)
-                      div ! className "center" $ do
-                        text $ ( showConsumedFood consumedFood)
+interface hover grid ( State { shoppedFood : ( Stock availableFood consumedFood )
+                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) = do
+                      displayState "Food: " availableFood consumedFood
+                      displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
                         -- text $ ( "Binned Food: " <> show ( state.binnedFood ) )
                         -- text $ ( "Managed Waste: " <> show ( state.managedWaste ) )
                       arrows true false $ optionsTokens Eating
                       hexes hover grid $ optionsTokens Eating
                       -- div ! className "center" $ do
                       --   tokenList arr
-    where
-      showAvailableFood ( Weight _ a ) = "Available Food: " <> ( show $ trunc a ) <> "kg"
-      showAvailableFood ( Volume _ a ) = "Available Food: " <> ( show $ trunc a ) <> "kg"
-      showAvailableFood ( IncompatibleQuantity ) = "Incompatible Quantity"
-      showConsumedFood ( Weight _ a ) = "Consumed Food: " <> ( show $ trunc a ) <> "kg"
-      showConsumedFood ( Volume _ a ) = "Consumed Food: " <> ( show $ trunc a ) <> "kg"
-      showConsumedFood ( IncompatibleQuantity ) = "Incompatible Quantity"
