@@ -83,6 +83,7 @@ eatingInitState = State { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weig
                         , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
                         , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
                         , sharedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
+                        , cookedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
                         }
 
 

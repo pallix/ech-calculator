@@ -191,6 +191,7 @@ data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity
 -- -- L / Person / Day
 -- data Volume a =
 
+-- keep track of available and consumed quantities
 data Stock a = Stock a a
 
 data Scale = PersonScale | HouseholdScale | EstateScale
@@ -246,7 +247,8 @@ type FlowParams = { eatingParam ::
                      , nonedibleFoodWasteRatio :: Ratio Waste
                      }
                   , binningParam :: { title :: String
-                      , inputRatio :: Ratio Waste
+                                    , inputRatio :: Ratio Waste
+                                    , allFoodWasteProcess :: Process Food Waste
                       }
                   }
 
@@ -281,6 +283,7 @@ eatingParam =  { title: "Eating"
 
 binningParam = { title: "Binning"
                , inputRatio: Ratio AnyWaste { ratio: 1.0 }
+               , allFoodWasteProcess: Process AnyFood AnyWaste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                }
 
 -- TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
@@ -293,9 +296,12 @@ data Process a b = Process a b { ratio :: Number }
 applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
 applyProcess ( Process a b { ratio: ratio }) = updateQty
   where
-    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
-    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
-    updateQty ( Stock _ _ ) = Stock IncompatibleQuantity IncompatibleQuantity
+    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
+      Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
+      Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock _ _ ) =
+      Stock IncompatibleQuantity IncompatibleQuantity
 
 
 --
@@ -323,17 +329,20 @@ flowParams = { eatingParam : eatingParam
 applyRatio :: forall a. Ratio a -> Stock ( Quantity a ) -> Stock ( Quantity a )
 applyRatio ( Ratio a { ratio: ratio } ) = updateQty
   where
-    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) = Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
-    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) = Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
-    updateQty ( Stock _ _ ) = Stock IncompatibleQuantity IncompatibleQuantity
+    updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
+      Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
+      Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
+    updateQty ( Stock _ _ ) =
+      Stock IncompatibleQuantity IncompatibleQuantity
 
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
-eating { eatedFoodRatio: eatedFoodRatio }
-        ( State state@{ shoppedFood: shoppedFoodStock } ) = State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock } )
+eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) = 
+  State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock } )
 
 binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
-binning { allFoodWasteProcess : allFoodWasteProcess }
-        ( State state@{ shoppedFood: shoppedFood } ) = State ( state { binnedFoodWaste = ( applyProcess allFoodWasteProcess shoppedFood ) } )
+binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
+  State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood } )
 
 
 composting :: forall r. FlowParam ( r ) -> State -> State
@@ -346,7 +355,8 @@ nexusSystem scale systemP { eatingParam: eatingP } input Eating = eatingOutput
   where
     eatingOutput = eating eatingP input
 
-nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } input EatingBinning = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } input EatingBinning =
+  eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     binningOutput = binning binningP eatingOutput
@@ -387,11 +397,13 @@ nexusSystem scale systemP { eatingParam: eatingP } input RainwaterWateringGarden
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input NotImplemented = State { shoppedFood: Stock ( Weight ShoppedFood 0.0 ) ( Weight ShoppedFood 0.0 )
-                                                                                , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
-                                                                                , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
-                                                                                , sharedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
-                                                                                }
+nexusSystem scale systemP { eatingParam: eatingP } input NotImplemented =
+  State { shoppedFood: Stock ( Weight ShoppedFood 0.0 ) ( Weight ShoppedFood 0.0 )
+        , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
+        , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
+        , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
+        , sharedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
+        }
 
 
 -- eatingBinning systemP eatingP compostingP binningP input = do
