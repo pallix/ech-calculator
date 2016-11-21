@@ -114,6 +114,14 @@ ui Eating = interface <$> ( boolean "Info" true )
                                           <*> pure eatingInitState
                                           <*> pure Eating )
 
+ui EatingBinning = interface <$> ( boolean "Info" true )
+                   <*> ( boolean "Grid" false )
+                   <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+                         <*> pure systemParam
+                         <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+                         <*> pure eatingInitState
+                         <*> pure EatingBinning )
+
 ui _ = interface <$> ( boolean "Info" true )
                  <*> ( boolean "Grid" false )
                  <*> ( nexusSystem <$> pure PersonScale

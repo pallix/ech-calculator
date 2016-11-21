@@ -261,7 +261,7 @@ instance mergeStock :: Semigroup ( Stock ( Quantity Food ) ) where
   append ( Stock qtyAvailable qtyConsumed ) ( Stock qtyAvailable' qtyConsumed' ) = Stock (qtyAvailable <> qtyAvailable') (qtyConsumed' <> qtyConsumed')
 
 instance mergeState :: Semigroup State where
-  append s1 s2 = s1
+  append s1 s2 = s1 -- TODO!
   --  State { shoppedFood : append s1.shoppedFood s2.shoppedFood
   --                      , binnedFoodWaste: s1.binnedFoodWaste <> s2.binnedFoodWaste
   --                      , managedWaste: s1.managedWaste <> s2.managedWaste
@@ -294,7 +294,7 @@ binningParam = { title: "Binning"
 data Process a b = Process a b { ratio :: Number }
 
 applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
-applyProcess ( Process a b { ratio: ratio }) = updateQty
+applyProcess (Process a b { ratio: ratio }) = updateQty
   where
     updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
       Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
@@ -338,11 +338,16 @@ applyRatio ( Ratio a { ratio: ratio } ) = updateQty
 
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
 eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) = 
-  State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock } )
+  State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
+                  binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
 
 binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
 binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
-  State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood } )
+  State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
+                  --    Stock (Weight AnyWaste 66.0) (Weight AnyWaste 66.0),
+                  -- shoppedFood =
+                  --   Stock (Weight AnyFood 66.0) (Weight AnyFood 66.0)
+                } )
 
 
 composting :: forall r. FlowParam ( r ) -> State -> State
@@ -356,11 +361,11 @@ nexusSystem scale systemP { eatingParam: eatingP } input Eating = eatingOutput
     eatingOutput = eating eatingP input
 
 nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } input EatingBinning =
-  eatingBinningOutput
+  binningOutput
   where
     eatingOutput = eating eatingP input
     binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput <> binningOutput
+    -- eatingBinningOutput = eatingOutput -- <> binningOutput
 
 nexusSystem scale systemP { eatingParam: eatingP } input Composting = eatingBinningOutput
   where

@@ -202,10 +202,10 @@ displayState title available consumed = div ! className "center" $ do
                           text $ ( showConsumed consumed)
     where
       showAvailable ( Weight _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
-      showAvailable ( Volume _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
+      showAvailable ( Volume _ a ) = "Available : " <> ( show $ trunc a ) <> "L"
       showAvailable ( IncompatibleQuantity ) = "Incompatible Quantity"
       showConsumed ( Weight _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
-      showConsumed ( Volume _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
+      showConsumed ( Volume _ a ) = "Consumed : " <> ( show $ trunc a ) <> "L"
       showConsumed ( IncompatibleQuantity ) = "Incompatible Quantity"
 
 
