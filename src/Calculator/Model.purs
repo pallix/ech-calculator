@@ -1,9 +1,33 @@
-module Calculator.Model (Token, Flow2, Tok, Flow(Flow), nexusSystem, flowParams, Stock(..), Food(..), Waste(..), Ratio(..), Process(..), Quantity(..), Scale(..), SystemParam(..), Options(..), State(..))  where
+module Calculator.Model (Token,
+                         Flow2,
+                         Tok,
+                         Flow(Flow),
+                         nexusSystem,
+                         flowParams,
+                         Stock(..),
+                         Food(..),
+                         Waste(..),
+                         Ratio(..),
+                         Process(..),
+                         Quantity(..),
+                         Scale(..),
+                         SystemParam(..),
+                         Options(..),
+                         State(..),
+                         initEState,
+                         foldEState,
+                         EProcess(..),
+                         Matter(..),
+                         EState(..),
+                         Entry(..),
+                         MatterProperty(..)
+                        )  where
 
 import Prelude
 -- import Boolean (and)
 import Data.Tuple (Tuple(..))
 import Data.Generic
+import Data.Foldable (foldl)
 -- import Data.Control.Monad (return)
 
 
@@ -204,6 +228,34 @@ data State = State { shoppedFood :: Stock ( Quantity Food )
                    , sharedFood :: Stock ( Quantity Food )
                    , managedWaste:: Stock ( Quantity Waste )
                    }
+
+-- model for the event sourcing
+data EProcess = EShopping | EEating | EBinning
+
+data Matter = Food | Waste
+
+data MatterProperty = Edible | NonEdible | Shopped | Cooked
+
+data Entry = Entry { process :: String
+                   , matter :: Matter
+                   , matterProperty :: MatterProperty
+                   , quantity :: Quantity Matter
+                   }
+
+data EState = EState (Array Entry)
+
+initEState = [{process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}]
+
+-- TODO filter on Matter
+foldEState :: EProcess -> Matter -> EState -> Number -- Quantity Matter
+foldEState process matter (EState states) =
+  foldl sumQuantity 0.0 quantities
+  where
+    quantities = map getQuantity states
+    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
+    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
+    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
+    sumQuantity acc qty = acc + qty
 
 derive instance genericFood :: Generic Food
 instance showFood :: Show Food where
