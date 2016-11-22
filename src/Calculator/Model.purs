@@ -17,6 +17,7 @@ module Calculator.Model (Token,
                          SystemState(..),
                          initEState,
                          foldEState,
+                         eEating, -- tmp
                          EProcess(..),
                          Matter(..),
                          EState(..),
@@ -248,14 +249,17 @@ instance eprocessEq :: Eq EProcess where
     [_, AllEProcess] -> true
     _ -> false
 
-data Matter = Food | Waste | AllMatter
+data Matter = EFood | EWaste | AllMatter
 
 derive instance genericMatter :: Generic Matter
 
+instance showMatter :: Show Matter where
+  show = gShow
+
 instance matterEq :: Eq Matter where
   eq a b = case [a, b] of
-    [Food, Food] -> true
-    [Waste, Waste] -> true
+    [EFood, EFood] -> true
+    [EWaste, EWaste] -> true
     [AllMatter, _] -> true
     [_, AllMatter] -> true
     _ -> false
@@ -287,10 +291,15 @@ instance showEntry :: Show Entry where
 
 data EState = EState (Array Entry)
 
-initEState = EState [ Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
-                    , Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
-                    , Entry {process: EEating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
+initEState = EState [ Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood 120.0}
+                    , Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood (-20.0)}
+                    , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: Weight EWaste 10.0} ]
 
+
+derive instance genericEState :: Generic EState
+
+instance showEState :: Show EState where
+    show = gShow
 
 hasProcess :: EProcess -> Entry -> Boolean
 hasProcess process (Entry {process: p}) =
@@ -382,6 +391,15 @@ type FlowParams = { eatingParam ::
                       }
                   }
 
+type EFlowParams = { eatingParam ::
+                     { title :: String
+                     , eatedFoodRatio :: Ratio Matter
+                     , allFoodWasteProcess :: Process Matter Matter
+                     }
+                  , binningParam :: { title :: String
+                                    }
+                  }
+
 instance mergeQty :: Semigroup ( Quantity a ) where
   append ( Volume t a ) ( Volume t' b ) = Volume t ( a + b )
   append ( Weight t a ) ( Weight t' b ) = Weight t ( a + b )
@@ -433,6 +451,14 @@ applyProcess (Process a b { ratio: ratio }) = updateQty
     updateQty ( Stock _ _ ) =
       Stock IncompatibleQuantity IncompatibleQuantity
 
+eApplyProcess :: Process Matter Matter -> (Quantity Matter) -> (Quantity Matter)
+eApplyProcess (Process a b { ratio: r }) = createQuantity
+  -- TODO add more typechecks
+  where
+    createQuantity (Weight _ w) = Weight b $ r * w
+    createQuantity (Volume _ w) = Weight b $ r * w
+    createQuantity IncompatibleQuantity = IncompatibleQuantity
+
 
 --
 -- eatingParam =  { title: "Eating"
@@ -466,10 +492,34 @@ applyRatio ( Ratio a { ratio: ratio } ) = updateQty
     updateQty ( Stock _ _ ) =
       Stock IncompatibleQuantity IncompatibleQuantity
 
+eApplyRatio :: forall a. Ratio a -> Quantity a -> Quantity a
+eApplyRatio (Ratio a { ratio: ratio }) qty =
+  appRatio ratio qty
+  where
+    appRatio :: Number -> Quantity a -> Quantity a
+    appRatio r (Weight a w) = Weight a $ - (r * w)
+    appRatio r (Volume a v) = Volume a $ - (r * v)
+    appRatio r IncompatibleQuantity = IncompatibleQuantity
+
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
 eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
   State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
                   binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
+
+eEating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Matter,
+                                 allFoodWasteProcess :: Process Matter Matter | r ) -> EState -> EState
+eEating {eatedFoodRatio: eatedFoodRatio,
+         allFoodWasteProcess: allFoodWasteProcess} state =
+  EState [
+    Entry {process: EShopping, matter: EFood, matterProperty: AllMatterProperty, quantity: consumed}
+    , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: wasted}
+  ]
+  where
+    shoppedFood = case foldEState EShopping EFood AllMatterProperty state of
+      Just (Entry {quantity: q}) -> q
+      Nothing -> Volume EFood 0.0
+    consumed = eApplyRatio eatedFoodRatio shoppedFood
+    wasted = eApplyProcess allFoodWasteProcess shoppedFood
 
 binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
 binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
