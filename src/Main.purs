@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), MatterProperty(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
+import Calculator.Model (nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), MatterProperty(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)
@@ -97,11 +97,6 @@ eatingParam =  { title: "Eating"
                , edibleWasteRatio: Ratio AnyWaste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
                , nonedibleFoodWasteRatio: Ratio AnyWaste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
-
-eatingBinningInput = Flow { input : 0
-                         , output: 0
-                         , stock: 0
-                         }
 
 scaleToString PersonScale = "Person"
 scaleToString HouseholdScale  = "HouseHold"

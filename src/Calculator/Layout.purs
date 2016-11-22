@@ -1,6 +1,6 @@
 module Calculator.Layout (interface) where
 
-import Calculator.Model (Food, Waste, Token, Flow2,
+import Calculator.Model (Food, Waste,
   Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning, NotImplemented),
   Quantity(IncompatibleQuantity, Volume, Weight),
   State(State), SystemState(SystemState), Stock(Stock), Food(..), Waste(..))
@@ -19,24 +19,28 @@ import Text.Smolder.HTML.Attributes (lang, charset, httpEquiv, content, name, re
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 import Prelude hiding (div, id)
 
+type Tok t = { title :: String, details :: String | t }
 
-example4 :: Rendered
-example4 = render do
-  body ? do
-    color blue
-  fromString "#world" ? do
-    display block
+type Token = Tok ()
+type Flow2 = Tok ( quantity :: Number )
+
+-- example4 :: Rendered
+-- example4 = render do
+--   body ? do
+--     color blue
+--   fromString "#world" ? do
+--     display block
 
 toCss :: Rendered -> String
 toCss r = case renderedSheet r of
               Nothing -> ""
               Just a -> a
 
-layout :: String
-layout = toCss example4
+-- layout :: String
+-- layout = toCss example4
 
-css :: forall e. Markup e
-css = style (text layout)
+-- css :: forall e. Markup e
+-- css = style (text layout)
 
 -- light :: forall e. Boolean -> Markup e
 -- light on = div ! arg $ mempty
@@ -54,15 +58,16 @@ hex hover grid item = li ! className "hex" ! id item.title $ do
                         tokenToHex { title } = a ! hoverClass hover grid $ do
                                      img ! src ( image item.title )
                                      h2 $ text title
-                                     p $ text "Details"
+                                     p $ text item.details
                         tokenToHex _  = a ! hoverClass hover grid $ do
                                      img ! src ( image item.title )
-                        image "Eating" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
-                        image "Binning" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
-                        image "Compost" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
+                        image "Eating" = "/images/cooking.svg"
+                        image "Binning" = "/images/rubbish_bin.svg"
+                        image "Compost" = "/images/composting.svg"
                         image "Garden" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
                         image "Food Garden" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
-                        image "Shopped Food" = "https://farm5.staticflickr.com/4144/5053682635_b348b24698.jpg"
+                        image "Shopped Food" = "/images/shop_food.svg"
+                        image "Managed Waste" = "/images/managed_waste.svg"
                         image "_" = "https://dummyimage.com/200x200&text=+"
                         image _ = ""
 
@@ -84,70 +89,105 @@ flow item = tokenToHex item
                       a ! className "hexIn hover" $ mempty -- $ do
                           --  img ! src "https://dummyimage.com/200x200&text=+"
 
-arrayHex :: Array Token -> Array Token
-arrayHex [ a ]  =  ( replicate 10 { title: "" } )
-                <> ( replicate  9 { title: "" } )
-                <> ( replicate 10 { title: "" } )
-                <> ( replicate  4 { title: "" } ) <> singleton a <> ( replicate 4 { title: "" } )
-                <> ( replicate 10 { title: "" } )
-                <> ( replicate  9 { title: "" } )
+--
+-- optionsTokens CompostingGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Garden"} ]
+-- optionsTokens CompostingFoodGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Food Garden"} ]
+-- optionsTokens WateringGarden = [ { title : "Garden" }]
+-- optionsTokens RainwaterWateringGarden = [ { title : "Collecting" }, { title : "Garden" }]
+-- optionsTokens NotImplemented = [ { title : "NotImplemented" }]
 
+displayState title available consumed = ( showAvailable available) <> " " <> ( showConsumed consumed)
+    where
+      showAvailable ( Weight _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
+      showAvailable ( Volume _ a ) = "Available : " <> ( show $ trunc a ) <> "L"
+      showAvailable ( IncompatibleQuantity ) = "Incompatible Quantity"
+      showConsumed ( Weight _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
+      showConsumed ( Volume _ a ) = "Consumed : " <> ( show $ trunc a ) <> "L"
+      showConsumed ( IncompatibleQuantity ) = "Incompatible Quantity"
 
-arrayHex [ a, b ]  = ( replicate 10 { title: "" } )
-                  <> ( replicate  9 { title: "" } )
-                  <> ( replicate 10 { title: "" } )
-                  <> ( replicate  3 { title: "" } ) <> singleton a <> ( replicate 1 { title: "" } ) <> singleton b <> ( replicate 3 { title: "" } )
-                  <> ( replicate 10 { title: "" } )
-                  <> ( replicate  9 { title: "" } )
+emptyHex = { title: "", details: "" }
 
-arrayHex [ a, b, c ]  = ( replicate 10 { title: "" } )
-                     <> ( replicate  4 { title: "" } ) <> singleton c <> ( replicate  4 { title: "" } )
-                     <> ( replicate 10 { title: "" } )
-                     <> ( replicate  3 { title: "" } ) <> singleton a <> ( replicate 1 { title: "" } ) <> singleton b <> ( replicate 3 { title: "" } )
-                     <> ( replicate 10 { title: "" } )
-                     <> ( replicate  9 { title: "" } )
+arrayHex :: SystemState -> Array Token
+                      -- displayState "Food: " availableFood consumedFood
+                      -- displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
 
+arrayHex sys@(SystemState ( Tuple Eating ( State { shoppedFood : ( Stock availableFood consumedFood )
+                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) ) ) = ( replicate 10 emptyHex )
+                <> ( replicate  9 emptyHex )
+                <> ( replicate 10 emptyHex )
+                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: "..." }
+                                                  <> singleton emptyHex
+                                                  <> singleton { title : "Eating", details: ( displayState "Food: " availableFood consumedFood ) }
+                                                  <> singleton emptyHex
+                                                  <> singleton { title : "Managed Waste", details: "..." } <> ( replicate 2 emptyHex )
+                <> ( replicate 10 emptyHex )
+                <> ( replicate  9 emptyHex )
 
-arrayHex [ a, b, c, d ]  = ( replicate 10 { title: "" } )
-                        <> ( replicate  4 { title: "" } ) <> singleton c <> ( replicate  4 { title: "" } )
-                        <> ( replicate 10 { title: "" } )
-                        <> ( replicate  3 { title: "" } ) <> singleton a <> ( replicate 1 { title: "" } ) <> singleton b <> ( replicate 3 { title: "" } )
-                        <> ( replicate 10 { title: "" } )
-                        <> ( replicate  4 { title: "" } ) <> singleton d <> ( replicate  4 { title: "" } )
+arrayHex sys@(SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 emptyHex )
+                  <> ( replicate  9 emptyHex )
+                  <> ( replicate 10 emptyHex )
+                  <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
+                                               <> ( replicate 1 emptyHex )
+                                               <> singleton { title: "Binning", details: "" } <> ( replicate 3 emptyHex )
+                  <> ( replicate 10 emptyHex )
+                  <> ( replicate  9 emptyHex )
 
-arrayHex _  = ( replicate 10 { title: "" } )
-           <> ( replicate  9 { title: "" } )
-           <> ( replicate 10 { title: "" } )
-           <> ( replicate  9 { title: "" } )
-           <> ( replicate 10 { title: "" } )
-           <> ( replicate  9 { title: "" } )
+arrayHex sys@(SystemState ( Tuple Composting state ) ) = ( replicate 10 emptyHex )
+                     <> ( replicate  4 emptyHex ) <> singleton {title: "Composting", details: ""}  <> ( replicate 4 emptyHex )
+                     <> ( replicate 10 emptyHex )
+                     <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
+                                                  <> ( replicate 1 emptyHex )
+                                                  <> singleton  { title: "Binning", details: "" }
+                                                  <> ( replicate 3 emptyHex )
+                     <> ( replicate 10 emptyHex )
+                     <> ( replicate  9 emptyHex )
+--
+--
+-- arrayHex [ a, b, c, d ]  = ( replicate 10 { title: "" } )
+--                         <> ( replicate  4 { title: "" } ) <> singleton c <> ( replicate  4 { title: "" } )
+--                         <> ( replicate 10 { title: "" } )
+--                         <> ( replicate  3 { title: "" } ) <> singleton a <> ( replicate 1 { title: "" } ) <> singleton b <> ( replicate 3 { title: "" } )
+--                         <> ( replicate 10 { title: "" } )
+--                         <> ( replicate  4 { title: "" } ) <> singleton d <> ( replicate  4 { title: "" } )
 
-hexes :: forall e. Boolean -> Boolean -> Array Token -> Markup e
-hexes hover grid arr = do
+arrayHex _  = ( replicate 10 emptyHex )
+           <> ( replicate  9 emptyHex )
+           <> ( replicate 10 emptyHex )
+           <> ( replicate  9 emptyHex )
+           <> ( replicate 10 emptyHex )
+           <> ( replicate  9 emptyHex )
+
+hexes :: forall e. Boolean -> Boolean -> SystemState -> Markup e
+hexes hover grid state = do
              ul ! className "hexGrid" $ do
-               foldMap ( hex hover grid ) ( arrayHex arr )
+               foldMap ( hex hover grid ) ( arrayHex  state )
 
-emptyArrow = { title: "", quantity: 0.0 }
+emptyArrow = { title: "", quantity: 0.0, details: "" }
 
-arrayArrow :: Array Token -> Array Flow2
-arrayArrow [ _ ]  = ( replicate 10 emptyArrow )
+arrayArrow :: SystemState -> Array Flow2
+arrayArrow sys@(SystemState ( Tuple Eating state ) ) =
+                     ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
-                  <> ( replicate  3 emptyArrow ) <> singleton  { title: "_", quantity: 2.0 } <> singleton  emptyArrow <> singleton  { title: "_", quantity: 2.0 } <> ( replicate 3 emptyArrow )
-                  <> ( replicate 10 emptyArrow )
-                  <> ( replicate  9 emptyArrow )
-
-arrayArrow [ _, _ ]  = ( replicate 10 emptyArrow )
-                  <> ( replicate  9 emptyArrow )
-                  <> ( replicate 10 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0 } <> ( replicate 4 emptyArrow )
+                  <> ( replicate  3 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" }
+                                                 <> singleton  emptyArrow
+                                                 <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
-arrayArrow [ _, _, _ ]  = ( replicate 10 emptyArrow )
+arrayArrow sys@(SystemState ( Tuple EatingBinning state ) ) =
+                     ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: 2.0 } <> ( replicate 5 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0 } <> ( replicate 4 emptyArrow )
+                  <> ( replicate 10 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 4 emptyArrow )
+                  <> ( replicate 10 emptyArrow )
+                  <> ( replicate  9 emptyArrow )
+
+arrayArrow sys@(SystemState ( Tuple Composting state ) ) =
+                     ( replicate 10 emptyArrow )
+                  <> ( replicate  9 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: 2.0, details: "" } <> ( replicate 5 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 4 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
@@ -173,51 +213,25 @@ arrayArrow _  = ( replicate 10 emptyArrow )
            <> ( replicate 10 emptyArrow )
            <> ( replicate  9 emptyArrow )
 
-arrows :: forall e. Boolean -> Boolean -> Array Token -> Markup e
-arrows hover grid arr = do
+arrows :: forall e. Boolean -> Boolean -> SystemState -> Markup e
+arrows hover grid state = do
              ul ! className "hexGrid flows" $ do
-               foldMap flow ( arrayArrow arr )
+               foldMap flow ( arrayArrow state )
 
 
 -- controls ::
 tokenList :: forall e. Array Token -> Markup e
 tokenList = (ul <<< foldMap (li <<< text <<< _.title ))
 
-optionsTokens Eating = [ { title : "Eating" } ]
-optionsTokens EatingBinning = [ { title : "Eating" }, { title: "Binning"} ]
-optionsTokens Composting = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"} ]
-optionsTokens CompostingGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Garden"} ]
-optionsTokens CompostingFoodGarden = [ { title : "Eating" }, { title: "Binning"}, {title: "Composting"}, { title: "Food Garden"} ]
-optionsTokens WateringGarden = [ { title : "Garden" }]
-optionsTokens RainwaterWateringGarden = [ { title : "Collecting" }, { title : "Garden" }]
-optionsTokens NotImplemented = [ { title : "NotImplemented" }]
 
 -- flowsSystem sys =
 -- tokenSystem sys =
 
-displayState title available consumed = div ! className "center" $ do
-                        text title
-                        div ! className "center" $ do
-                          text $ ( showAvailable available)
-                        div ! className "center" $ do
-                          text $ ( showConsumed consumed)
-    where
-      showAvailable ( Weight _ a ) = "Available : " <> ( show $ trunc a ) <> "kg"
-      showAvailable ( Volume _ a ) = "Available : " <> ( show $ trunc a ) <> "L"
-      showAvailable ( IncompatibleQuantity ) = "Incompatible Quantity"
-      showConsumed ( Weight _ a ) = "Consumed : " <> ( show $ trunc a ) <> "kg"
-      showConsumed ( Volume _ a ) = "Consumed : " <> ( show $ trunc a ) <> "L"
-      showConsumed ( IncompatibleQuantity ) = "Incompatible Quantity"
-
-
 interface :: forall e. Boolean -> Boolean -> SystemState -> Markup e
-interface hover grid ( SystemState ( Tuple opt ( State { shoppedFood : ( Stock availableFood consumedFood )
-                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) ) ) = do
-                      displayState "Food: " availableFood consumedFood
-                      displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
+interface hover grid state = do
                         -- text $ ( "Binned Food: " <> show ( state.binnedFood ) )
                         -- text $ ( "Managed Waste: " <> show ( state.managedWaste ) )
-                      arrows true false $ optionsTokens opt
-                      hexes hover grid $ optionsTokens opt
+                      arrows true false state
+                      hexes hover grid state
                       -- div ! className "center" $ do
                       --   tokenList arr

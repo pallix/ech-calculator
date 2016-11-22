@@ -1,7 +1,4 @@
-module Calculator.Model (Token,
-                         Flow2,
-                         Tok,
-                         Flow(Flow),
+module Calculator.Model (Flow(Flow),
                          nexusSystem,
                          flowParams,
                          Stock(..),
@@ -33,12 +30,6 @@ import Data.Foldable (foldl)
 import Data.Array (filter, head, tail)
 import Data.Maybe (Maybe(..))
 -- import Data.Control.Monad (return)
-
-
-type Tok t = { title :: String | t }
-
-type Token = Tok ()
-type Flow2 = Tok ( quantity :: Number )
 
 --
 -- Specs / Tests
