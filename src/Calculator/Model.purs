@@ -29,7 +29,8 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.Generic
 import Data.Foldable (foldl)
-import Data.Array (takeWhile)
+import Data.Array (filter, head, tail)
+import Data.Maybe (Maybe(..))
 -- import Data.Control.Monad (return)
 
 
@@ -234,13 +235,44 @@ data State = State { shoppedFood :: Stock ( Quantity Food )
 data SystemState = SystemState ( Tuple Options State )
 
 -- model for the event sourcing
-data EProcess = EShopping | EEating | EBinning
--- instance eprocessEq :: Eq EProcess where
---   eq a b =
+data EProcess = EShopping | EEating | EBinning | AllEProcess
 
-data Matter = Food | Waste
+derive instance genericEProcess :: Generic EProcess
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked
+instance eprocessEq :: Eq EProcess where
+  eq a b = case [a, b] of
+    [EShopping, EShopping] -> true
+    [EEating, EEating] -> true
+    [EBinning, EBinning] -> true
+    [AllEProcess, _] -> true
+    [_, AllEProcess] -> true
+    _ -> false
+
+data Matter = Food | Waste | AllMatter
+
+derive instance genericMatter :: Generic Matter
+
+instance matterEq :: Eq Matter where
+  eq a b = case [a, b] of
+    [Food, Food] -> true
+    [Waste, Waste] -> true
+    [AllMatter, _] -> true
+    [_, AllMatter] -> true
+    _ -> false
+
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | AllMatterProperty
+
+derive instance genericMatterProperty :: Generic MatterProperty
+
+instance matterProperty :: Eq MatterProperty where
+  eq a b = case [a, b] of
+    [Edible, Edible] -> true
+    [NonEdible, NonEdible] -> true
+    [Shopped, Shopped] -> true
+    [Cooked, Cooked] -> true
+    [AllMatterProperty, _] -> true
+    [_, AllMatterProperty] -> true
+    _ -> false
 
 data Entry = Entry { process :: EProcess
                    , matter :: Matter
@@ -248,35 +280,47 @@ data Entry = Entry { process :: EProcess
                    , quantity :: Quantity Matter
                    }
 
+derive instance genericEntry :: Generic Entry
+
+instance showEntry :: Show Entry where
+  show = gShow
+
 data EState = EState (Array Entry)
 
 initEState = EState [ Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
-                    , Entry {process: EEating, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)} ]
+                    , Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
+                    , Entry {process: EEating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
 
-foldEState :: EState -> Number -- Quantity Matter
-foldEState (EState states) =
-  foldl sumQuantity 0.0 quantities
+
+hasProcess :: EProcess -> Entry -> Boolean
+hasProcess process (Entry {process: p}) =
+  p == process
+
+hasMatter :: Matter -> Entry -> Boolean
+hasMatter matter (Entry {matter: m}) =
+  m == matter
+
+hasMatterProperty :: MatterProperty -> Entry -> Boolean
+hasMatterProperty matterProperty (Entry {matterProperty: mp}) =
+  mp == matterProperty
+
+foldEState :: EProcess -> Matter -> MatterProperty -> EState -> Maybe Entry
+foldEState process matter matterProperty (EState states) =
+  case head quantities of
+    Nothing -> Nothing
+    Just h -> case tail quantities of
+      Nothing -> Just $ makeEntry h
+      Just t -> Just (makeEntry $ foldl sumQuantity h t)
   where
-    quantities = map getQuantity states
-    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
-    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
-    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
-    sumQuantity acc qty = acc + qty
-
-isProcess :: EProcess -> Entry -> Boolean
-isProcess process (Entry {process: p}) =
-  true -- TODO
-
-foldEStateOnProcess :: EProcess -> EState -> Number -- Quantity Matter
-foldEStateOnProcess process (EState states) =
-  foldl sumQuantity 0.0 quantities
-  where
-    states' = takeWhile (isProcess process) states
+    states' = filter qualifies states
+    qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
     quantities = map getQuantity states'
-    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
-    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
-    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
-    sumQuantity acc qty = acc + qty
+    getQuantity (Entry {quantity: q}) = q
+    sumQuantity acc qty = acc <> qty
+    makeEntry q = Entry { process: process
+                        , matter: matter
+                        , matterProperty: matterProperty
+                        , quantity: q}
 
 -- /model for the event sourcing
 
