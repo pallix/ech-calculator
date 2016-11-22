@@ -1,9 +1,34 @@
-module Calculator.Model (Token, Flow2, Tok, Flow(Flow), nexusSystem, flowParams, Stock(..), Food(..), Waste(..), Ratio(..), Process(..), Quantity(..), Scale(..), SystemParam(..), Options(..), State(..))  where
+module Calculator.Model (Token,
+                         Flow2,
+                         Tok,
+                         Flow(Flow),
+                         nexusSystem,
+                         flowParams,
+                         Stock(..),
+                         Food(..),
+                         Waste(..),
+                         Ratio(..),
+                         Process(..),
+                         Quantity(..),
+                         Scale(..),
+                         SystemParam(..),
+                         Options(..),
+                         State(..),
+                         initEState,
+                         foldEState,
+                         EProcess(..),
+                         Matter(..),
+                         EState(..),
+                         Entry(..),
+                         MatterProperty(..)
+                        )  where
 
 import Prelude
 -- import Boolean (and)
 import Data.Tuple (Tuple(..))
 import Data.Generic
+import Data.Foldable (foldl)
+import Data.Array (takeWhile)
 -- import Data.Control.Monad (return)
 
 
@@ -204,6 +229,53 @@ data State = State { shoppedFood :: Stock ( Quantity Food )
                    , sharedFood :: Stock ( Quantity Food )
                    , managedWaste:: Stock ( Quantity Waste )
                    }
+
+-- model for the event sourcing
+data EProcess = EShopping | EEating | EBinning
+-- instance eprocessEq :: Eq EProcess where
+--   eq a b = 
+
+data Matter = Food | Waste
+
+data MatterProperty = Edible | NonEdible | Shopped | Cooked
+
+data Entry = Entry { process :: EProcess
+                   , matter :: Matter
+                   , matterProperty :: MatterProperty
+                   , quantity :: Quantity Matter
+                   }
+
+data EState = EState (Array Entry)
+
+initEState = EState [ Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
+                    , Entry {process: EEating, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)} ]
+
+foldEState :: EState -> Number -- Quantity Matter
+foldEState (EState states) =
+  foldl sumQuantity 0.0 quantities
+  where
+    quantities = map getQuantity states
+    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
+    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
+    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
+    sumQuantity acc qty = acc + qty
+
+isProcess :: EProcess -> Entry -> Boolean
+isProcess process (Entry {process: p}) =
+  true -- TODO
+
+foldEStateOnProcess :: EProcess -> EState -> Number -- Quantity Matter
+foldEStateOnProcess process (EState states) =
+  foldl sumQuantity 0.0 quantities
+  where
+    states' = takeWhile (isProcess process) states
+    quantities = map getQuantity states'
+    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
+    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
+    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
+    sumQuantity acc qty = acc + qty
+
+-- /model for the event sourcing
 
 derive instance genericFood :: Generic Food
 instance showFood :: Show Food where
