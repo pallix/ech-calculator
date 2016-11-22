@@ -2,9 +2,23 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model (nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), MatterProperty(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
+import Calculator.Model ( nexusSystem
+                        , flowParams
+                        , State(..)
+                        , Matter(..)
+                        , MatterProperty(..)
+                        , Entry(..)
+                        , SystemState(..)
+                        , Scale(..)
+                        , Quantity(..)
+                        , Ratio(..)
+                        , Process(..)
+                        , Transform(..)
+                        , SystemParam(..)
+                        , Options(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
+import Debug.Trace (spy)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc)
@@ -28,20 +42,20 @@ import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 
-data Action = Food
-            | Bin
-            | Compost
-            | Garden
-            | FoodGarden
-            | Reset
-
-label :: Action -> String
-label Food = "Food"
-label Bin = "Bin"
-label Compost = "Compost"
-label Garden = "Garden"
-label FoodGarden = "FoodGarden"
-label Reset = "Reset"
+-- data Action = Food
+--             | Bin
+--             | Compost
+--             | Garden
+--             | FoodGarden
+--             | Reset
+--
+-- label :: Action -> String
+-- label Food = "Food"
+-- label Bin = "Bin"
+-- label Compost = "Compost"
+-- label Garden = "Garden"
+-- label FoodGarden = "FoodGarden"
+-- label Reset = "Reset"
 
 -- type State = Array Token
 
@@ -60,16 +74,16 @@ label Reset = "Reset"
 -- list = foldp id ["Food"] actions
 
 
-optionsLabel Eating = "Food"
+optionsLabel EatingOnly = "Food"
 optionsLabel EatingBinning = "Food & Waste"
-optionsLabel Composting = "Composting"
+optionsLabel CompostingOnly = "Composting"
 optionsLabel CompostingGarden = "Composting & Garden"
 optionsLabel CompostingFoodGarden = "Composting & Food Garden"
 optionsLabel WateringGarden = "Watering Garden"
 optionsLabel RainwaterWateringGarden = "Rainwater Collection & Garden"
 optionsLabel NotImplemented = "Not Implemented Yet"
 
-nexusOptions = select "Options" (Eating :| [ EatingBinning, Composting, CompostingGarden, CompostingFoodGarden, WateringGarden, RainwaterWateringGarden ] ) optionsLabel
+nexusOptions = select "Options" (EatingOnly :| [ EatingBinning, CompostingOnly, CompostingGarden, CompostingFoodGarden, WateringGarden, RainwaterWateringGarden ] ) optionsLabel
 
 systemParamWithConstants = SystemParam <$> { houseHoldSize: _
                                            , estatePopulation : 200
@@ -80,29 +94,22 @@ systemParamWithConstants = SystemParam <$> { houseHoldSize: _
 
 systemParam = systemParamWithConstants ( 0 )
 
-eatingInitState = State { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
-                        , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
-                        , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
-                        , sharedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
-                        , cookedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
-                        }
-
-initEState = EState [ Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood 120.0}
-                    , Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood (-20.0)}
-                    , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: Weight EWaste 10.0} ]
+initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
+                    , Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
+                    , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
 
 eatingParam =  { title: "Eating"
-               , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
-               , allFoodWasteProcess: Process AnyFood AnyWaste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteRatio: Ratio AnyWaste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteRatio: Ratio AnyWaste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+               , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
+               , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteRatio: Ratio Waste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+               , nonedibleFoodWasteRatio: Ratio Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
 
 scaleToString PersonScale = "Person"
 scaleToString HouseholdScale  = "HouseHold"
 scaleToString EstateScale  = "Estate"
 
-controllableParam eatedFoodRatio = flowParams { eatingParam = eatingParam { eatedFoodRatio = Ratio AnyFood { ratio: eatedFoodRatio } } }
+controllableParam eatedFoodRatio = flowParams { eatingParam = eatingParam { eatedFoodRatio = Ratio Food { ratio: eatedFoodRatio } } }
 
 systemState :: Options -> State -> SystemState
 systemState opt state = SystemState ( Tuple opt state )
@@ -111,10 +118,11 @@ systemState opt state = SystemState ( Tuple opt state )
 --
 ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
-               <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+               <*> ( spy <$> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
                                   <*> pure systemParam
                                   <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
-                                  <*> ( systemState <$> nexusOptions <*> ( pure eatingInitState ) ) )
+                                  <*> ( systemState <$> nexusOptions
+                                                    <*> ( pure initState ) ) ) )
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )

@@ -1,9 +1,12 @@
 module Calculator.Layout (interface) where
 
-import Calculator.Model (Food, Waste,
-  Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning, NotImplemented),
-  Quantity(IncompatibleQuantity, Volume, Weight),
-  State(State), SystemState(SystemState), Stock(Stock), Food(..), Waste(..))
+import Calculator.Model (
+  Options(..),
+  Process(..),
+  Matter(..),
+  MatterProperty(..),
+  Quantity(..),
+  State(State), SystemState(..), foldState)
 
 import Math (trunc)
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
@@ -107,23 +110,25 @@ displayState title available consumed = ( showAvailable available) <> " " <> ( s
 
 emptyHex = { title: "", details: "" }
 
+shoppedFood = foldState Shopping Food AllMatterProperty
+cookedFood = foldState Eating Food AllMatterProperty
+
 arrayHex :: SystemState -> Array Token
                       -- displayState "Food: " availableFood consumedFood
                       -- displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
 
-arrayHex sys@(SystemState ( Tuple Eating ( State { shoppedFood : ( Stock availableFood consumedFood )
-                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState ( Tuple EatingOnly state ) ) = ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
                 <> ( replicate 10 emptyHex )
-                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: "..." }
+                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: show $ shoppedFood state }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Eating", details: ( displayState "Food: " availableFood consumedFood ) }
+                                                  <> singleton { title : "Eating", details: show $ cookedFood state }
                                                   <> singleton emptyHex
                                                   <> singleton { title : "Managed Waste", details: "..." } <> ( replicate 2 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
 
-arrayHex sys@(SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 emptyHex )
                   <> ( replicate  9 emptyHex )
                   <> ( replicate 10 emptyHex )
                   <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
@@ -132,7 +137,7 @@ arrayHex sys@(SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 empty
                   <> ( replicate 10 emptyHex )
                   <> ( replicate  9 emptyHex )
 
-arrayHex sys@(SystemState ( Tuple Composting state ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState ( Tuple CompostingOnly state ) ) = ( replicate 10 emptyHex )
                      <> ( replicate  4 emptyHex ) <> singleton {title: "Composting", details: ""}  <> ( replicate 4 emptyHex )
                      <> ( replicate 10 emptyHex )
                      <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
@@ -165,7 +170,7 @@ hexes hover grid state = do
 emptyArrow = { title: "", quantity: 0.0, details: "" }
 
 arrayArrow :: SystemState -> Array Flow2
-arrayArrow sys@(SystemState ( Tuple Eating state ) ) =
+arrayArrow sys@(SystemState ( Tuple EatingOnly state ) ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
@@ -183,7 +188,7 @@ arrayArrow sys@(SystemState ( Tuple EatingBinning state ) ) =
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
-arrayArrow sys@(SystemState ( Tuple Composting state ) ) =
+arrayArrow sys@(SystemState ( Tuple CompostingOnly state ) ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: 2.0, details: "" } <> ( replicate 5 emptyArrow )
@@ -227,7 +232,7 @@ tokenList = (ul <<< foldMap (li <<< text <<< _.title ))
 -- flowsSystem sys =
 -- tokenSystem sys =
 
-interface :: forall e. Boolean -> Boolean -> SystemState -> Markup e
+-- interface :: forall e. Boolean -> Boolean -> SystemState -> Markup e
 interface hover grid state = do
                         -- text $ ( "Binned Food: " <> show ( state.binnedFood ) )
                         -- text $ ( "Managed Waste: " <> show ( state.managedWaste ) )
