@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
+import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)
@@ -10,6 +10,7 @@ import DOM (DOM)
 import Data.Array (cons, snoc)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber)
+import Data.Tuple (Tuple(..))
 import Data.Maybe (maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
@@ -86,6 +87,14 @@ eatingInitState = State { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weig
                         , cookedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
                         }
 
+initState = EState [ { process: EShopping, matter:  } ]
+data Entry = Entry { process :: EProcess
+                   , matter :: Matter
+                   , matterProperty :: MatterProperty
+                   , quantity :: Quantity Matter
+                   }
+
+data EProcess = EShopping | EEating | EBinning
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
@@ -105,32 +114,46 @@ scaleToString EstateScale  = "Estate"
 
 controllableParam eatedFoodRatio = flowParams { eatingParam = eatingParam { eatedFoodRatio = Ratio AnyFood { ratio: eatedFoodRatio } } }
 
+systemState :: Options -> State -> SystemState
+systemState opt state = SystemState ( Tuple opt state )
+
 -- ui :: forall e e'. UI e (Markup e')
-ui Eating = interface <$> ( boolean "Info" true )
-                       <*> ( boolean "Grid" false )
-                       <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
-                                          <*> pure systemParam
-                                          <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
-                                          <*> pure eatingInitState
-                                          <*> pure Eating )
+--
+ui = interface <$> ( boolean "Info" true )
+               <*> ( boolean "Grid" false )
+               <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+                                  <*> pure systemParam
+                                  <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+                                  <*> ( systemState <$> nexusOptions <*> ( pure eatingInitState ) ) )
 
-ui EatingBinning = interface <$> ( boolean "Info" true )
-                   <*> ( boolean "Grid" false )
-                   <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
-                         <*> pure systemParam
-                         <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
-                         <*> pure eatingInitState
-                         <*> pure EatingBinning )
+--
+-- ui opt = interface <$> ( boolean "Info" true )
+--                        <*> ( boolean "Grid" false )
+--                        <*> pure opt
+--                        <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+--                                           <*> pure systemParam
+--                                           <*> fieldset ( ( optionsLabel opt ) <> "Parameters" ) ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+--                                           <*> pure eatingInitState
+--                                           <*> pure opt )
+--
+-- ui EatingBinning = interface <$> ( boolean "Info" true )
+--                    <*> ( boolean "Grid" false )
+--                    <*> pure EatingBinning
+--                    <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+--                          <*> pure systemParam
+--                          <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+--                          <*> pure eatingInitState
+--                          <*> pure EatingBinning )
+--
+-- ui _ = interface <$> ( boolean "Info" true )
+--                  <*> ( boolean "Grid" false )
+--                  <*> ( nexusSystem <$> pure PersonScale
+--                                    <*> pure systemParam
+--                                    <*> pure ( controllableParam 0.0 )
+--                                    <*> pure eatingInitState
+--                                    <*> pure NotImplemented )
 
-ui _ = interface <$> ( boolean "Info" true )
-                 <*> ( boolean "Grid" false )
-                 <*> ( nexusSystem <$> pure PersonScale
-                                   <*> pure systemParam
-                                   <*> pure ( controllableParam 0.0 )
-                                   <*> pure eatingInitState
-                                   <*> pure NotImplemented )
-
-inner = runFlareHTML "controls" "output" <<< ui
+-- inner = runFlareHTML "controls" "output" <<< ui
 
 -- <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
 
@@ -151,10 +174,9 @@ inner = runFlareHTML "controls" "output" <<< ui
 --     test = boolean "Test" false
 --
 
-nexus = nexusOptions
-
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit
-main = runFlareWith "select" inner nexus
+-- main = runFlareWith "select" inner nexusOptions
+main = runFlareHTML "controls" "output" ui
 
   -- runFlareWith "controls" "output" ui2
   -- runFlareDrawing "controls1" "output1" uidrawing

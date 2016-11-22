@@ -3,7 +3,7 @@ module Calculator.Layout (interface) where
 import Calculator.Model (Food, Waste, Token, Flow2,
   Options(Eating, RainwaterWateringGarden, WateringGarden, CompostingFoodGarden, CompostingGarden, Composting, EatingBinning, NotImplemented),
   Quantity(IncompatibleQuantity, Volume, Weight),
-  State(State), Stock(Stock), Food(..), Waste(..))
+  State(State), SystemState(SystemState), Stock(Stock), Food(..), Waste(..))
 
 import Math (trunc)
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
@@ -13,10 +13,11 @@ import Data.Foldable (foldMap)
 import Data.Maybe (Maybe(Nothing, Just))
 import Data.Monoid (mempty)
 import Data.Generic
+import Data.Tuple (Tuple(..))
 import Text.Smolder.HTML (div, li, ul, table, td, tr, ul, li, p, h2, a, img, style)
-import Text.Smolder.HTML.Attributes (lang, charset, httpEquiv, content, name, rel, href, className, src)
+import Text.Smolder.HTML.Attributes (lang, charset, httpEquiv, content, name, rel, href, className, src, id)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-import Prelude hiding (div)
+import Prelude hiding (div, id)
 
 
 example4 :: Rendered
@@ -43,7 +44,7 @@ css = style (text layout)
 --             | otherwise = mempty
 
 hex :: forall e. Boolean -> Boolean -> Token -> Markup e
-hex hover grid item = li ! className "hex" $ do
+hex hover grid item = li ! className "hex" ! id item.title $ do
                         tokenToHex item
                       where
                         hoverClass false false = className "hexIn"
@@ -209,14 +210,14 @@ displayState title available consumed = div ! className "center" $ do
       showConsumed ( IncompatibleQuantity ) = "Incompatible Quantity"
 
 
-interface :: forall e. Boolean -> Boolean -> State -> Markup e
-interface hover grid ( State { shoppedFood : ( Stock availableFood consumedFood )
-                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) = do
+interface :: forall e. Boolean -> Boolean -> SystemState -> Markup e
+interface hover grid ( SystemState ( Tuple opt ( State { shoppedFood : ( Stock availableFood consumedFood )
+                             , binnedFoodWaste: ( Stock availableBinnedFoodWaste consumedBinnedFoodWaste ) } ) ) ) = do
                       displayState "Food: " availableFood consumedFood
                       displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
                         -- text $ ( "Binned Food: " <> show ( state.binnedFood ) )
                         -- text $ ( "Managed Waste: " <> show ( state.managedWaste ) )
-                      arrows true false $ optionsTokens Eating
-                      hexes hover grid $ optionsTokens Eating
+                      arrows true false $ optionsTokens opt
+                      hexes hover grid $ optionsTokens opt
                       -- div ! className "center" $ do
                       --   tokenList arr
