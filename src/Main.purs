@@ -2,7 +2,7 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
+import Calculator.Model (Token, Flow(Flow), nexusSystem, flowParams, State(..), EState(..), EProcess(..), Matter(..), MatterProperty(..), Entry(..), SystemState(..), Scale(..), Quantity(..), Ratio(..), Process(..), Food(..), Waste(..), Stock(..), SystemParam(..), Options(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)
@@ -87,14 +87,9 @@ eatingInitState = State { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weig
                         , cookedFood: Stock ( Weight SharedFood 0.0 ) ( Weight SharedFood 0.0 )
                         }
 
-initState = EState [ { process: EShopping, matter:  } ]
-data Entry = Entry { process :: EProcess
-                   , matter :: Matter
-                   , matterProperty :: MatterProperty
-                   , quantity :: Quantity Matter
-                   }
-
-data EProcess = EShopping | EEating | EBinning
+initEState = EState [ Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood 120.0}
+                    , Entry {process: EShopping, matter: EFood, matterProperty: Shopped, quantity: Weight EFood (-20.0)}
+                    , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: Weight EWaste 10.0} ]
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio AnyFood { ratio: 0.81 } -- 1 - allFoodWasteRatio
