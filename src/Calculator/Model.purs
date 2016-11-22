@@ -14,6 +14,7 @@ module Calculator.Model (Token,
                          SystemParam(..),
                          Options(..),
                          State(..),
+                         SystemState(..),
                          initEState,
                          foldEState,
                          EProcess(..),
@@ -224,16 +225,18 @@ data Scale = PersonScale | HouseholdScale | EstateScale
 data Ratio a = Ratio a { ratio :: Number }
 
 data State = State { shoppedFood :: Stock ( Quantity Food )
-                   , cookedFood :: Stock ( Quantity Food )
-                   , binnedFoodWaste :: Stock ( Quantity Waste )
-                   , sharedFood :: Stock ( Quantity Food )
-                   , managedWaste:: Stock ( Quantity Waste )
-                   }
+                                   , cookedFood :: Stock ( Quantity Food )
+                                   , binnedFoodWaste :: Stock ( Quantity Waste )
+                                   , sharedFood :: Stock ( Quantity Food )
+                                   , managedWaste:: Stock ( Quantity Waste )
+                                   }
+
+data SystemState = SystemState ( Tuple Options State )
 
 -- model for the event sourcing
 data EProcess = EShopping | EEating | EBinning
 -- instance eprocessEq :: Eq EProcess where
---   eq a b = 
+--   eq a b =
 
 data Matter = Food | Waste
 
@@ -299,17 +302,28 @@ derive instance genericStockWaste :: Generic ( Stock ( Quantity Waste ) )
 instance showStockWaste :: ( Show a ) => Show ( Stock ( Quantity Waste ) ) where
     show ( Stock a b ) = "Available stock: " <> ( show a ) <> "\nConsumed stock: " <> ( show b )
 
-derive instance genericState :: Generic State
-
-instance showState :: Show State where
+derive instance genericOptions :: Generic Options
+instance showOptions :: Show Options where
     show = gShow
 
-systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
-                        , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
-                        , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
-                        , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
-                        , sharedFood: _
-                        }
+derive instance genericState :: Generic State
+
+instance showState :: Show State  where
+    show = gShow
+
+
+derive instance genericSystemState :: Generic SystemState
+
+instance showSystemState :: Show SystemState  where
+    show = gShow
+
+
+-- systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
+--                         , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
+--                         , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
+--                         , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
+--                         , sharedFood: _
+--                         }
 
 type FlowParams = { eatingParam ::
                      { title :: String
@@ -409,7 +423,7 @@ applyRatio ( Ratio a { ratio: ratio } ) = updateQty
       Stock IncompatibleQuantity IncompatibleQuantity
 
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
-eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) = 
+eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
   State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
                   binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
 
@@ -427,55 +441,63 @@ composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedF
 
 
 
-nexusSystem :: Scale -> SystemParam -> FlowParams -> State -> Options -> State
-nexusSystem scale systemP { eatingParam: eatingP } input Eating = eatingOutput
+nexusSystem :: Scale -> SystemParam -> FlowParams -> SystemState -> SystemState
+-- nexusSystem scale systemP { eatingParam: eatingP } sys@(Tuple option input) = SystemState ( Tuple option
+--   case option of
+--     Eating -> eating eatingP input
+--     Eating -> eatingOutput
+--   where
+--     eatingOutput =
+
+
+
+nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } sys@(SystemState ( Tuple Eating input ) ) = SystemState $ Tuple Eating eatingOutput
   where
     eatingOutput = eating eatingP input
 
-nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } input EatingBinning =
-  binningOutput
+
+nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } sys@(SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput
   where
     eatingOutput = eating eatingP input
     binningOutput = binning binningP eatingOutput
     -- eatingBinningOutput = eatingOutput -- <> binningOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input Composting = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple Composting input ) ) = SystemState $ Tuple Composting eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input CompostingGarden = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple CompostingGarden input ) ) = SystemState $ Tuple CompostingGarden eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input CompostingFoodGarden = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple CompostingFoodGarden input ) ) = SystemState $ Tuple CompostingFoodGarden eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input WateringGarden = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple WateringGarden input ) ) = SystemState $ Tuple WateringGarden eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input RainwaterWateringGarden = eatingBinningOutput
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple RainwaterWateringGarden input ) ) = SystemState $ Tuple RainwaterWateringGarden eatingBinningOutput
   where
     eatingOutput = eating eatingP input
     -- compostingOutput = composting compostingP eatingOutput
     -- binningOutput = binning binningP eatingOutput
     eatingBinningOutput = eatingOutput
 
-nexusSystem scale systemP { eatingParam: eatingP } input NotImplemented =
-  State { shoppedFood: Stock ( Weight ShoppedFood 0.0 ) ( Weight ShoppedFood 0.0 )
+nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple NotImplemented input ) ) = SystemState $ Tuple NotImplemented $ State { shoppedFood: Stock ( Weight ShoppedFood 0.0 ) ( Weight ShoppedFood 0.0 )
         , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
         , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
         , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
