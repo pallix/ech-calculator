@@ -523,6 +523,22 @@ eEating {eatedFoodRatio: eatedFoodRatio,
     consumed = eApplyRatio eatedFoodRatio shoppedFood
     wasted = eApplyProcess allFoodWasteProcess shoppedFood
 
+
+eBinning :: forall r. FlowParam (allFoodWasteProcess :: Process Matter Matter | r ) -> EState -> EState
+eBinning {allFoodWasteProcess: allFoodWasteProcess} state@(EState entries) =
+  EState $
+  entries <>
+  [
+    -- TODO: issue an entry to remove EWaste
+    Entry {process: EBinning, matter: EManagedWaste, matterProperty: NonEdible, quantity: managed}
+  ]
+  where
+    waste = case foldEState EEating EWaste AllMatterProperty state of
+      Just (Entry {quantity: q}) -> q
+      Nothing -> Volume EWaste 0.0
+    managed = eApplyProcess allFoodWasteProcess waste
+
+
 binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
 binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
   State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
