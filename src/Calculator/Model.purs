@@ -236,7 +236,7 @@ data Matter = Food | Waste
 
 data MatterProperty = Edible | NonEdible | Shopped | Cooked
 
-data Entry = Entry { process :: String
+data Entry = Entry { process :: EProcess
                    , matter :: Matter
                    , matterProperty :: MatterProperty
                    , quantity :: Quantity Matter
@@ -244,7 +244,7 @@ data Entry = Entry { process :: String
 
 data EState = EState (Array Entry)
 
-initEState = [{process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}]
+initEState = EState [Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}]
 
 -- TODO filter on Matter
 foldEState :: EProcess -> Matter -> EState -> Number -- Quantity Matter
