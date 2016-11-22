@@ -28,6 +28,7 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.Generic
 import Data.Foldable (foldl)
+import Data.Array (takeWhile)
 -- import Data.Control.Monad (return)
 
 
@@ -231,6 +232,8 @@ data State = State { shoppedFood :: Stock ( Quantity Food )
 
 -- model for the event sourcing
 data EProcess = EShopping | EEating | EBinning
+-- instance eprocessEq :: Eq EProcess where
+--   eq a b = 
 
 data Matter = Food | Waste
 
@@ -244,11 +247,11 @@ data Entry = Entry { process :: EProcess
 
 data EState = EState (Array Entry)
 
-initEState = EState [Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}]
+initEState = EState [ Entry {process: EShopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
+                    , Entry {process: EEating, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)} ]
 
--- TODO filter on Matter
-foldEState :: EProcess -> Matter -> EState -> Number -- Quantity Matter
-foldEState process matter (EState states) =
+foldEState :: EState -> Number -- Quantity Matter
+foldEState (EState states) =
   foldl sumQuantity 0.0 quantities
   where
     quantities = map getQuantity states
@@ -256,6 +259,23 @@ foldEState process matter (EState states) =
     getQuantity (Entry {quantity: (Volume _ qty)}) = qty
     getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
     sumQuantity acc qty = acc + qty
+
+isProcess :: EProcess -> Entry -> Boolean
+isProcess process (Entry {process: p}) =
+  true -- TODO
+
+foldEStateOnProcess :: EProcess -> EState -> Number -- Quantity Matter
+foldEStateOnProcess process (EState states) =
+  foldl sumQuantity 0.0 quantities
+  where
+    states' = takeWhile (isProcess process) states
+    quantities = map getQuantity states'
+    getQuantity (Entry {quantity: (Weight _ qty)}) = qty
+    getQuantity (Entry {quantity: (Volume _ qty)}) = qty
+    getQuantity (Entry {quantity: IncompatibleQuantity}) = 0.0
+    sumQuantity acc qty = acc + qty
+
+-- /model for the event sourcing
 
 derive instance genericFood :: Generic Food
 instance showFood :: Show Food where
