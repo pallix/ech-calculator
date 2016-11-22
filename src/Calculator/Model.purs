@@ -240,7 +240,7 @@ instance eprocessEq :: Eq EProcess where
     [_, AllEProcess] -> true
     _ -> false
 
-data Matter = EFood | EWaste | AllMatter
+data Matter = EFood | EWaste | EManagedWaste | AllMatter
 
 derive instance genericMatter :: Generic Matter
 
@@ -388,6 +388,7 @@ type EFlowParams = { eatingParam ::
                      , allFoodWasteProcess :: Process Matter Matter
                      }
                   , binningParam :: { title :: String
+                                    , allFoodWasteProcess :: Process Matter Matter
                                     }
                   }
 
@@ -500,10 +501,11 @@ eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFo
 eEating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Matter,
                                  allFoodWasteProcess :: Process Matter Matter | r ) -> EState -> EState
 eEating {eatedFoodRatio: eatedFoodRatio,
-         allFoodWasteProcess: allFoodWasteProcess} state =
-  EState [
-    Entry {process: EShopping, matter: EFood, matterProperty: AllMatterProperty, quantity: consumed}
-    , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: wasted}
+         allFoodWasteProcess: allFoodWasteProcess} state@(EState entries) =
+  EState $
+  entries <>
+  [ Entry {process: EShopping, matter: EFood, matterProperty: AllMatterProperty, quantity: consumed}
+  , Entry {process: EEating, matter: EWaste, matterProperty: NonEdible, quantity: wasted}
   ]
   where
     shoppedFood = case foldEState EShopping EFood AllMatterProperty state of
@@ -511,6 +513,22 @@ eEating {eatedFoodRatio: eatedFoodRatio,
       Nothing -> Volume EFood 0.0
     consumed = eApplyRatio eatedFoodRatio shoppedFood
     wasted = eApplyProcess allFoodWasteProcess shoppedFood
+
+
+eBinning :: forall r. FlowParam (allFoodWasteProcess :: Process Matter Matter | r ) -> EState -> EState
+eBinning {allFoodWasteProcess: allFoodWasteProcess} state@(EState entries) =
+  EState $
+  entries <>
+  [
+    -- TODO: issue an entry to remove EWaste
+    Entry {process: EBinning, matter: EManagedWaste, matterProperty: NonEdible, quantity: managed}
+  ]
+  where
+    waste = case foldEState EEating EWaste AllMatterProperty state of
+      Just (Entry {quantity: q}) -> q
+      Nothing -> Volume EWaste 0.0
+    managed = eApplyProcess allFoodWasteProcess waste
+
 
 binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
 binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
