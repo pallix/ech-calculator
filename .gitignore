@@ -3,3 +3,4 @@
 .pulp-cache
 output
 bower_components
+main.js
