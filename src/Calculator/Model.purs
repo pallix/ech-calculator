@@ -83,6 +83,12 @@ neg (Volume c qty) = Volume c (- qty)
 neg IncompatibleQuantity = IncompatibleQuantity
 neg ZeroQuantity = ZeroQuantity
 
+substract :: forall a. Quantity a -> Quantity a -> Quantity a
+substract (Weight c qty1) (Weight _ qty2) = Weight c (qty1 - qty2)
+substract (Volume c qty1) (Volume _ qty2) = Weight c (qty1 - qty2)
+substract q ZeroQuantity = q
+substract ZeroQuantity q = neg q
+substract _ _ = IncompatibleQuantity
 
 -- -- Kg / Person / Day
 -- data Weight a =
@@ -94,7 +100,7 @@ data Scale = PersonScale | HouseholdScale | EstateScale
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process = Shopping | Eating | Binning | AllProcess
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting
 
 derive instance genericProcess :: Generic Process
 
@@ -107,7 +113,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = Food | Waste | ManagedWaste | GreyWater | AllMatter
+data Matter = AllMatter | Food | Waste | ManagedWaste | GreyWater | Compost
 
 derive instance genericMatter :: Generic Matter
 
@@ -216,6 +222,10 @@ type ProcessParams = { eatingParam ::
                                        , inputRatio :: Ratio Matter
                                        , allFoodWasteProcess :: Transform Matter Matter
                                        }
+                     , wormCompostingParam :: { title :: String
+                                          , inputRatio :: Ratio Matter
+                                          , compostProcess :: Transform Matter Matter
+                                          }
                      }
 
 type ProcessParam = Record
@@ -235,7 +245,16 @@ binningParam = { title: "Binning"
                , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                }
 
-initProcessParams = { eatingParam, binningParam }
+wormCompostingParam = { title: "WormComposting"
+                    -- 'Wormery compost'!B9 * 4 (four turnover per year)
+                  , compostProcess: Transform Waste Compost { ratio: 0.13 * 4.0 }
+                  , inputRatio: Ratio Waste { ratio: 0.6 } -- TODO: it is missing in the sheet, arbitrary number taken
+                  }
+
+initProcessParams = { eatingParam
+                    , binningParam
+                    , wormCompostingParam
+                    }
 
 data Transform a b = Transform a b { ratio :: Number }
 
@@ -303,8 +322,22 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
     waste = foldState Eating Waste AllMatterProperty state
     managed = applyTransform allFoodWasteProcess waste
 
--- composting :: forall r. FlowParam ( r ) -> State -> State
--- composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
+eatingWormComposting :: forall r. ProcessParam (inputRatio :: Ratio Matter,
+                                      compostProcess :: Transform Matter Matter | r ) -> State -> State
+eatingWormComposting {compostProcess,
+                  inputRatio} state@(State entries) =
+  State $
+  entries <>
+  [
+    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: neg wasteInput}
+  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: remaining}
+  , Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: compost}
+  ]
+  where
+    wastedFood =  foldState Eating Waste AllMatterProperty state
+    wasteInput = applyRatio inputRatio wastedFood
+    compost = applyTransform compostProcess wasteInput
+    remaining = substract wasteInput compost
 
 nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
