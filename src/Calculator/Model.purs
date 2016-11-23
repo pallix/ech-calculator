@@ -208,8 +208,8 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
 
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
-    show ( Weight _ a ) = ( show $ trunc a ) <> "Kg"
-    show ( Volume _ a ) = ( show $ trunc a ) <> "L"
+    show ( Weight _ a ) = ( show $ ( trunc a * 10.0 ) / 10.0 ) <> "Kg"
+    show ( Volume _ a ) = ( show $ ( trunc a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
     show ( ZeroQuantity ) = "0"
 
