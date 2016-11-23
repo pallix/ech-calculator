@@ -4,6 +4,7 @@ import Prelude
 import Calculator.Layout (interface)
 import Calculator.Model ( nexusSystem
                         , flowParams
+                        , eatingParam
                         , State(..)
                         , Matter(..)
                         , MatterProperty(..)
@@ -97,13 +98,6 @@ systemParam = systemParamWithConstants ( 0 )
 initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
                     , Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
                     , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
-
-eatingParam =  { title: "Eating"
-               , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
-               , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteRatio: Ratio Waste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteRatio: Ratio Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
-               }
 
 scaleToString PersonScale = "Person"
 scaleToString HouseholdScale  = "HouseHold"
