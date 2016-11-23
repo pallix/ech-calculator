@@ -2,6 +2,8 @@
 
 Engineering Comes Home Calculator using [purescript-flare](https://github.com/sharkdp/purescript-flare).
 
+![](images/screencap.gif)
+
 ## Quick start
 
 You will need Purescript 0.10.x and pulp. See the [Purescript website](http://www.purescript.org/download/) for installation instructions. Then, run:
