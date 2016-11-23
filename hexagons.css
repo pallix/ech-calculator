@@ -92,7 +92,7 @@ a.hexIn.grid {
 }
 
 .flows li.hex.rotate-1 {
-  transform: rotate(-60deg) translateZ(0);
+  transform: rotate(-120deg) skewY(+30deg) translateZ(0);
 }
 
 .hex h2:after {

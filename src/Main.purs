@@ -10,6 +10,8 @@ import Calculator.Model ( nexusSystem
                         , Entry(..)
                         , SystemState(..)
                         , Scale(..)
+                        , Time(..)
+                        , SystemScale(..)
                         , Quantity(..)
                         , Ratio(..)
                         , Process(..)
@@ -77,17 +79,29 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 
 optionsLabel EatingOnly = "Food"
 optionsLabel EatingBinning = "Food & Waste"
-optionsLabel CompostingOnly = "Composting"
-optionsLabel CompostingGarden = "Composting & Garden"
-optionsLabel CompostingFoodGarden = "Composting & Food Garden"
-optionsLabel WateringGarden = "Watering Garden"
-optionsLabel RainwaterWateringGarden = "Rainwater Collection & Garden"
+optionsLabel EatingBinningWormComposting = "Wormery"
+optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
+optionsLabel EatingBinningWormCompostingFoodGarden = "Wormery & Food Garden"
+optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
+optionsLabel EatingBinningWormCompostingFoodGardenWatering = "Food Garden Watering "
+optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
+optionsLabel EatingBinningWormCompostingFoodGardenRainwater = "Rainwater Collection & Food Garden"
+optionsLabel EatingBinningWormCompostingFoodSharing = "Food Sharing"
 optionsLabel NotImplemented = "Not Implemented Yet"
 
-nexusOptions = select "Options" (EatingOnly :| [ EatingBinning, CompostingOnly, CompostingGarden, CompostingFoodGarden, WateringGarden, RainwaterWateringGarden ] ) optionsLabel
+nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
+                                               , EatingBinningWormComposting
+                                               , EatingBinningWormCompostingGarden
+                                               , EatingBinningWormCompostingFoodGarden
+                                               , EatingBinningWormCompostingGardenWatering
+                                               , EatingBinningWormCompostingFoodGardenWatering
+                                               , EatingBinningWormCompostingGardenRainwater
+                                               , EatingBinningWormCompostingFoodGardenRainwater
+                                               , EatingBinningWormCompostingFoodSharing ] ) optionsLabel
 
 systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
                                            , estatePopulation : 200
+                                           , estateAveragePersonPerHousehold : 2.4
                                            , estateFlatsOneBedroom : 70
                                            , estateFlatsTwoBedroom : 23
                                            , estateFlatsThreeBedroom : 15
@@ -98,26 +112,27 @@ systemParams = systemParamsWithConstants ( 0 )
 initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}]
 
 
-scaleToString PersonScale = "Person"
-scaleToString HouseholdScale  = "HouseHold"
-scaleToString EstateScale  = "Estate"
+scaleToString { scale : PersonScale, time: _ } = "Person"
+scaleToString { scale : HouseholdScale, time: _ }  = "HouseHold"
+scaleToString { scale : EstateScale, time: _ }  = "Estate"
 
 controllableParam eatedFoodRatio = initProcessParams { eatingParam = initProcessParams.eatingParam { eatedFoodRatio = Ratio Food { ratio: eatedFoodRatio } } }
 
 ratio ( Ratio _ { ratio } ) = ratio
 
-systemState :: Options -> Scale -> SystemParams -> ProcessParams -> State -> SystemState
+systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
 systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
+
 
 -- ui :: forall e e'. UI e (Markup e')
 --
 ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
-                                                    <*> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
-                                                    <*> pure systemParams
-                                                    <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
-                                                    <*> ( pure initState ) ) )
+                                                          <*> (select "Scale" ( { scale: PersonScale, time: Year } :| [ { scale: HouseholdScale, time: Year }, { scale: EstateScale, time: Year } ]) scaleToString)
+                                                          <*> pure systemParams
+                                                          <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
+                                                          <*> ( pure initState ) ) )
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )

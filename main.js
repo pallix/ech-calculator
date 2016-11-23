@@ -1319,6 +1319,13 @@ var PS = {};
       };
       return Transform;
   })();
+  var Year = (function () {
+      function Year() {
+
+      };
+      Year.value = new Year();
+      return Year;
+  })();
   var SystemParams = (function () {
       function SystemParams(value0) {
           this.value0 = value0;
@@ -1440,6 +1447,17 @@ var PS = {};
   /**
  *  model for the event sourcing
  */  
+  var AllProcess = (function () {
+      function AllProcess() {
+
+      };
+      AllProcess.value = new AllProcess();
+      return AllProcess;
+  })();
+
+  /**
+ *  model for the event sourcing
+ */  
   var Shopping = (function () {
       function Shopping() {
 
@@ -1473,12 +1491,23 @@ var PS = {};
   /**
  *  model for the event sourcing
  */  
-  var AllProcess = (function () {
-      function AllProcess() {
+  var WormComposting = (function () {
+      function WormComposting() {
 
       };
-      AllProcess.value = new AllProcess();
-      return AllProcess;
+      WormComposting.value = new WormComposting();
+      return WormComposting;
+  })();
+
+  /**
+ *  model for the event sourcing
+ */  
+  var ManagingWaste = (function () {
+      function ManagingWaste() {
+
+      };
+      ManagingWaste.value = new ManagingWaste();
+      return ManagingWaste;
   })();
   var EatingOnly = (function () {
       function EatingOnly() {
@@ -1494,40 +1523,61 @@ var PS = {};
       EatingBinning.value = new EatingBinning();
       return EatingBinning;
   })();
-  var CompostingOnly = (function () {
-      function CompostingOnly() {
+  var EatingBinningWormComposting = (function () {
+      function EatingBinningWormComposting() {
 
       };
-      CompostingOnly.value = new CompostingOnly();
-      return CompostingOnly;
+      EatingBinningWormComposting.value = new EatingBinningWormComposting();
+      return EatingBinningWormComposting;
   })();
-  var CompostingGarden = (function () {
-      function CompostingGarden() {
+  var EatingBinningWormCompostingGarden = (function () {
+      function EatingBinningWormCompostingGarden() {
 
       };
-      CompostingGarden.value = new CompostingGarden();
-      return CompostingGarden;
+      EatingBinningWormCompostingGarden.value = new EatingBinningWormCompostingGarden();
+      return EatingBinningWormCompostingGarden;
   })();
-  var CompostingFoodGarden = (function () {
-      function CompostingFoodGarden() {
+  var EatingBinningWormCompostingFoodGarden = (function () {
+      function EatingBinningWormCompostingFoodGarden() {
 
       };
-      CompostingFoodGarden.value = new CompostingFoodGarden();
-      return CompostingFoodGarden;
+      EatingBinningWormCompostingFoodGarden.value = new EatingBinningWormCompostingFoodGarden();
+      return EatingBinningWormCompostingFoodGarden;
   })();
-  var WateringGarden = (function () {
-      function WateringGarden() {
+  var EatingBinningWormCompostingGardenWatering = (function () {
+      function EatingBinningWormCompostingGardenWatering() {
 
       };
-      WateringGarden.value = new WateringGarden();
-      return WateringGarden;
+      EatingBinningWormCompostingGardenWatering.value = new EatingBinningWormCompostingGardenWatering();
+      return EatingBinningWormCompostingGardenWatering;
   })();
-  var RainwaterWateringGarden = (function () {
-      function RainwaterWateringGarden() {
+  var EatingBinningWormCompostingFoodGardenWatering = (function () {
+      function EatingBinningWormCompostingFoodGardenWatering() {
 
       };
-      RainwaterWateringGarden.value = new RainwaterWateringGarden();
-      return RainwaterWateringGarden;
+      EatingBinningWormCompostingFoodGardenWatering.value = new EatingBinningWormCompostingFoodGardenWatering();
+      return EatingBinningWormCompostingFoodGardenWatering;
+  })();
+  var EatingBinningWormCompostingGardenRainwater = (function () {
+      function EatingBinningWormCompostingGardenRainwater() {
+
+      };
+      EatingBinningWormCompostingGardenRainwater.value = new EatingBinningWormCompostingGardenRainwater();
+      return EatingBinningWormCompostingGardenRainwater;
+  })();
+  var EatingBinningWormCompostingFoodGardenRainwater = (function () {
+      function EatingBinningWormCompostingFoodGardenRainwater() {
+
+      };
+      EatingBinningWormCompostingFoodGardenRainwater.value = new EatingBinningWormCompostingFoodGardenRainwater();
+      return EatingBinningWormCompostingFoodGardenRainwater;
+  })();
+  var EatingBinningWormCompostingFoodSharing = (function () {
+      function EatingBinningWormCompostingFoodSharing() {
+
+      };
+      EatingBinningWormCompostingFoodSharing.value = new EatingBinningWormCompostingFoodSharing();
+      return EatingBinningWormCompostingFoodSharing;
   })();
   var NotImplemented = (function () {
       function NotImplemented() {
@@ -1571,6 +1621,13 @@ var PS = {};
       AllMatterProperty.value = new AllMatterProperty();
       return AllMatterProperty;
   })();
+  var AllMatter = (function () {
+      function AllMatter() {
+
+      };
+      AllMatter.value = new AllMatter();
+      return AllMatter;
+  })();
   var Food = (function () {
       function Food() {
 
@@ -1585,13 +1642,6 @@ var PS = {};
       Waste.value = new Waste();
       return Waste;
   })();
-  var ManagedWaste = (function () {
-      function ManagedWaste() {
-
-      };
-      ManagedWaste.value = new ManagedWaste();
-      return ManagedWaste;
-  })();
   var GreyWater = (function () {
       function GreyWater() {
 
@@ -1599,12 +1649,12 @@ var PS = {};
       GreyWater.value = new GreyWater();
       return GreyWater;
   })();
-  var AllMatter = (function () {
-      function AllMatter() {
+  var Compost = (function () {
+      function Compost() {
 
       };
-      AllMatter.value = new AllMatter();
-      return AllMatter;
+      Compost.value = new Compost();
+      return Compost;
   })();
   var Entry = (function () {
       function Entry(value0) {
@@ -1633,6 +1683,15 @@ var PS = {};
       };
       return SystemState;
   })();
+  var wormCompostingParam = {
+      title: "Wormery", 
+      compostableRatio: new Ratio(Waste.value, {
+          ratio: 0.6
+      }), 
+      compostingYield: new Transform(Waste.value, Compost.value, {
+          ratio: 0.125 * 4.0
+      })
+  };
   var showQuantity = function (dictShow) {
       return new Data_Show.Show(function (v) {
           if (v instanceof Weight) {
@@ -1647,31 +1706,37 @@ var PS = {};
           if (v instanceof ZeroQuantity) {
               return "0";
           };
-          throw new Error("Failed pattern match at Calculator.Model line 190, column 5 - line 191, column 5: " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Calculator.Model line 210, column 5 - line 211, column 5: " + [ v.constructor.name ]);
       });
   };
   var processEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $58 = [ a, b ];
-          if ($58.length === 2 && ($58[0] instanceof Shopping && $58[1] instanceof Shopping)) {
+          var $66 = [ a, b ];
+          if ($66.length === 2 && ($66[0] instanceof Shopping && $66[1] instanceof Shopping)) {
               return true;
           };
-          if ($58.length === 2 && ($58[0] instanceof Eating && $58[1] instanceof Eating)) {
+          if ($66.length === 2 && ($66[0] instanceof Eating && $66[1] instanceof Eating)) {
               return true;
           };
-          if ($58.length === 2 && ($58[0] instanceof Binning && $58[1] instanceof Binning)) {
+          if ($66.length === 2 && ($66[0] instanceof Binning && $66[1] instanceof Binning)) {
               return true;
           };
-          if ($58.length === 2 && $58[0] instanceof AllProcess) {
+          if ($66.length === 2 && ($66[0] instanceof ManagingWaste && $66[1] instanceof ManagingWaste)) {
               return true;
           };
-          if ($58.length === 2 && $58[1] instanceof AllProcess) {
+          if ($66.length === 2 && ($66[0] instanceof WormComposting && $66[1] instanceof WormComposting)) {
+              return true;
+          };
+          if ($66.length === 2 && $66[0] instanceof AllProcess) {
+              return true;
+          };
+          if ($66.length === 2 && $66[1] instanceof AllProcess) {
               return true;
           };
           return false;
       };
   });
-  var neg = function (v) {
+  var negQty = function (v) {
       if (v instanceof Weight) {
           return new Weight(v.value0, -v.value1);
       };
@@ -1684,7 +1749,24 @@ var PS = {};
       if (v instanceof ZeroQuantity) {
           return ZeroQuantity.value;
       };
-      throw new Error("Failed pattern match at Calculator.Model line 81, column 1 - line 81, column 38: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Calculator.Model line 83, column 1 - line 83, column 41: " + [ v.constructor.name ]);
+  };
+  var subQty = function (v) {
+      return function (v1) {
+          if (v instanceof Weight && v1 instanceof Weight) {
+              return new Weight(v.value0, v.value1 - v1.value1);
+          };
+          if (v instanceof Volume && v1 instanceof Volume) {
+              return new Weight(v.value0, v.value1 - v1.value1);
+          };
+          if (v1 instanceof ZeroQuantity) {
+              return v;
+          };
+          if (v instanceof ZeroQuantity) {
+              return negQty(v1);
+          };
+          return IncompatibleQuantity.value;
+      };
   };
   var mergeQty = new Data_Semigroup.Semigroup(function (v) {
       return function (v1) {
@@ -1705,23 +1787,23 @@ var PS = {};
   });
   var matterProperty = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $84 = [ a, b ];
-          if ($84.length === 2 && ($84[0] instanceof Edible && $84[1] instanceof Edible)) {
+          var $106 = [ a, b ];
+          if ($106.length === 2 && ($106[0] instanceof Edible && $106[1] instanceof Edible)) {
               return true;
           };
-          if ($84.length === 2 && ($84[0] instanceof NonEdible && $84[1] instanceof NonEdible)) {
+          if ($106.length === 2 && ($106[0] instanceof NonEdible && $106[1] instanceof NonEdible)) {
               return true;
           };
-          if ($84.length === 2 && ($84[0] instanceof Shopped && $84[1] instanceof Shopped)) {
+          if ($106.length === 2 && ($106[0] instanceof Shopped && $106[1] instanceof Shopped)) {
               return true;
           };
-          if ($84.length === 2 && ($84[0] instanceof Cooked && $84[1] instanceof Cooked)) {
+          if ($106.length === 2 && ($106[0] instanceof Cooked && $106[1] instanceof Cooked)) {
               return true;
           };
-          if ($84.length === 2 && $84[0] instanceof AllMatterProperty) {
+          if ($106.length === 2 && $106[0] instanceof AllMatterProperty) {
               return true;
           };
-          if ($84.length === 2 && $84[1] instanceof AllMatterProperty) {
+          if ($106.length === 2 && $106[1] instanceof AllMatterProperty) {
               return true;
           };
           return false;
@@ -1729,22 +1811,28 @@ var PS = {};
   });
   var matterEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $97 = [ a, b ];
-          if ($97.length === 2 && ($97[0] instanceof Food && $97[1] instanceof Food)) {
+          var $119 = [ a, b ];
+          if ($119.length === 2 && ($119[0] instanceof Food && $119[1] instanceof Food)) {
               return true;
           };
-          if ($97.length === 2 && ($97[0] instanceof Waste && $97[1] instanceof Waste)) {
+          if ($119.length === 2 && ($119[0] instanceof Waste && $119[1] instanceof Waste)) {
               return true;
           };
-          if ($97.length === 2 && $97[0] instanceof AllMatter) {
+          if ($119.length === 2 && $119[0] instanceof AllMatter) {
               return true;
           };
-          if ($97.length === 2 && $97[1] instanceof AllMatter) {
+          if ($119.length === 2 && $119[1] instanceof AllMatter) {
               return true;
           };
           return false;
       };
   });
+  var managedWasteParam = {
+      title: "Managed Waste", 
+      collectedWasteRatio: new Ratio(Waste.value, {
+          ratio: 1.0
+      })
+  };
 
   /**
  * 
@@ -1785,58 +1873,64 @@ var PS = {};
       };
   }; 
   var genericMatter = new Data_Generic.Generic(function (v) {
+      if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.AllMatter" && v.value1.length === 0)) {
+          return new Data_Maybe.Just(AllMatter.value);
+      };
       if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.Food" && v.value1.length === 0)) {
           return new Data_Maybe.Just(Food.value);
       };
       if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.Waste" && v.value1.length === 0)) {
           return new Data_Maybe.Just(Waste.value);
       };
-      if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.ManagedWaste" && v.value1.length === 0)) {
-          return new Data_Maybe.Just(ManagedWaste.value);
-      };
       if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.GreyWater" && v.value1.length === 0)) {
           return new Data_Maybe.Just(GreyWater.value);
       };
-      if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.AllMatter" && v.value1.length === 0)) {
-          return new Data_Maybe.Just(AllMatter.value);
+      if (v instanceof Data_Generic.SProd && (v.value0 === "Calculator.Model.Compost" && v.value1.length === 0)) {
+          return new Data_Maybe.Just(Compost.value);
       };
       return Data_Maybe.Nothing.value;
   }, function ($dollarq) {
       return new Data_Generic.SigProd("Calculator.Model.Matter", [ {
+          sigConstructor: "Calculator.Model.AllMatter", 
+          sigValues: [  ]
+      }, {
           sigConstructor: "Calculator.Model.Food", 
           sigValues: [  ]
       }, {
           sigConstructor: "Calculator.Model.Waste", 
           sigValues: [  ]
       }, {
-          sigConstructor: "Calculator.Model.ManagedWaste", 
-          sigValues: [  ]
-      }, {
           sigConstructor: "Calculator.Model.GreyWater", 
           sigValues: [  ]
       }, {
-          sigConstructor: "Calculator.Model.AllMatter", 
+          sigConstructor: "Calculator.Model.Compost", 
           sigValues: [  ]
       } ]);
   }, function (v) {
+      if (v instanceof AllMatter) {
+          return new Data_Generic.SProd("Calculator.Model.AllMatter", [  ]);
+      };
       if (v instanceof Food) {
           return new Data_Generic.SProd("Calculator.Model.Food", [  ]);
       };
       if (v instanceof Waste) {
           return new Data_Generic.SProd("Calculator.Model.Waste", [  ]);
       };
-      if (v instanceof ManagedWaste) {
-          return new Data_Generic.SProd("Calculator.Model.ManagedWaste", [  ]);
-      };
       if (v instanceof GreyWater) {
           return new Data_Generic.SProd("Calculator.Model.GreyWater", [  ]);
       };
-      if (v instanceof AllMatter) {
-          return new Data_Generic.SProd("Calculator.Model.AllMatter", [  ]);
+      if (v instanceof Compost) {
+          return new Data_Generic.SProd("Calculator.Model.Compost", [  ]);
       };
-      throw new Error("Failed pattern match at Calculator.Model line 112, column 1 - line 112, column 48: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Calculator.Model line 132, column 1 - line 132, column 48: " + [ v.constructor.name ]);
   });
   var showMatter = new Data_Show.Show(Data_Generic.gShow(genericMatter));
+  var foodSharingParam = {
+      title: "Food Sharing", 
+      sharedFoodRatio: new Ratio(Food.value, {
+          ratio: 1.0
+      })
+  };
   var foldState = function (process) {
       return function (matter) {
           return function (matterProperty1) {
@@ -1857,16 +1951,33 @@ var PS = {};
           };
       };
   };
+
+  /**
+ *  compostWaste = subQty compostableWaste compostProduct
+ */  
+  var managingWaste = function (v) {
+      return function (v1) {
+          var binnedWaste = foldState(Binning.value)(Waste.value)(AllMatterProperty.value)(v1);
+          return State.create(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v1.value0)([ new Entry({
+              process: Binning.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: negQty(binnedWaste)
+          }), new Entry({
+              process: ManagingWaste.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: binnedWaste
+          }) ]));
+      };
+  };
   var eatingParam = {
       title: "Eating", 
       eatedFoodRatio: new Ratio(Food.value, {
           ratio: 0.81
       }), 
-      edibleWasteProcess: new Transform(Food.value, Waste.value, {
-          ratio: 0.114
-      }), 
-      nonedibleFoodWasteProcess: new Transform(Food.value, Waste.value, {
-          ratio: 7.6e-2
+      edibleWasteProcess: new Transform(Food.value, Food.value, {
+          ratio: 0.6
       })
   };
   var complementOneRatioTransform = function (v) {
@@ -1876,16 +1987,16 @@ var PS = {};
   };
   var binningParam = {
       title: "Binning", 
-      inputRatio: new Ratio(Waste.value, {
-          ratio: 1.0
-      }), 
-      allFoodWasteProcess: new Transform(Food.value, Waste.value, {
-          ratio: 0.19
+      compactingRatio: new Ratio(Waste.value, {
+          ratio: 0.0
       })
   };
   var initProcessParams = {
       eatingParam: eatingParam, 
-      binningParam: binningParam
+      binningParam: binningParam, 
+      wormCompostingParam: wormCompostingParam, 
+      managedWasteParam: managedWasteParam, 
+      foodSharingParam: foodSharingParam
   };
   var applyTransform = function (v) {
       var createQuantity = function (v1) {
@@ -1901,26 +2012,9 @@ var PS = {};
           if (v1 instanceof IncompatibleQuantity) {
               return IncompatibleQuantity.value;
           };
-          throw new Error("Failed pattern match at Calculator.Model line 246, column 5 - line 246, column 51: " + [ v1.constructor.name ]);
+          throw new Error("Failed pattern match at Calculator.Model line 296, column 5 - line 296, column 51: " + [ v1.constructor.name ]);
       };
       return createQuantity;
-  };
-  var binning = function (v) {
-      return function (v1) {
-          var waste = foldState(Eating.value)(Waste.value)(AllMatterProperty.value)(v1);
-          var managed = applyTransform(v.allFoodWasteProcess)(waste);
-          return State.create(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v1.value0)([ new Entry({
-              process: Eating.value, 
-              matter: Waste.value, 
-              matterProperty: AllMatterProperty.value, 
-              quantity: neg(waste)
-          }), new Entry({
-              process: Binning.value, 
-              matter: ManagedWaste.value, 
-              matterProperty: AllMatterProperty.value, 
-              quantity: managed
-          }) ]));
-      };
   };
   var applyRatio = function (v) {
       return function (qty) {
@@ -1938,10 +2032,38 @@ var PS = {};
                   if (v1 instanceof IncompatibleQuantity) {
                       return IncompatibleQuantity.value;
                   };
-                  throw new Error("Failed pattern match at Calculator.Model line 256, column 5 - line 256, column 47: " + [ r.constructor.name, v1.constructor.name ]);
+                  throw new Error("Failed pattern match at Calculator.Model line 306, column 5 - line 306, column 47: " + [ r.constructor.name, v1.constructor.name ]);
               };
           };
           return appRatio(v.value1.ratio)(qty);
+      };
+  };
+  var composting_EatingBinningWormComposting = function (v) {
+      return function (v1) {
+          var wastedFood = foldState(Eating.value)(Waste.value)(AllMatterProperty.value)(v1);
+          var compostableWaste = applyRatio(v.compostableRatio)(wastedFood);
+          var compostProduct = applyTransform(v.compostingYield)(compostableWaste);
+          return State.create(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v1.value0)([ new Entry({
+              process: Eating.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: negQty(compostableWaste)
+          }), new Entry({
+              process: WormComposting.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: compostableWaste
+          }), new Entry({
+              process: WormComposting.value, 
+              matter: Compost.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: compostProduct
+          }), new Entry({
+              process: WormComposting.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: negQty(compostableWaste)
+          }) ]));
       };
   };
   var eating = function (v) {
@@ -1953,7 +2075,7 @@ var PS = {};
               process: Shopping.value, 
               matter: Food.value, 
               matterProperty: AllMatterProperty.value, 
-              quantity: neg(shoppedFood)
+              quantity: negQty(shoppedFood)
           }), new Entry({
               process: Eating.value, 
               matter: Food.value, 
@@ -1967,38 +2089,75 @@ var PS = {};
           }) ]));
       };
   };
-
-  /**
- *  composting :: forall r. FlowParam ( r ) -> State -> State
- *  composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
- */  
+  var addQty = function (v) {
+      return function (v1) {
+          if (v instanceof Weight && v1 instanceof Weight) {
+              return new Weight(v.value0, v.value1 + v1.value1);
+          };
+          if (v instanceof Volume && v1 instanceof Volume) {
+              return new Weight(v.value0, v.value1 + v1.value1);
+          };
+          if (v1 instanceof ZeroQuantity) {
+              return v;
+          };
+          if (v instanceof ZeroQuantity) {
+              return v1;
+          };
+          return IncompatibleQuantity.value;
+      };
+  };
+  var binning = function (v) {
+      return function (v1) {
+          var foodWormComposting = foldState(WormComposting.value)(Waste.value)(AllMatterProperty.value)(v1);
+          var foodWaste = foldState(Eating.value)(Waste.value)(AllMatterProperty.value)(v1);
+          return State.create(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v1.value0)([ new Entry({
+              process: Eating.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: negQty(foodWaste)
+          }), new Entry({
+              process: WormComposting.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: negQty(foodWormComposting)
+          }), new Entry({
+              process: Binning.value, 
+              matter: Waste.value, 
+              matterProperty: AllMatterProperty.value, 
+              quantity: addQty(foodWaste)(foodWormComposting)
+          }) ]));
+      };
+  };
   var nexusSystem = function (v) {
       var endState = (function () {
           if (v.value0.current instanceof EatingOnly) {
               return eating(v.value0.processParams.eatingParam)(v.value0.state);
           };
           if (v.value0.current instanceof EatingBinning) {
-              return binning(v.value0.processParams.binningParam)(eating(v.value0.processParams.eatingParam)(v.value0.state));
+              return managingWaste(v.value0.processParams.managedWasteParam)(binning(v.value0.processParams.binningParam)(eating(v.value0.processParams.eatingParam)(v.value0.state)));
+          };
+          if (v.value0.current instanceof EatingBinningWormComposting) {
+              return managingWaste(v.value0.processParams.managedWasteParam)(binning(v.value0.processParams.binningParam)(composting_EatingBinningWormComposting(v.value0.processParams.wormCompostingParam)(eating(v.value0.processParams.eatingParam)(v.value0.state))));
           };
           return new State([  ]);
       })();
       return SystemState.create((function () {
-          var $266 = {};
-          for (var $267 in v.value0) {
-              if (v.value0.hasOwnProperty($267)) {
-                  $266[$267] = v.value0[$267];
+          var $321 = {};
+          for (var $322 in v.value0) {
+              if (v.value0.hasOwnProperty($322)) {
+                  $321[$322] = v.value0[$322];
               };
           };
-          $266.state = endState;
-          return $266;
+          $321.state = endState;
+          return $321;
       })());
   };
   exports["Entry"] = Entry;
+  exports["AllMatter"] = AllMatter;
   exports["Food"] = Food;
   exports["Waste"] = Waste;
-  exports["ManagedWaste"] = ManagedWaste;
   exports["GreyWater"] = GreyWater;
-  exports["AllMatter"] = AllMatter;
+  exports["Compost"] = Compost;
   exports["Edible"] = Edible;
   exports["NonEdible"] = NonEdible;
   exports["Shopped"] = Shopped;
@@ -2006,16 +2165,21 @@ var PS = {};
   exports["AllMatterProperty"] = AllMatterProperty;
   exports["EatingOnly"] = EatingOnly;
   exports["EatingBinning"] = EatingBinning;
-  exports["CompostingOnly"] = CompostingOnly;
-  exports["CompostingGarden"] = CompostingGarden;
-  exports["CompostingFoodGarden"] = CompostingFoodGarden;
-  exports["WateringGarden"] = WateringGarden;
-  exports["RainwaterWateringGarden"] = RainwaterWateringGarden;
+  exports["EatingBinningWormComposting"] = EatingBinningWormComposting;
+  exports["EatingBinningWormCompostingGarden"] = EatingBinningWormCompostingGarden;
+  exports["EatingBinningWormCompostingFoodGarden"] = EatingBinningWormCompostingFoodGarden;
+  exports["EatingBinningWormCompostingGardenWatering"] = EatingBinningWormCompostingGardenWatering;
+  exports["EatingBinningWormCompostingFoodGardenWatering"] = EatingBinningWormCompostingFoodGardenWatering;
+  exports["EatingBinningWormCompostingGardenRainwater"] = EatingBinningWormCompostingGardenRainwater;
+  exports["EatingBinningWormCompostingFoodGardenRainwater"] = EatingBinningWormCompostingFoodGardenRainwater;
+  exports["EatingBinningWormCompostingFoodSharing"] = EatingBinningWormCompostingFoodSharing;
   exports["NotImplemented"] = NotImplemented;
+  exports["AllProcess"] = AllProcess;
   exports["Shopping"] = Shopping;
   exports["Eating"] = Eating;
   exports["Binning"] = Binning;
-  exports["AllProcess"] = AllProcess;
+  exports["WormComposting"] = WormComposting;
+  exports["ManagingWaste"] = ManagingWaste;
   exports["Weight"] = Weight;
   exports["Volume"] = Volume;
   exports["IncompatibleQuantity"] = IncompatibleQuantity;
@@ -2027,11 +2191,14 @@ var PS = {};
   exports["State"] = State;
   exports["SystemParams"] = SystemParams;
   exports["SystemState"] = SystemState;
+  exports["Year"] = Year;
   exports["Transform"] = Transform;
+  exports["addQty"] = addQty;
   exports["foldState"] = foldState;
   exports["initProcessParams"] = initProcessParams;
   exports["initialState"] = initialState;
   exports["nexusSystem"] = nexusSystem;
+  exports["subQty"] = subQty;
   exports["processEq"] = processEq;
   exports["genericMatter"] = genericMatter;
   exports["showMatter"] = showMatter;
@@ -2761,7 +2928,10 @@ var PS = {};
   var Control_Bind = PS["Control.Bind"];
   var Data_Semigroup = PS["Data.Semigroup"];
   var Data_Show = PS["Data.Show"];
+  var managedWaste = Calculator_Model.foldState(Calculator_Model.ManagingWaste.value)(Calculator_Model.Waste.value)(Calculator_Model.AllMatterProperty.value);
   var initialShoppedFood = Calculator_Model.initialState(Calculator_Model.Shopping.value)(Calculator_Model.Food.value)(Calculator_Model.AllMatterProperty.value);
+  var initialCompostedWaste = Calculator_Model.initialState(Calculator_Model.WormComposting.value)(Calculator_Model.Waste.value)(Calculator_Model.AllMatterProperty.value);
+  var initialBinnedFoodWaste = Calculator_Model.initialState(Calculator_Model.Eating.value)(Calculator_Model.Waste.value)(Calculator_Model.AllMatterProperty.value);
   var hex = function (hover) {
       return function (grid) {
           return function (item) {
@@ -2772,7 +2942,7 @@ var PS = {};
                   if (v === "Binning") {
                       return "/images/rubbish_bin.svg";
                   };
-                  if (v === "Compost") {
+                  if (v === "Wormery") {
                       return "/images/composting.svg";
                   };
                   if (v === "Garden") {
@@ -2865,25 +3035,37 @@ var PS = {};
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))))));
       };
       if (v.value0.current instanceof Calculator_Model.EatingBinning) {
-          return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+          return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(1)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "Shopped Food", 
+              details: "..."
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Eating", 
-              details: ""
+              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(eatedFood(v.value0.state))
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(1)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Binning", 
               details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))));
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "Managed Waste", 
+              details: "..."
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))))))));
       };
-      if (v.value0.current instanceof Calculator_Model.CompostingOnly) {
+      if (v.value0.current instanceof Calculator_Model.EatingBinningWormComposting) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
-              title: "Composting", 
+              title: "Wormery", 
               details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(1)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "Shopped Food", 
+              details: "..."
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Eating", 
-              details: ""
+              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(eatedFood(v.value0.state))
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(1)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Binning", 
               details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))))));
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "Managed Waste", 
+              details: "..."
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))))))))));
       };
       return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))));
   };
@@ -2907,22 +3089,38 @@ var PS = {};
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))))));
       };
       if (v.value0.current instanceof Calculator_Model.EatingBinning) {
-          return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+          return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "_", 
-              quantity: "", 
-              details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))));
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(initialShoppedFood(v.value0.state)), 
+              details: "of Food"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "_", 
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(initialBinnedFoodWaste(v.value0.state)), 
+              details: "of Food Waste"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "_", 
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(managedWaste(v.value0.state)), 
+              details: "of Waste"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))))))));
       };
-      if (v.value0.current instanceof Calculator_Model.CompostingOnly) {
+      if (v.value0.current instanceof Calculator_Model.EatingBinningWormComposting) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "/", 
-              quantity: "", 
-              details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(5)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(initialCompostedWaste(v.value0.state)), 
+              details: "of Food Waste "
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(5)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "_", 
-              quantity: "", 
-              details: ""
-          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))))));
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(initialShoppedFood(v.value0.state)), 
+              details: "of Food"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "_", 
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(Calculator_Model.subQty(initialBinnedFoodWaste(v.value0.state))(initialCompostedWaste(v.value0.state))), 
+              details: "of Food Waste"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
+              title: "_", 
+              quantity: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(managedWaste(v.value0.state)), 
+              details: "of Waste"
+          }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))))))))));
       };
       return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))));
   };
@@ -3769,8 +3967,7 @@ var PS = {};
   exports["runFlareHTML"] = runFlareHTML;
 })(PS["Flare.Smolder"] = PS["Flare.Smolder"] || {});
 (function(exports) {
-  // Generated by psc version 0.10.1
-  "use strict";
+    "use strict";
   var Prelude = PS["Prelude"];
   var Calculator_Layout = PS["Calculator.Layout"];
   var Calculator_Model = PS["Calculator.Model"];
@@ -3823,6 +4020,7 @@ var PS = {};
       return {
           houseHoldSize: v, 
           estatePopulation: 200, 
+          estateAveragePersonPerHousehold: 2.4, 
           estateFlatsOneBedroom: 70, 
           estateFlatsTwoBedroom: 23, 
           estateFlatsThreeBedroom: 15
@@ -3830,20 +4028,50 @@ var PS = {};
   });
   var systemParams = systemParamsWithConstants(0);
   var scaleToString = function (v) {
-      if (v instanceof Calculator_Model.PersonScale) {
+      if (v.scale instanceof Calculator_Model.PersonScale) {
           return "Person";
       };
-      if (v instanceof Calculator_Model.HouseholdScale) {
+      if (v.scale instanceof Calculator_Model.HouseholdScale) {
           return "HouseHold";
       };
-      if (v instanceof Calculator_Model.EstateScale) {
+      if (v.scale instanceof Calculator_Model.EstateScale) {
           return "Estate";
       };
-      throw new Error("Failed pattern match at Main line 101, column 1 - line 102, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 115, column 1 - line 116, column 1: " + [ v.constructor.name ]);
   };
   var ratio = function (v) {
       return v.value1.ratio;
   };
+
+  /**
+ *  data Action = Food
+ *              | Bin
+ *              | Compost
+ *              | Garden
+ *              | FoodGarden
+ *              | Reset
+ * 
+ *  label :: Action -> String
+ *  label Food = "Food"
+ *  label Bin = "Bin"
+ *  label Compost = "Compost"
+ *  label Garden = "Garden"
+ *  label FoodGarden = "FoodGarden"
+ *  label Reset = "Reset"
+ *  type State = Array Token
+ *  perform :: Action -> State -> State
+ *  perform Food = flip snoc { title: "Food" }
+ *  perform Bin = flip snoc { title: "Bin" }
+ *  perform Compost = flip snoc { title: "Compost" }
+ *  perform Garden = flip snoc { title: "Garden" }
+ *  perform FoodGarden = flip snoc { title: "Food Garden" }
+ *  perform Reset     = const []
+ *  TODO: Reuse this traverseable approach to create `optionals` and `booleans` functions
+ *  controls = foldp (maybe id perform) [ { title: "Food" } ] $
+ *              buttons [Food, Bin, Compost, Garden, FoodGarden, Reset] label
+ *  actions = string "Add item:" "Bin" <**> button "Add" (flip const) cons
+ *  list = foldp id ["Food"] actions
+ */  
   var optionsLabel = function (v) {
       if (v instanceof Calculator_Model.EatingOnly) {
           return "Food";
@@ -3851,27 +4079,36 @@ var PS = {};
       if (v instanceof Calculator_Model.EatingBinning) {
           return "Food & Waste";
       };
-      if (v instanceof Calculator_Model.CompostingOnly) {
-          return "Composting";
+      if (v instanceof Calculator_Model.EatingBinningWormComposting) {
+          return "Wormery";
       };
-      if (v instanceof Calculator_Model.CompostingGarden) {
-          return "Composting & Garden";
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingGarden) {
+          return "Wormery & Garden";
       };
-      if (v instanceof Calculator_Model.CompostingFoodGarden) {
-          return "Composting & Food Garden";
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingFoodGarden) {
+          return "Wormery & Food Garden";
       };
-      if (v instanceof Calculator_Model.WateringGarden) {
-          return "Watering Garden";
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingGardenWatering) {
+          return "Garden Watering ";
       };
-      if (v instanceof Calculator_Model.RainwaterWateringGarden) {
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingFoodGardenWatering) {
+          return "Food Garden Watering ";
+      };
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingGardenRainwater) {
           return "Rainwater Collection & Garden";
+      };
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingFoodGardenRainwater) {
+          return "Rainwater Collection & Food Garden";
+      };
+      if (v instanceof Calculator_Model.EatingBinningWormCompostingFoodSharing) {
+          return "Food Sharing";
       };
       if (v instanceof Calculator_Model.NotImplemented) {
           return "Not Implemented Yet";
       };
-      throw new Error("Failed pattern match at Main line 78, column 1 - line 79, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 80, column 1 - line 81, column 1: " + [ v.constructor.name ]);
   };
-  var nexusOptions = Flare.select(Data_Foldable.foldableArray)("Options")(new Data_NonEmpty.NonEmpty(Calculator_Model.EatingOnly.value, [ Calculator_Model.EatingBinning.value, Calculator_Model.CompostingOnly.value, Calculator_Model.CompostingGarden.value, Calculator_Model.CompostingFoodGarden.value, Calculator_Model.WateringGarden.value, Calculator_Model.RainwaterWateringGarden.value ]))(optionsLabel);
+  var nexusOptions = Flare.select(Data_Foldable.foldableArray)("Options")(new Data_NonEmpty.NonEmpty(Calculator_Model.EatingOnly.value, [ Calculator_Model.EatingBinning.value, Calculator_Model.EatingBinningWormComposting.value, Calculator_Model.EatingBinningWormCompostingGarden.value, Calculator_Model.EatingBinningWormCompostingFoodGarden.value, Calculator_Model.EatingBinningWormCompostingGardenWatering.value, Calculator_Model.EatingBinningWormCompostingFoodGardenWatering.value, Calculator_Model.EatingBinningWormCompostingGardenRainwater.value, Calculator_Model.EatingBinningWormCompostingFoodGardenRainwater.value, Calculator_Model.EatingBinningWormCompostingFoodSharing.value ]))(optionsLabel);
   var initState = new Calculator_Model.State([ new Calculator_Model.Entry({
       process: Calculator_Model.Shopping.value, 
       matter: Calculator_Model.Food.value, 
@@ -3879,27 +4116,88 @@ var PS = {};
       quantity: new Calculator_Model.Weight(Calculator_Model.Food.value, 585.0)
   }) ]);
   var controllableParam = function (eatedFoodRatio) {
-      var $13 = {};
-      for (var $14 in Calculator_Model.initProcessParams) {
-          if (Calculator_Model.initProcessParams.hasOwnProperty($14)) {
-              $13[$14] = Calculator_Model.initProcessParams[$14];
+      var $19 = {};
+      for (var $20 in Calculator_Model.initProcessParams) {
+          if (Calculator_Model.initProcessParams.hasOwnProperty($20)) {
+              $19[$20] = Calculator_Model.initProcessParams[$20];
           };
       };
-      $13.eatingParam = (function () {
-          var $10 = {};
-          for (var $11 in Calculator_Model.initProcessParams.eatingParam) {
-              if (Calculator_Model.initProcessParams.eatingParam.hasOwnProperty($11)) {
-                  $10[$11] = Calculator_Model.initProcessParams.eatingParam[$11];
+      $19.eatingParam = (function () {
+          var $16 = {};
+          for (var $17 in Calculator_Model.initProcessParams.eatingParam) {
+              if (Calculator_Model.initProcessParams.eatingParam.hasOwnProperty($17)) {
+                  $16[$17] = Calculator_Model.initProcessParams.eatingParam[$17];
               };
           };
-          $10.eatedFoodRatio = new Calculator_Model.Ratio(Calculator_Model.Food.value, {
+          $16.eatedFoodRatio = new Calculator_Model.Ratio(Calculator_Model.Food.value, {
               ratio: eatedFoodRatio
           });
-          return $10;
+          return $16;
       })();
-      return $13;
+      return $19;
   };
-  var ui = Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Data_Functor.map(Flare.functorUI)(Data_Functor.map(Data_Functor.functorFn)(Debug_Trace.spy)(Calculator_Model.nexusSystem))(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(systemState)(nexusOptions))(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty(Calculator_Model.PersonScale.value, [ Calculator_Model.HouseholdScale.value, Calculator_Model.EstateScale.value ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParams)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(ratio(Calculator_Model.initProcessParams.eatingParam.eatedFoodRatio))))))(Control_Applicative.pure(Flare.applicativeUI)(initState))));
+
+  /**
+ *  ui :: forall e e'. UI e (Markup e')
+ * 
+ */  
+  var ui = Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Data_Functor.map(Flare.functorUI)(Data_Functor.map(Data_Functor.functorFn)(Debug_Trace.spy)(Calculator_Model.nexusSystem))(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(systemState)(nexusOptions))(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty({
+      scale: Calculator_Model.PersonScale.value, 
+      time: Calculator_Model.Year.value
+  }, [ {
+      scale: Calculator_Model.HouseholdScale.value, 
+      time: Calculator_Model.Year.value
+  }, {
+      scale: Calculator_Model.EstateScale.value, 
+      time: Calculator_Model.Year.value
+  } ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParams)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(ratio(Calculator_Model.initProcessParams.eatingParam.eatedFoodRatio))))))(Control_Applicative.pure(Flare.applicativeUI)(initState))));
+
+  /**
+ * 
+ *  ui opt = interface <$> ( boolean "Info" true )
+ *                         <*> ( boolean "Grid" false )
+ *                         <*> pure opt
+ *                         <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+ *                                            <*> pure systemParam
+ *                                            <*> fieldset ( ( optionsLabel opt ) <> "Parameters" ) ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+ *                                            <*> pure eatingInitState
+ *                                            <*> pure opt )
+ * 
+ *  ui EatingBinning = interface <$> ( boolean "Info" true )
+ *                     <*> ( boolean "Grid" false )
+ *                     <*> pure EatingBinning
+ *                     <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+ *                           <*> pure systemParam
+ *                           <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
+ *                           <*> pure eatingInitState
+ *                           <*> pure EatingBinning )
+ * 
+ *  ui _ = interface <$> ( boolean "Info" true )
+ *                   <*> ( boolean "Grid" false )
+ *                   <*> ( nexusSystem <$> pure PersonScale
+ *                                     <*> pure systemParam
+ *                                     <*> pure ( controllableParam 0.0 )
+ *                                     <*> pure eatingInitState
+ *                                     <*> pure NotImplemented )
+ *  inner = runFlareHTML "controls" "output" <<< ui
+ *  <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
+ *  ui = token <$> string_ "Yo"
+ *             <*> (color "Color" (hsl 333.0 0.6 0.5))
+ *  Below is an example of what I think the applicative interface results in
+ *  where test is instantiated twice with both instance being completely independent.
+ * 
+ *  ui :: forall e e'. UI e (Markup e')
+ *  ui = ( interface <$> ( boolean "Info" true )
+ *                 <*> ( test )
+ *                 <*> ( eatingBinningUI )
+ *                 <*> ( optionsTokens <$> options ) )
+ *    <> ( text <$>
+ *          ( show <$> test ) )
+ *    where
+ *      test = boolean "Test" false
+ * 
+ *  main = runFlareWith "select" inner nexusOptions
+ */  
   var main = Flare_Smolder.runFlareHTML("controls")("output")(ui);
   exports["controllableParam"] = controllableParam;
   exports["initState"] = initState;
