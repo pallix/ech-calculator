@@ -1,12 +1,12 @@
 module Calculator.Model (Flow(Flow),
                          nexusSystem,
-                         flowParams,
-                         eatingParam,
                          Ratio(..),
                          Transform(..),
                          Quantity(..),
                          Scale(..),
-                         SystemParam(..),
+                         SystemParams(..),
+                         ProcessParams(..),
+                         initProcessParams,
                          Options(..),
                          State(..),
                          SystemState(..),
@@ -48,7 +48,7 @@ data Flow a = Flow { input:: a,
                      stock:: a
                    }
 
-data SystemParam = SystemParam { houseHoldSize :: Int
+data SystemParams = SystemParams { houseHoldSize :: Int
                                 , estatePopulation :: Int
                                 , estateFlatsOneBedroom :: Int
                                 , estateFlatsTwoBedroom :: Int
@@ -91,9 +91,6 @@ neg ZeroQuantity = ZeroQuantity
 data Scale = PersonScale | HouseholdScale | EstateScale
 
 data Ratio a = Ratio a { ratio :: Number }
-
-
-data SystemState = SystemState ( Tuple Options State )
 
 -- model for the event sourcing
 data Process = Shopping | Eating | Binning | AllProcess
@@ -198,33 +195,28 @@ instance mergeQty :: Semigroup ( Quantity a ) where
   append ZeroQuantity b = b
   append _ _ = IncompatibleQuantity
 
+
 derive instance genericOptions :: Generic Options
 instance showOptions :: Show Options where
     show = gShow
 
+type ProcessParams = { eatingParam ::
+                          -- missing: packaging quantity
+                          { title :: String
+                          , eatedFoodRatio :: Ratio Matter
+                          , allFoodWasteProcess :: Transform Matter Matter
+                          , edibleWasteProcess :: Transform Matter Matter
+                          , nonedibleFoodWasteProcess :: Transform Matter Matter
+                          }
+                     , binningParam :: { title :: String
+                                       , inputRatio :: Ratio Matter
+                                       , allFoodWasteProcess :: Transform Matter Matter
+                                       }
+                     }
 
-derive instance genericSystemState :: Generic SystemState
+type ProcessParam = Record
 
-instance showSystemState :: Show SystemState  where
-    show = gShow
-
-
-type FlowParams = { eatingParam ::
-                       -- missing: packaging quantity
-                       { title :: String
-                       , eatedFoodRatio :: Ratio Matter
-                       , allFoodWasteProcess :: Transform Matter Matter
-                       , edibleWasteProcess :: Transform Matter Matter
-                       , nonedibleFoodWasteProcess :: Transform Matter Matter
-                       }
-    , binningParam :: { title :: String
-                      , inputRatio :: Ratio Matter
-                      , allFoodWasteProcess :: Transform Matter Matter
-                      }
-    }
-
-
-type FlowParam = Record
+data SystemState = SystemState { current :: Options, scale :: Scale, state :: State, systemParams :: SystemParams, processParams :: ProcessParams }
 
 
 eatingParam =  { title: "Eating"
@@ -240,6 +232,8 @@ binningParam = { title: "Binning"
                , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                }
 
+initProcessParams = { eatingParam, binningParam }
+
 data Transform a b = Transform a b { ratio :: Number }
 
 applyTransform :: Transform Matter Matter -> (Quantity Matter) -> (Quantity Matter)
@@ -251,12 +245,10 @@ applyTransform (Transform a b { ratio: r }) = createQuantity
     createQuantity ZeroQuantity = ZeroQuantity
     createQuantity IncompatibleQuantity = IncompatibleQuantity
 
-
 -- flowParams :: EFlowParams
 flowParams = { eatingParam : eatingParam
              , binningParam : binningParam
              }
-
 
 applyRatio :: forall a. Ratio a -> Quantity a -> Quantity a
 applyRatio (Ratio a { ratio: ratio }) qty =
@@ -268,7 +260,7 @@ applyRatio (Ratio a { ratio: ratio }) qty =
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
 
-eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Matter,
+eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
                                 edibleWasteProcess :: Transform Matter Matter,
                                 nonedibleFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
 eating {eatedFoodRatio: eatedFoodRatio,
@@ -287,7 +279,7 @@ eating {eatedFoodRatio: eatedFoodRatio,
     nonedibleWasted = applyTransform nonedibleFoodWasteProcess shoppedFood
 
 
-binning :: forall r. FlowParam (allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
+binning :: forall r. ProcessParam (allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
 binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
   State $
   entries <>
@@ -302,63 +294,61 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
 -- composting :: forall r. FlowParam ( r ) -> State -> State
 -- composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
 
-nexusSystem :: Scale -> SystemParam -> FlowParams -> SystemState -> SystemState
--- nexusSystem scale systemP { eatingParam: eatingP } sys@(Tuple option input) = SystemState ( Tuple option
+nexusSystem :: SystemState -> SystemState
+-- nexusSystem scale systemP { eatingParam: eatingP } (Tuple option input) = SystemState ( Tuple option
 --   case option of
 --     Eating -> eating eatingP input
 --     Eating -> eatingOutput
 --   where
 --     eatingOutput =
 
+nexusSystem (SystemState { current, scale, state, systemParams, processParams: processParams@{ eatingParam: eatingP, binningParam: binningP } } ) = SystemState $ { current, scale, systemParams, processParams, state: _ }
+  case current of
+    EatingOnly -> eating eatingP state
+    _ -> State []
 
-
-nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } sys@(SystemState ( Tuple EatingOnly input ) ) = SystemState $ Tuple EatingOnly eatingOutput
-  where
-    eatingOutput = eating eatingP input
-
-
-nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } sys@(SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput
-  where
-    eatingOutput = eating eatingP input
-    binningOutput = binning binningP eatingOutput
-    -- eatingBinningOutput = eatingOutput -- <> binningOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple CompostingOnly input ) ) = SystemState $ Tuple CompostingOnly eatingBinningOutput
-  where
-    eatingOutput = eating eatingP input
-    -- compostingOutput = composting compostingP eatingOutput
-    -- binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple CompostingGarden input ) ) = SystemState $ Tuple CompostingGarden eatingBinningOutput
-  where
-    eatingOutput = eating eatingP input
-    -- compostingOutput = composting compostingP eatingOutput
-    -- binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple CompostingFoodGarden input ) ) = SystemState $ Tuple CompostingFoodGarden eatingBinningOutput
-  where
-    eatingOutput = eating eatingP input
-    -- compostingOutput = composting compostingP eatingOutput
-    -- binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple WateringGarden input ) ) = SystemState $ Tuple WateringGarden eatingBinningOutput
-  where
-    eatingOutput = eating eatingP input
-    -- compostingOutput = composting compostingP eatingOutput
-    -- binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple RainwaterWateringGarden input ) ) = SystemState $ Tuple RainwaterWateringGarden eatingBinningOutput
-  where
-    eatingOutput = eating eatingP input
-    -- compostingOutput = composting compostingP eatingOutput
-    -- binningOutput = binning binningP eatingOutput
-    eatingBinningOutput = eatingOutput
-
-nexusSystem scale systemP { eatingParam: eatingP } sys@(SystemState ( Tuple NotImplemented input ) ) = SystemState $ Tuple NotImplemented $ State []
+-- nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } (SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput
+--   where
+--     eatingOutput = eating eatingP state
+--     binningOutput = binning binningP eatingOutput
+--     -- eatingBinningOutput = eatingOutput -- <> binningOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingOnly input ) ) = SystemState $ Tuple CompostingOnly eatingBinningOutput
+--   where
+--     eatingOutput = eating eatingP input
+--     -- compostingOutput = composting compostingP eatingOutput
+--     -- binningOutput = binning binningP eatingOutput
+--     eatingBinningOutput = eatingOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingGarden input ) ) = SystemState $ Tuple CompostingGarden eatingBinningOutput
+--   where
+--     eatingOutput = eating eatingP input
+--     -- compostingOutput = composting compostingP eatingOutput
+--     -- binningOutput = binning binningP eatingOutput
+--     eatingBinningOutput = eatingOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingFoodGarden input ) ) = SystemState $ Tuple CompostingFoodGarden eatingBinningOutput
+--   where
+--     eatingOutput = eating eatingP input
+--     -- compostingOutput = composting compostingP eatingOutput
+--     -- binningOutput = binning binningP eatingOutput
+--     eatingBinningOutput = eatingOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple WateringGarden input ) ) = SystemState $ Tuple WateringGarden eatingBinningOutput
+--   where
+--     eatingOutput = eating eatingP input
+--     -- compostingOutput = composting compostingP eatingOutput
+--     -- binningOutput = binning binningP eatingOutput
+--     eatingBinningOutput = eatingOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple RainwaterWateringGarden input ) ) = SystemState $ Tuple RainwaterWateringGarden eatingBinningOutput
+--   where
+--     eatingOutput = eating eatingP input
+--     -- compostingOutput = composting compostingP eatingOutput
+--     -- binningOutput = binning binningP eatingOutput
+--     eatingBinningOutput = eatingOutput
+--
+-- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple NotImplemented input ) ) = SystemState $ Tuple NotImplemented $ State []
 
 
 -- eatingBinning systemP eatingP compostingP binningP input = do

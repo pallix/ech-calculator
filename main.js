@@ -1256,13 +1256,6 @@ var PS = {};
   var Data_HeytingAlgebra = PS["Data.HeytingAlgebra"];
   var Data_Functor = PS["Data.Functor"];
   var Data_Function = PS["Data.Function"];
-
-  /**
- *  TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
- *        The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
- *        Currently doing this with the process functions (`eating`,...) should be enough.
- * 
- */  
   var Transform = (function () {
       function Transform(value0, value1, value2) {
           this.value0 = value0;
@@ -1278,14 +1271,14 @@ var PS = {};
       };
       return Transform;
   })();
-  var SystemParam = (function () {
-      function SystemParam(value0) {
+  var SystemParams = (function () {
+      function SystemParams(value0) {
           this.value0 = value0;
       };
-      SystemParam.create = function (value0) {
-          return new SystemParam(value0);
+      SystemParams.create = function (value0) {
+          return new SystemParams(value0);
       };
-      return SystemParam;
+      return SystemParams;
   })();
 
   /**
@@ -1576,15 +1569,6 @@ var PS = {};
       };
       return State;
   })();
-
-  /**
- *  data State = State { shoppedFood :: Stock ( Quantity Food )
- *                                     , cookedFood :: Stock ( Quantity Food )
- *                                     , binnedFoodWaste :: Stock ( Quantity Waste )
- *                                     , sharedFood :: Stock ( Quantity Food )
- *                                     , managedWaste:: Stock ( Quantity Waste )
- *                                     }
- */  
   var SystemState = (function () {
       function SystemState(value0) {
           this.value0 = value0;
@@ -1608,25 +1592,25 @@ var PS = {};
           if (v instanceof ZeroQuantity) {
               return "0";
           };
-          throw new Error("Failed pattern match at Calculator.Model line 187, column 5 - line 187, column 47: " + [ v.constructor.name ]);
+          throw new Error("Failed pattern match at Calculator.Model line 179, column 5 - line 179, column 47: " + [ v.constructor.name ]);
       });
   };
   var processEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $55 = [ a, b ];
-          if ($55.length === 2 && ($55[0] instanceof Shopping && $55[1] instanceof Shopping)) {
+          var $51 = [ a, b ];
+          if ($51.length === 2 && ($51[0] instanceof Shopping && $51[1] instanceof Shopping)) {
               return true;
           };
-          if ($55.length === 2 && ($55[0] instanceof Eating && $55[1] instanceof Eating)) {
+          if ($51.length === 2 && ($51[0] instanceof Eating && $51[1] instanceof Eating)) {
               return true;
           };
-          if ($55.length === 2 && ($55[0] instanceof Binning && $55[1] instanceof Binning)) {
+          if ($51.length === 2 && ($51[0] instanceof Binning && $51[1] instanceof Binning)) {
               return true;
           };
-          if ($55.length === 2 && $55[0] instanceof AllProcess) {
+          if ($51.length === 2 && $51[0] instanceof AllProcess) {
               return true;
           };
-          if ($55.length === 2 && $55[1] instanceof AllProcess) {
+          if ($51.length === 2 && $51[1] instanceof AllProcess) {
               return true;
           };
           return false;
@@ -1651,23 +1635,23 @@ var PS = {};
   });
   var matterProperty = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $76 = [ a, b ];
-          if ($76.length === 2 && ($76[0] instanceof Edible && $76[1] instanceof Edible)) {
+          var $72 = [ a, b ];
+          if ($72.length === 2 && ($72[0] instanceof Edible && $72[1] instanceof Edible)) {
               return true;
           };
-          if ($76.length === 2 && ($76[0] instanceof NonEdible && $76[1] instanceof NonEdible)) {
+          if ($72.length === 2 && ($72[0] instanceof NonEdible && $72[1] instanceof NonEdible)) {
               return true;
           };
-          if ($76.length === 2 && ($76[0] instanceof Shopped && $76[1] instanceof Shopped)) {
+          if ($72.length === 2 && ($72[0] instanceof Shopped && $72[1] instanceof Shopped)) {
               return true;
           };
-          if ($76.length === 2 && ($76[0] instanceof Cooked && $76[1] instanceof Cooked)) {
+          if ($72.length === 2 && ($72[0] instanceof Cooked && $72[1] instanceof Cooked)) {
               return true;
           };
-          if ($76.length === 2 && $76[0] instanceof AllMatterProperty) {
+          if ($72.length === 2 && $72[0] instanceof AllMatterProperty) {
               return true;
           };
-          if ($76.length === 2 && $76[1] instanceof AllMatterProperty) {
+          if ($72.length === 2 && $72[1] instanceof AllMatterProperty) {
               return true;
           };
           return false;
@@ -1675,17 +1659,17 @@ var PS = {};
   });
   var matterEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $89 = [ a, b ];
-          if ($89.length === 2 && ($89[0] instanceof Food && $89[1] instanceof Food)) {
+          var $85 = [ a, b ];
+          if ($85.length === 2 && ($85[0] instanceof Food && $85[1] instanceof Food)) {
               return true;
           };
-          if ($89.length === 2 && ($89[0] instanceof Waste && $89[1] instanceof Waste)) {
+          if ($85.length === 2 && ($85[0] instanceof Waste && $85[1] instanceof Waste)) {
               return true;
           };
-          if ($89.length === 2 && $89[0] instanceof AllMatter) {
+          if ($85.length === 2 && $85[0] instanceof AllMatter) {
               return true;
           };
-          if ($89.length === 2 && $89[1] instanceof AllMatter) {
+          if ($85.length === 2 && $85[1] instanceof AllMatter) {
               return true;
           };
           return false;
@@ -1747,7 +1731,7 @@ var PS = {};
       if (v instanceof AllMatter) {
           return new Data_Generic.SProd("Calculator.Model.AllMatter", [  ]);
       };
-      throw new Error("Failed pattern match at Calculator.Model line 112, column 1 - line 112, column 48: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Calculator.Model line 104, column 1 - line 104, column 48: " + [ v.constructor.name ]);
   });
   var showMatter = new Data_Show.Show(Data_Generic.gShow(genericMatter));
   var foldState = function (process) {
@@ -1770,10 +1754,6 @@ var PS = {};
           };
       };
   };
-
-  /**
- *  systemFlows :: forall r. FlowType -> Record ( title :: String | r )
- */  
   var eatingParam = {
       title: "Eating", 
       eatedFoodRatio: new Ratio(Food.value, {
@@ -1798,37 +1778,10 @@ var PS = {};
           ratio: 0.19
       })
   };
-
-  /**
- * 
- *  eatingParam =  { title: "Eating"
- *                 , eatedFoodProcess: Process ( Food Any ) Life { ratio: 0.81 } -- ( 1 - allFoodWasteProcess
- *                 , allFoodProcess: Process ( Food Any ) ( Waste FoodWaste ) { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
- *                 , edibleWasteProcess: Process ( Food Any ) ( Food EdibleFoodWaste ) { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
- *                 , nonedibleFoodWasteProcess: Process ( Food Any ) ( Waste NonEdibleFoodWaste ) { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
- *                 }
- * 
- *  binningParam = { title: "Binning"
- *                 , inputProcess: Process ( Waste Any ) ManagedWaste { ratio: 1.0 }
- *                 }
- *  flowParams :: EFlowParams
- */  
-  var flowParams = {
+  var initProcessParams = {
       eatingParam: eatingParam, 
       binningParam: binningParam
   };
-
-  /**
- *  applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
- *  applyProcess (Process a b { ratio: ratio }) = updateQty
- *    where
- *      updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
- *        Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
- *        Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock _ _ ) =
- *        Stock IncompatibleQuantity IncompatibleQuantity
- */  
   var applyTransform = function (v) {
       var createQuantity = function (v1) {
           if (v1 instanceof Weight) {
@@ -1843,38 +1796,10 @@ var PS = {};
           if (v1 instanceof IncompatibleQuantity) {
               return IncompatibleQuantity.value;
           };
-          throw new Error("Failed pattern match at Calculator.Model line 295, column 5 - line 295, column 51: " + [ v1.constructor.name ]);
+          throw new Error("Failed pattern match at Calculator.Model line 234, column 5 - line 234, column 51: " + [ v1.constructor.name ]);
       };
       return createQuantity;
   };
-  var binning = function (v) {
-      return function (v1) {
-          var waste = foldState(Eating.value)(Waste.value)(AllMatterProperty.value)(v1);
-          var managed = applyTransform(v.allFoodWasteProcess)(waste);
-          return State.create(Data_Semigroup.append(Data_Semigroup.semigroupArray)(v1.value0)([ new Entry({
-              process: Binning.value, 
-              matter: ManagedWaste.value, 
-              matterProperty: NonEdible.value, 
-              quantity: managed
-          }) ]));
-      };
-  };
-
-  /**
- *  systemFlows CompostingFlow = unsafeCoerce
- *  systemFlows WateringFlow = unsafeCoerce
- *  systemFlows RainwaterCollectingFlow = unsafeCoerce
- * 
- *  applyRatio :: forall a. Ratio a -> Stock ( Quantity a ) -> Stock ( Quantity a )
- *  applyRatio ( Ratio a { ratio: ratio } ) = updateQty
- *    where
- *      updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
- *        Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
- *        Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock _ _ ) =
- *        Stock IncompatibleQuantity IncompatibleQuantity
- */  
   var applyRatio = function (v) {
       return function (qty) {
           var appRatio = function (r) {
@@ -1891,19 +1816,12 @@ var PS = {};
                   if (v1 instanceof IncompatibleQuantity) {
                       return IncompatibleQuantity.value;
                   };
-                  throw new Error("Failed pattern match at Calculator.Model line 338, column 5 - line 338, column 51: " + [ r.constructor.name, v1.constructor.name ]);
+                  throw new Error("Failed pattern match at Calculator.Model line 249, column 5 - line 249, column 51: " + [ r.constructor.name, v1.constructor.name ]);
               };
           };
           return appRatio(v.value1.ratio)(qty);
       };
   };
-
-  /**
- *  eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
- *  eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
- *    State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
- *                    binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
- */  
   var eating = function (v) {
       return function (v1) {
           var shoppedFood = foldState(Shopping.value)(Food.value)(AllMatterProperty.value)(v1);
@@ -1924,87 +1842,30 @@ var PS = {};
   };
 
   /**
- *  binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
- *  binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
- *    State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
- *                    --    Stock (Weight AnyWaste 66.0) (Weight AnyWaste 66.0),
- *                    -- shoppedFood =
- *                    --   Stock (Weight AnyFood 66.0) (Weight AnyFood 66.0)
- *                  } )
  *  composting :: forall r. FlowParam ( r ) -> State -> State
  *  composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
- *  nexusSystem scale systemP { eatingParam: eatingP } sys@(Tuple option input) = SystemState ( Tuple option
+ *  nexusSystem scale systemP { eatingParam: eatingP } (Tuple option input) = SystemState ( Tuple option
  *    case option of
  *      Eating -> eating eatingP input
  *      Eating -> eatingOutput
  *    where
  *      eatingOutput =
  */  
-  var nexusSystem = function (scale) {
-      return function (systemP) {
-          return function (v) {
-              return function (v1) {
-                  if (v1.value0.value0 instanceof EatingOnly) {
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(EatingOnly.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof EatingBinning) {
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      var binningOutput = binning(v.binningParam)(eatingOutput);
-                      return SystemState.create(new Data_Tuple.Tuple(EatingBinning.value, binningOutput));
-                  };
-                  if (v1.value0.value0 instanceof CompostingOnly) {
-                    
-                      /**
-                     *  compostingOutput = composting compostingP eatingOutput
-                     *  binningOutput = binning binningP eatingOutput
-                     */  
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(CompostingOnly.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof CompostingGarden) {
-                    
-                      /**
-                     *  compostingOutput = composting compostingP eatingOutput
-                     *  binningOutput = binning binningP eatingOutput
-                     */  
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(CompostingGarden.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof CompostingFoodGarden) {
-                    
-                      /**
-                     *  compostingOutput = composting compostingP eatingOutput
-                     *  binningOutput = binning binningP eatingOutput
-                     */  
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(CompostingFoodGarden.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof WateringGarden) {
-                    
-                      /**
-                     *  compostingOutput = composting compostingP eatingOutput
-                     *  binningOutput = binning binningP eatingOutput
-                     */  
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(WateringGarden.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof RainwaterWateringGarden) {
-                    
-                      /**
-                     *  compostingOutput = composting compostingP eatingOutput
-                     *  binningOutput = binning binningP eatingOutput
-                     */  
-                      var eatingOutput = eating(v.eatingParam)(v1.value0.value1);
-                      return SystemState.create(new Data_Tuple.Tuple(RainwaterWateringGarden.value, eatingOutput));
-                  };
-                  if (v1.value0.value0 instanceof NotImplemented) {
-                      return SystemState.create(Data_Tuple.Tuple.create(NotImplemented.value)(new State([  ])));
-                  };
-                  throw new Error("Failed pattern match at Calculator.Model line 397, column 1 - line 399, column 40: " + [ scale.constructor.name, systemP.constructor.name, v.constructor.name, v1.constructor.name ]);
-              };
+  var nexusSystem = function (v) {
+      return SystemState.create((function (v1) {
+          return {
+              current: v.value0.current, 
+              scale: v.value0.scale, 
+              systemParams: v.value0.systemParams, 
+              processParams: v.value0.processParams, 
+              state: v1
           };
-      };
+      })((function () {
+          if (v.value0.current instanceof EatingOnly) {
+              return eating(v.value0.processParams.eatingParam)(v.value0.state);
+          };
+          return new State([  ]);
+      })()));
   };
   exports["Entry"] = Entry;
   exports["Food"] = Food;
@@ -2037,11 +1898,11 @@ var PS = {};
   exports["HouseholdScale"] = HouseholdScale;
   exports["EstateScale"] = EstateScale;
   exports["State"] = State;
-  exports["SystemParam"] = SystemParam;
+  exports["SystemParams"] = SystemParams;
   exports["SystemState"] = SystemState;
   exports["Transform"] = Transform;
-  exports["flowParams"] = flowParams;
   exports["foldState"] = foldState;
+  exports["initProcessParams"] = initProcessParams;
   exports["nexusSystem"] = nexusSystem;
   exports["processEq"] = processEq;
   exports["genericMatter"] = genericMatter;
@@ -2750,7 +2611,8 @@ var PS = {};
   exports["src"] = src;
 })(PS["Text.Smolder.HTML.Attributes"] = PS["Text.Smolder.HTML.Attributes"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.1
+  "use strict";
   var Calculator_Model = PS["Calculator.Model"];
   var $$Math = PS["Math"];
   var CSS = PS["CSS"];
@@ -2772,17 +2634,6 @@ var PS = {};
   var Data_Show = PS["Data.Show"];
   var Data_Semigroup = PS["Data.Semigroup"];
   var shoppedFood = Calculator_Model.foldState(Calculator_Model.Shopping.value)(Calculator_Model.Food.value)(Calculator_Model.AllMatterProperty.value);
-
-  /**
- *  layout :: String
- *  layout = toCss example4
- *  css :: forall e. Markup e
- *  css = style (text layout)
- *  light :: forall e. Boolean -> Markup e
- *  light on = div ! arg $ mempty
- *    where arg | on = className "on"
- *              | otherwise = mempty
- */  
   var hex = function (hover) {
       return function (grid) {
           return function (item) {
@@ -2871,25 +2722,20 @@ var PS = {};
       details: ""
   };
   var cookedFood = Calculator_Model.foldState(Calculator_Model.Eating.value)(Calculator_Model.Food.value)(Calculator_Model.AllMatterProperty.value);
-
-  /**
- *  displayState "Food: " availableFood consumedFood
- *  displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
- */  
   var arrayHex = function (v) {
-      if (v.value0.value0 instanceof Calculator_Model.EatingOnly) {
+      if (v.value0.current instanceof Calculator_Model.EatingOnly) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Shopped Food", 
-              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(shoppedFood(v.value0.value1))
+              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(shoppedFood(v.value0.state))
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Eating", 
-              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(cookedFood(v.value0.value1))
+              details: Data_Show.show(Calculator_Model.showQuantity(Calculator_Model.showMatter))(cookedFood(v.value0.state))
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Managed Waste", 
               details: "..."
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(2)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))))));
       };
-      if (v.value0.value0 instanceof Calculator_Model.EatingBinning) {
+      if (v.value0.current instanceof Calculator_Model.EatingBinning) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Eating", 
               details: ""
@@ -2898,7 +2744,7 @@ var PS = {};
               details: ""
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Array.replicate(9)(emptyHex))))))))));
       };
-      if (v.value0.value0 instanceof Calculator_Model.CompostingOnly) {
+      if (v.value0.current instanceof Calculator_Model.CompostingOnly) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyHex))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "Composting", 
               details: ""
@@ -2920,7 +2766,7 @@ var PS = {};
       };
   };
   var arrayArrow = function (v) {
-      if (v.value0.value0 instanceof Calculator_Model.EatingOnly) {
+      if (v.value0.current instanceof Calculator_Model.EatingOnly) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "_", 
               quantity: 2.0, 
@@ -2931,14 +2777,14 @@ var PS = {};
               details: ""
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(3)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))))));
       };
-      if (v.value0.value0 instanceof Calculator_Model.EatingBinning) {
+      if (v.value0.current instanceof Calculator_Model.EatingBinning) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "_", 
               quantity: 2.0, 
               details: ""
           }))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Array.replicate(9)(emptyArrow))))))));
       };
-      if (v.value0.value0 instanceof Calculator_Model.CompostingOnly) {
+      if (v.value0.current instanceof Calculator_Model.CompostingOnly) {
           return Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(10)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(9)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.replicate(4)(emptyArrow))(Data_Semigroup.append(Data_Semigroup.semigroupArray)(Data_Array.singleton({
               title: "/", 
               quantity: 2.0, 
@@ -2958,12 +2804,6 @@ var PS = {};
           };
       };
   };
-
-  /**
- *  flowsSystem sys =
- *  tokenSystem sys =
- *  interface :: forall e. Boolean -> Boolean -> SystemState -> Markup e
- */  
   var $$interface = function (hover) {
       return function (grid) {
           return function (state) {
@@ -3800,7 +3640,8 @@ var PS = {};
   exports["runFlareHTML"] = runFlareHTML;
 })(PS["Flare.Smolder"] = PS["Flare.Smolder"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.1
+  "use strict";
   var Prelude = PS["Prelude"];
   var Calculator_Layout = PS["Calculator.Layout"];
   var Calculator_Model = PS["Calculator.Model"];
@@ -3833,12 +3674,24 @@ var PS = {};
   var Data_Ring = PS["Data.Ring"];
   var Control_Apply = PS["Control.Apply"];
   var Control_Applicative = PS["Control.Applicative"];        
-  var systemState = function (opt) {
-      return function (state) {
-          return new Calculator_Model.SystemState(new Data_Tuple.Tuple(opt, state));
+  var systemState = function (current) {
+      return function (scale) {
+          return function (systemParams1) {
+              return function (processParams) {
+                  return function (state) {
+                      return new Calculator_Model.SystemState({
+                          scale: scale, 
+                          systemParams: systemParams1, 
+                          processParams: processParams, 
+                          current: current, 
+                          state: state
+                      });
+                  };
+              };
+          };
       };
   };
-  var systemParamWithConstants = Data_Functor.map(Data_Functor.functorFn)(Calculator_Model.SystemParam.create)(function (v) {
+  var systemParamsWithConstants = Data_Functor.map(Data_Functor.functorFn)(Calculator_Model.SystemParams.create)(function (v) {
       return {
           houseHoldSize: v, 
           estatePopulation: 200, 
@@ -3847,7 +3700,7 @@ var PS = {};
           estateFlatsThreeBedroom: 15
       };
   });
-  var systemParam = systemParamWithConstants(0);
+  var systemParams = systemParamsWithConstants(0);
   var scaleToString = function (v) {
       if (v instanceof Calculator_Model.PersonScale) {
           return "Person";
@@ -3858,38 +3711,8 @@ var PS = {};
       if (v instanceof Calculator_Model.EstateScale) {
           return "Estate";
       };
-      throw new Error("Failed pattern match at Main line 108, column 1 - line 109, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 114, column 1 - line 115, column 1: " + [ v.constructor.name ]);
   };
-
-  /**
- *  data Action = Food
- *              | Bin
- *              | Compost
- *              | Garden
- *              | FoodGarden
- *              | Reset
- * 
- *  label :: Action -> String
- *  label Food = "Food"
- *  label Bin = "Bin"
- *  label Compost = "Compost"
- *  label Garden = "Garden"
- *  label FoodGarden = "FoodGarden"
- *  label Reset = "Reset"
- *  type State = Array Token
- *  perform :: Action -> State -> State
- *  perform Food = flip snoc { title: "Food" }
- *  perform Bin = flip snoc { title: "Bin" }
- *  perform Compost = flip snoc { title: "Compost" }
- *  perform Garden = flip snoc { title: "Garden" }
- *  perform FoodGarden = flip snoc { title: "Food Garden" }
- *  perform Reset     = const []
- *  TODO: Reuse this traverseable approach to create `optionals` and `booleans` functions
- *  controls = foldp (maybe id perform) [ { title: "Food" } ] $
- *              buttons [Food, Bin, Compost, Garden, FoodGarden, Reset] label
- *  actions = string "Add item:" "Bin" <**> button "Add" (flip const) cons
- *  list = foldp id ["Food"] actions
- */  
   var optionsLabel = function (v) {
       if (v instanceof Calculator_Model.EatingOnly) {
           return "Food";
@@ -3915,7 +3738,7 @@ var PS = {};
       if (v instanceof Calculator_Model.NotImplemented) {
           return "Not Implemented Yet";
       };
-      throw new Error("Failed pattern match at Main line 77, column 1 - line 78, column 1: " + [ v.constructor.name ]);
+      throw new Error("Failed pattern match at Main line 78, column 1 - line 79, column 1: " + [ v.constructor.name ]);
   };
   var nexusOptions = Flare.select(Data_Foldable.foldableArray)("Options")(new Data_NonEmpty.NonEmpty(Calculator_Model.EatingOnly.value, [ Calculator_Model.EatingBinning.value, Calculator_Model.CompostingOnly.value, Calculator_Model.CompostingGarden.value, Calculator_Model.CompostingFoodGarden.value, Calculator_Model.WateringGarden.value, Calculator_Model.RainwaterWateringGarden.value ]))(optionsLabel);
   var initState = new Calculator_Model.State([ new Calculator_Model.Entry({
@@ -3934,33 +3757,18 @@ var PS = {};
       matterProperty: Calculator_Model.NonEdible.value, 
       quantity: new Calculator_Model.Weight(Calculator_Model.Waste.value, 10.0)
   }) ]);
-  var eatingParam = {
-      title: "Eating", 
-      eatedFoodRatio: new Calculator_Model.Ratio(Calculator_Model.Food.value, {
-          ratio: 0.81
-      }), 
-      allFoodWasteProcess: new Calculator_Model.Transform(Calculator_Model.Food.value, Calculator_Model.Waste.value, {
-          ratio: 0.19
-      }), 
-      edibleWasteRatio: new Calculator_Model.Ratio(Calculator_Model.Waste.value, {
-          ratio: 0.114
-      }), 
-      nonedibleFoodWasteRatio: new Calculator_Model.Ratio(Calculator_Model.Waste.value, {
-          ratio: 7.6e-2
-      })
-  };
   var controllableParam = function (eatedFoodRatio) {
       var $8 = {};
-      for (var $9 in Calculator_Model.flowParams) {
-          if (Calculator_Model.flowParams.hasOwnProperty($9)) {
-              $8[$9] = Calculator_Model.flowParams[$9];
+      for (var $9 in Calculator_Model.initProcessParams) {
+          if (Calculator_Model.initProcessParams.hasOwnProperty($9)) {
+              $8[$9] = Calculator_Model.initProcessParams[$9];
           };
       };
       $8.eatingParam = (function () {
           var $5 = {};
-          for (var $6 in eatingParam) {
-              if (eatingParam.hasOwnProperty($6)) {
-                  $5[$6] = eatingParam[$6];
+          for (var $6 in Calculator_Model.initProcessParams.eatingParam) {
+              if (Calculator_Model.initProcessParams.eatingParam.hasOwnProperty($6)) {
+                  $5[$6] = Calculator_Model.initProcessParams.eatingParam[$6];
               };
           };
           $5.eatedFoodRatio = new Calculator_Model.Ratio(Calculator_Model.Food.value, {
@@ -3970,69 +3778,16 @@ var PS = {};
       })();
       return $8;
   };
-
-  /**
- *  ui :: forall e e'. UI e (Markup e')
- * 
- */  
-  var ui = Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Data_Functor.map(Flare.functorUI)(Debug_Trace.spy)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Model.nexusSystem)(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty(Calculator_Model.PersonScale.value, [ Calculator_Model.HouseholdScale.value, Calculator_Model.EstateScale.value ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParam)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(0.81)))))(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(systemState)(nexusOptions))(Control_Applicative.pure(Flare.applicativeUI)(initState)))));
-
-  /**
- * 
- *  ui opt = interface <$> ( boolean "Info" true )
- *                         <*> ( boolean "Grid" false )
- *                         <*> pure opt
- *                         <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
- *                                            <*> pure systemParam
- *                                            <*> fieldset ( ( optionsLabel opt ) <> "Parameters" ) ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
- *                                            <*> pure eatingInitState
- *                                            <*> pure opt )
- * 
- *  ui EatingBinning = interface <$> ( boolean "Info" true )
- *                     <*> ( boolean "Grid" false )
- *                     <*> pure EatingBinning
- *                     <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
- *                           <*> pure systemParam
- *                           <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
- *                           <*> pure eatingInitState
- *                           <*> pure EatingBinning )
- * 
- *  ui _ = interface <$> ( boolean "Info" true )
- *                   <*> ( boolean "Grid" false )
- *                   <*> ( nexusSystem <$> pure PersonScale
- *                                     <*> pure systemParam
- *                                     <*> pure ( controllableParam 0.0 )
- *                                     <*> pure eatingInitState
- *                                     <*> pure NotImplemented )
- *  inner = runFlareHTML "controls" "output" <<< ui
- *  <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
- *  ui = token <$> string_ "Yo"
- *             <*> (color "Color" (hsl 333.0 0.6 0.5))
- *  Below is an example of what I think the applicative interface results in
- *  where test is instantiated twice with both instance being completely independent.
- * 
- *  ui :: forall e e'. UI e (Markup e')
- *  ui = ( interface <$> ( boolean "Info" true )
- *                 <*> ( test )
- *                 <*> ( eatingBinningUI )
- *                 <*> ( optionsTokens <$> options ) )
- *    <> ( text <$>
- *          ( show <$> test ) )
- *    where
- *      test = boolean "Test" false
- * 
- *  main = runFlareWith "select" inner nexusOptions
- */  
+  var ui = Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Data_Functor.map(Flare.functorUI)(Debug_Trace.spy)(Data_Functor.map(Flare.functorUI)(Calculator_Model.nexusSystem)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(systemState)(nexusOptions))(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty(Calculator_Model.PersonScale.value, [ Calculator_Model.HouseholdScale.value, Calculator_Model.EstateScale.value ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParams)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(0.81)))))(Control_Applicative.pure(Flare.applicativeUI)(initState)))));
   var main = Flare_Smolder.runFlareHTML("controls")("output")(ui);
   exports["controllableParam"] = controllableParam;
-  exports["eatingParam"] = eatingParam;
   exports["initState"] = initState;
   exports["main"] = main;
   exports["nexusOptions"] = nexusOptions;
   exports["optionsLabel"] = optionsLabel;
   exports["scaleToString"] = scaleToString;
-  exports["systemParam"] = systemParam;
-  exports["systemParamWithConstants"] = systemParamWithConstants;
+  exports["systemParams"] = systemParams;
+  exports["systemParamsWithConstants"] = systemParamsWithConstants;
   exports["systemState"] = systemState;
   exports["ui"] = ui;
 })(PS["Main"] = PS["Main"] || {});

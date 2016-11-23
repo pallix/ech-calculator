@@ -117,7 +117,7 @@ arrayHex :: SystemState -> Array Token
                       -- displayState "Food: " availableFood consumedFood
                       -- displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
 
-arrayHex ( SystemState ( Tuple EatingOnly state ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState { current: EatingOnly, state } ) = ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: show $ shoppedFood state }
@@ -128,7 +128,7 @@ arrayHex ( SystemState ( Tuple EatingOnly state ) ) = ( replicate 10 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
 
-arrayHex ( SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState { current: EatingBinning, state } ) = ( replicate 10 emptyHex )
                   <> ( replicate  9 emptyHex )
                   <> ( replicate 10 emptyHex )
                   <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
@@ -137,7 +137,7 @@ arrayHex ( SystemState ( Tuple EatingBinning state ) ) = ( replicate 10 emptyHex
                   <> ( replicate 10 emptyHex )
                   <> ( replicate  9 emptyHex )
 
-arrayHex ( SystemState ( Tuple CompostingOnly state ) ) = ( replicate 10 emptyHex )
+arrayHex ( SystemState { current: CompostingOnly, state } ) = ( replicate 10 emptyHex )
                      <> ( replicate  4 emptyHex ) <> singleton {title: "Composting", details: ""}  <> ( replicate 4 emptyHex )
                      <> ( replicate 10 emptyHex )
                      <> ( replicate  3 emptyHex ) <> singleton { title : "Eating", details: "" }
@@ -170,7 +170,7 @@ hexes hover grid state = do
 emptyArrow = { title: "", quantity: 0.0, details: "" }
 
 arrayArrow :: SystemState -> Array Flow2
-arrayArrow sys@(SystemState ( Tuple EatingOnly state ) ) =
+arrayArrow (SystemState { current: EatingOnly, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
@@ -180,7 +180,7 @@ arrayArrow sys@(SystemState ( Tuple EatingOnly state ) ) =
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
-arrayArrow sys@(SystemState ( Tuple EatingBinning state ) ) =
+arrayArrow (SystemState { current: EatingBinning, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
@@ -188,7 +188,7 @@ arrayArrow sys@(SystemState ( Tuple EatingBinning state ) ) =
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
-arrayArrow sys@(SystemState ( Tuple CompostingOnly state ) ) =
+arrayArrow (SystemState { current: CompostingOnly, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: 2.0, details: "" } <> ( replicate 5 emptyArrow )
@@ -212,11 +212,11 @@ arrayArrow sys@(SystemState ( Tuple CompostingOnly state ) ) =
 --                         <> ( replicate  4 emptyArrow ) <> singleton d <> ( replicate  4 emptyArrow )
 
 arrayArrow _  = ( replicate 10 emptyArrow )
-           <> ( replicate  9 emptyArrow )
-           <> ( replicate 10 emptyArrow )
-           <> ( replicate  9 emptyArrow )
-           <> ( replicate 10 emptyArrow )
-           <> ( replicate  9 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
 
 arrows :: forall e. Boolean -> Boolean -> SystemState -> Markup e
 arrows hover grid state = do
