@@ -6,7 +6,7 @@ import Calculator.Model (
   Matter(..),
   MatterProperty(..),
   Quantity(..),
-  State(State), SystemState(..), foldState)
+  State(State), SystemState(..), foldState, initialState)
 
 import Math (trunc)
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
@@ -25,7 +25,7 @@ import Prelude hiding (div, id)
 type Tok t = { title :: String, details :: String | t }
 
 type Token = Tok ()
-type Flow2 = Tok ( quantity :: Number )
+type Flow2 = Tok ( quantity :: String )
 
 -- example4 :: Rendered
 -- example4 = render do
@@ -77,15 +77,15 @@ hex hover grid item = li ! className "hex" ! id item.title $ do
 flow :: forall e. Flow2 -> Markup e
 flow item = tokenToHex item
             where
-              tokenToHex { title: "_", quantity: n } = li ! className "hex" $ do
+              tokenToHex { title: "_", quantity, details } = li ! className "hex" $ do
                       a ! className "hexIn hover" $ do
-                           h2 $ text $ show n
-                           p $ text ""
+                           h2 $ text quantity
+                           p $ text details
                            div ! className "arrow-css right" $ mempty
-              tokenToHex { title: "/", quantity: n } = li ! className "hex rotate-1" $ do
+              tokenToHex { title: "/", quantity, details } = li ! className "hex rotate-1" $ do
                       a ! className "hexIn hover" $ do
-                           h2 $ text $ show n
-                           p $ text ""
+                           h2 $ text quantity
+                           p $ text details
                            div ! className "arrow-css right" $ mempty
                           --  img ! src "https://dummyimage.com/200x200&text=+"
               tokenToHex _  = li ! className "hex" $ do
@@ -110,9 +110,8 @@ displayState title available consumed = ( showAvailable available) <> " " <> ( s
 
 emptyHex = { title: "", details: "" }
 
-shoppedFood = foldState Shopping Food AllMatterProperty
-cookedFood = foldState Eating Food AllMatterProperty
-foodWaste = foldState Eating Waste AllMatterProperty
+eatedFood = foldState Eating Food AllMatterProperty
+
 
 arrayHex :: SystemState -> Array Token
                       -- displayState "Food: " availableFood consumedFood
@@ -121,11 +120,11 @@ arrayHex :: SystemState -> Array Token
 arrayHex ( SystemState { current: EatingOnly, state } ) = ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
                 <> ( replicate 10 emptyHex )
-                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: show $ shoppedFood state }
+                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: "..." }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Eating", details: show $ cookedFood state }
+                                                  <> singleton { title : "Eating", details: show $ eatedFood state }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Managed Waste", details: show $ foodWaste state } <> ( replicate 2 emptyHex )
+                                                  <> singleton { title : "Managed Waste", details: "..." } <> ( replicate 2 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
 
@@ -168,16 +167,19 @@ hexes hover grid state = do
              ul ! className "hexGrid" $ do
                foldMap ( hex hover grid ) ( arrayHex  state )
 
-emptyArrow = { title: "", quantity: 0.0, details: "" }
+initialShoppedFood = initialState Shopping Food AllMatterProperty
+foodWaste = foldState Eating Waste AllMatterProperty
+
+emptyArrow = { title: "", quantity: "", details: "" }
 
 arrayArrow :: SystemState -> Array Flow2
 arrayArrow (SystemState { current: EatingOnly, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
-                  <> ( replicate  3 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" }
+                  <> ( replicate  3 emptyArrow ) <> singleton  { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
                                                  <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 3 emptyArrow )
+                                                 <> singleton  { title: "_", quantity: show $ foodWaste state, details: "of Waste" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
@@ -185,15 +187,15 @@ arrayArrow (SystemState { current: EatingBinning, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 4 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: "", details: "" } <> ( replicate 4 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
 arrayArrow (SystemState { current: CompostingOnly, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: 2.0, details: "" } <> ( replicate 5 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: 2.0, details: "" } <> ( replicate 4 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: "", details: "" } <> ( replicate 5 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "_", quantity: "", details: "" } <> ( replicate 4 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
