@@ -99,7 +99,7 @@ data Scale = PersonScale | HouseholdScale | EstateScale
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | Composting
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting
 
 derive instance genericProcess :: Generic Process
 
@@ -112,7 +112,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = AllMatter | Food | Waste | ManagedWaste | GreyWatter | Compost
+data Matter = AllMatter | Food | Waste | ManagedWaste | GreyWater | Compost
 
 derive instance genericMatter :: Generic Matter
 
@@ -218,7 +218,7 @@ type ProcessParams = { eatingParam ::
                                        , inputRatio :: Ratio Matter
                                        , allFoodWasteProcess :: Transform Matter Matter
                                        }
-                     , compostingParam :: { title :: String
+                     , wormCompostingParam :: { title :: String
                                           , inputRatio :: Ratio Matter
                                           , compostProcess :: Transform Matter Matter
                                           }
@@ -242,7 +242,7 @@ binningParam = { title: "Binning"
                , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                }
 
-compostingParam = { title: "Composting"
+wormCompostingParam = { title: "WormComposting"
                     -- 'Wormery compost'!B9 * 4 (four turnover per year)
                   , compostProcess: Transform Waste Compost { ratio: 0.13 * 4.0 }
                   , inputRatio: Ratio Waste { ratio: 0.6 } -- TODO: it is missing in the sheet, arbitrary number taken
@@ -250,7 +250,7 @@ compostingParam = { title: "Composting"
 
 initProcessParams = { eatingParam
                     , binningParam
-                    , compostingParam
+                    , wormCompostingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
@@ -310,16 +310,16 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
     waste = foldState Eating Waste AllMatterProperty state
     managed = applyTransform allFoodWasteProcess waste
 
-eatingComposting :: forall r. ProcessParam (inputRatio :: Ratio Matter,
+eatingWormComposting :: forall r. ProcessParam (inputRatio :: Ratio Matter,
                                       compostProcess :: Transform Matter Matter | r ) -> State -> State
-eatingComposting {compostProcess,
+eatingWormComposting {compostProcess,
                   inputRatio} state@(State entries) =
   State $
   entries <>
   [
     Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: neg wasteInput}
-  , Entry {process: Composting, matter: Waste, matterProperty: AllMatterProperty, quantity: remaining}
-  , Entry {process: Composting, matter: Compost, matterProperty: AllMatterProperty, quantity: compost}
+  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: remaining}
+  , Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: compost}
   ]
   where
     wastedFood =  foldState Eating Waste AllMatterProperty state
