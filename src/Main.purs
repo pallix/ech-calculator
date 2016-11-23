@@ -95,9 +95,7 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
 
 systemParams = systemParamsWithConstants ( 0 )
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
-                    , Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
-                    , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
+initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}]
 
 
 scaleToString PersonScale = "Person"
@@ -106,18 +104,20 @@ scaleToString EstateScale  = "Estate"
 
 controllableParam eatedFoodRatio = initProcessParams { eatingParam = initProcessParams.eatingParam { eatedFoodRatio = Ratio Food { ratio: eatedFoodRatio } } }
 
-systemState :: Options -> Scale -> SystemParams -> ProcessParams ->  State -> SystemState
-systemState current scale systemParams processParams  state = SystemState { scale, systemParams, processParams, current, state }
+ratio ( Ratio _ { ratio } ) = ratio
+
+systemState :: Options -> Scale -> SystemParams -> ProcessParams -> State -> SystemState
+systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
 
 -- ui :: forall e e'. UI e (Markup e')
 --
 ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
-               <*> ( spy <$> ( nexusSystem <$> ( systemState <$> nexusOptions
-                                                              <*> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
-                                                              <*> pure systemParams
-                                                              <*> fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
-                                                              <*> ( pure initState ) ) ) )
+               <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
+                                                    <*> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
+                                                    <*> pure systemParams
+                                                    <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
+                                                    <*> ( pure initState ) ) )
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )
