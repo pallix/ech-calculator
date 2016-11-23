@@ -82,6 +82,12 @@ neg (Volume c qty) = Volume c 0.5
 neg IncompatibleQuantity = IncompatibleQuantity
 neg ZeroQuantity = ZeroQuantity
 
+substract :: forall a. Quantity a -> Quantity a -> Quantity a
+substract (Weight c qty1) (Weight _ qty2) = Weight c (qty1 - qty2)
+substract (Volume c qty1) (Volume _ qty2) = Weight c (qty1 - qty2)
+substract q ZeroQuantity = q
+substract ZeroQuantity q = neg q
+substract _ _ = IncompatibleQuantity
 
 -- -- Kg / Person / Day
 -- data Weight a =
@@ -311,13 +317,15 @@ eatingComposting {compostProcess,
   State $
   entries <>
   [
-    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: neg compostedFood}
+    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: neg wasteInput}
+  , Entry {process: Composting, matter: Waste, matterProperty: AllMatterProperty, quantity: remaining}
   , Entry {process: Composting, matter: Compost, matterProperty: AllMatterProperty, quantity: compost}
   ]
   where
     wastedFood =  foldState Eating Waste AllMatterProperty state
-    compostedFood = applyRatio inputRatio wastedFood
-    compost = applyTransform compostProcess compostedFood
+    wasteInput = applyRatio inputRatio wastedFood
+    compost = applyTransform compostProcess wasteInput
+    remaining = substract wasteInput compost
 
 nexusSystem :: SystemState -> SystemState
 -- nexusSystem scale systemP { eatingParam: eatingP } (Tuple option input) = SystemState ( Tuple option
