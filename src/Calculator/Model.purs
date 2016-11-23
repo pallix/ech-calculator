@@ -84,12 +84,6 @@ data Scale = PersonScale | HouseholdScale | EstateScale
 
 data Ratio a = Ratio a { ratio :: Number }
 
--- data State = State { shoppedFood :: Stock ( Quantity Food )
---                                    , cookedFood :: Stock ( Quantity Food )
---                                    , binnedFoodWaste :: Stock ( Quantity Waste )
---                                    , sharedFood :: Stock ( Quantity Food )
---                                    , managedWaste:: Stock ( Quantity Waste )
---                                    }
 
 data SystemState = SystemState ( Tuple Options State )
 
@@ -200,46 +194,13 @@ derive instance genericOptions :: Generic Options
 instance showOptions :: Show Options where
     show = gShow
 
---
--- instance mergeState :: Semigroup State where
---   append s1 s2 = s1 -- TODO!
-  --  State { shoppedFood : append s1.shoppedFood s2.shoppedFood
-  --                      , binnedFoodWaste: s1.binnedFoodWaste <> s2.binnedFoodWaste
-  --                      , managedWaste: s1.managedWaste <> s2.managedWaste
-  --                      , sharedFood: s1.sharedFood <> s2.sharedFood
-  --                      }
-
-
--- derive instance genericState :: Generic State
---
--- instance showState :: Show State  where
---     show = gShow
 
 derive instance genericSystemState :: Generic SystemState
 
 instance showSystemState :: Show SystemState  where
     show = gShow
 
--- systemState = State <$> { shoppedFood: Stock ( Weight ShoppedFood 585.0 ) ( Weight ShoppedFood 0.0 )
---                         , cookedFood: Stock ( Weight CookedFood 0.0 ) ( Weight CookedFood 0.0 )
---                         , binnedFoodWaste: Stock ( Weight FoodWaste 0.0 ) ( Weight FoodWaste 0.0 )
---                         , managedWaste: Stock ( Weight ManagedWaste 0.0 ) ( Weight ManagedWaste 0.0 )
---                         , sharedFood: _
---                         }
 
--- type FlowParams = { eatingParam ::
---                      { title :: String
---                      , eatedFoodRatio :: Ratio Food
---                      , allFoodWasteProcess :: Process Food Waste
---                      , edibleWasteRatio :: Ratio Waste
---                      , nonedibleFoodWasteRatio :: Ratio Waste
---                      }
---                   , binningParam :: { title :: String
---                                     , inputRatio :: Ratio Waste
---                                     , allFoodWasteProcess :: Process Food Waste
---                       }
---                   }
---
 type FlowParams = { eatingParam :: { title :: String
                      , eatedFoodRatio :: Ratio Matter
                      , allFoodWasteProcess :: Transform Matter Matter
@@ -255,8 +216,6 @@ type FlowParams = { eatingParam :: { title :: String
 
 type FlowParam = Record
 
--- systemFlows :: forall r. FlowType -> Record ( title :: String | r )
-
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
@@ -271,22 +230,7 @@ binningParam = { title: "Binning"
                , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                }
 
--- TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
---       The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
---       Currently doing this with the process functions (`eating`,...) should be enough.
---
-
 data Transform a b = Transform a b { ratio :: Number }
-
--- applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
--- applyProcess (Process a b { ratio: ratio }) = updateQty
---   where
---     updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
---       Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
---       Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock _ _ ) =
---       Stock IncompatibleQuantity IncompatibleQuantity
 
 applyTransform :: Transform Matter Matter -> (Quantity Matter) -> (Quantity Matter)
 applyTransform (Transform a b { ratio: r }) = createQuantity
@@ -298,37 +242,11 @@ applyTransform (Transform a b { ratio: r }) = createQuantity
     createQuantity IncompatibleQuantity = IncompatibleQuantity
 
 
---
--- eatingParam =  { title: "Eating"
---                , eatedFoodProcess: Process ( Food Any ) Life { ratio: 0.81 } -- ( 1 - allFoodWasteProcess
---                , allFoodProcess: Process ( Food Any ) ( Waste FoodWaste ) { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
---                , edibleWasteProcess: Process ( Food Any ) ( Food EdibleFoodWaste ) { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
---                , nonedibleFoodWasteProcess: Process ( Food Any ) ( Waste NonEdibleFoodWaste ) { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
---                }
---
--- binningParam = { title: "Binning"
---                , inputProcess: Process ( Waste Any ) ManagedWaste { ratio: 1.0 }
---                }
-
 -- flowParams :: EFlowParams
 flowParams = { eatingParam : eatingParam
              , binningParam : binningParam
              }
 
--- systemFlows CompostingFlow = unsafeCoerce
--- systemFlows WateringFlow = unsafeCoerce
--- systemFlows RainwaterCollectingFlow = unsafeCoerce
---
-
--- applyRatio :: forall a. Ratio a -> Stock ( Quantity a ) -> Stock ( Quantity a )
--- applyRatio ( Ratio a { ratio: ratio } ) = updateQty
---   where
---     updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
---       Stock ( Weight a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight a ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
---       Stock ( Volume a (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume a ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock _ _ ) =
---       Stock IncompatibleQuantity IncompatibleQuantity
 
 applyRatio :: forall a. Ratio a -> Quantity a -> Quantity a
 applyRatio (Ratio a { ratio: ratio }) qty =
@@ -339,11 +257,6 @@ applyRatio (Ratio a { ratio: ratio }) qty =
     appRatio r (Volume a v) = Volume a $ - (r * v)
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
-
--- eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
--- eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
---   State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
---                   binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
 
 eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Matter,
                                  allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
@@ -371,15 +284,6 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
   where
     waste = foldState Eating Waste AllMatterProperty state
     managed = applyTransform allFoodWasteProcess waste
-
-
--- binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
--- binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
---   State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
---                   --    Stock (Weight AnyWaste 66.0) (Weight AnyWaste 66.0),
---                   -- shoppedFood =
---                   --   Stock (Weight AnyFood 66.0) (Weight AnyFood 66.0)
---                 } )
 
 -- composting :: forall r. FlowParam ( r ) -> State -> State
 -- composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
