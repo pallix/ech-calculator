@@ -112,6 +112,7 @@ emptyHex = { title: "", details: "" }
 
 shoppedFood = foldState Shopping Food AllMatterProperty
 cookedFood = foldState Eating Food AllMatterProperty
+foodWaste = foldState Eating Waste AllMatterProperty
 
 arrayHex :: SystemState -> Array Token
                       -- displayState "Food: " availableFood consumedFood
@@ -124,7 +125,7 @@ arrayHex ( SystemState { current: EatingOnly, state } ) = ( replicate 10 emptyHe
                                                   <> singleton emptyHex
                                                   <> singleton { title : "Eating", details: show $ cookedFood state }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Managed Waste", details: "..." } <> ( replicate 2 emptyHex )
+                                                  <> singleton { title : "Managed Waste", details: show $ foodWaste state } <> ( replicate 2 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
 

@@ -7,7 +7,7 @@ $( document ).ready(function() {
   // define what element should be observed by the observer
   // and what types of mutations trigger the callback
 
-  eatedFoodRatioOriginal = $('#flare-component-4')
+  eatedFoodRatioOriginal = $('#flare-component-5')
   $('#layer #Eating').prepend('<div id="eatedFoodRatioLayered"></div>')
   eatedFoodRatioLayered = $('#eatedFoodRatioLayered').slider({
     slide: function(event, ui) {
@@ -20,5 +20,5 @@ $( document ).ready(function() {
   });
 
   eatedFoodRatioLayered.slider( "value", eatedFoodRatioOriginal.val()*100)
-  
+
 });
