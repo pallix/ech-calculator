@@ -113,7 +113,7 @@ type SystemScale = { scale:: Scale, time:: Time}
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing
 
 derive instance genericProcess :: Generic Process
 
@@ -278,7 +278,7 @@ wormCompostingParam = { title: "Wormery"
 
 
 foodSharingParam = { title: "Food Sharing"
-                  , sharedFoodRatio: Ratio Food { ratio: 1.0 } -- TODO: What is the ratio of available food for sharing to food actually shared?
+                  , sharedFoodRatio: Ratio Food { ratio: 0.9 } -- TODO: What is the ratio of available food for sharing to food actually shared?
                   }
 
 managedWasteParam = { title: "Managed Waste"
@@ -343,10 +343,21 @@ binning _ state@(State entries) =
     foodWaste = foldState Eating Waste AllMatterProperty state
     foodWormComposting = foldState WormComposting Waste AllMatterProperty state
 
+foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter | r ) -> State -> State
+foodSharing {sharedFoodRatio} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: ( negQty edibleShared )}
+  , Entry {process: FoodSharing, matter: Food, matterProperty: Edible, quantity: edibleShared}
+  ]
+  where
+    edibleWasted = foldState Eating Food Edible state
+    edibleShared = applyRatio sharedFoodRatio edibleWasted
+
 composting_EatingBinningWormComposting :: forall r. ProcessParam (compostableRatio :: Ratio Matter,
                                       compostingYield :: Transform Matter Matter | r ) -> State -> State
 composting_EatingBinningWormComposting {compostingYield,
-                  compostableRatio} state@(State entries) =
+                                        compostableRatio} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty compostableWaste )}
@@ -429,4 +440,16 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ binning processParams.binningParam
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
+             -- EatingBinningWormCompostingGarden
+             -- EatingBinningWormCompostingFoodGarden
+             -- EatingBinningWormCompostingGardenWatering
+             -- EatingBinningWormCompostingFoodGardenWatering
+             -- EatingBinningWormCompostingGardenRainwater
+             -- EatingBinningWormCompostingFoodGardenRainwater
+      EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
+                                   $ foodSharing processParams.foodSharingParam
+                                   $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+
       _ -> State []
