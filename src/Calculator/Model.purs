@@ -29,6 +29,7 @@ import Data.Generic
 import Data.Foldable (foldl)
 import Data.Array (filter, head, tail)
 import Data.Maybe (maybe, Maybe(..))
+import Data.Int (toNumber)
 import Math (trunc)
 
 --
@@ -250,7 +251,11 @@ type ProcessParams = { eatingParam ::
 
 type ProcessParam = Record
 
-data SystemState = SystemState { current :: Options, scale :: SystemScale, state :: State, systemParams :: SystemParams, processParams :: ProcessParams }
+data SystemState = SystemState { current :: Options
+                               , scale :: SystemScale
+                               , state :: State
+                               , systemParams :: SystemParams
+                               , processParams :: ProcessParams }
 
 
 eatingParam =  { title: "Eating"
@@ -386,20 +391,44 @@ eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProces
     edibleWasted = applyTransform edibleWasteProcess wasted
     nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) shoppedFood
 
+scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
+scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
+  scaleQ q
+  where scaleFactor = case scale of
+          PersonScale -> 1.0
+          HouseholdScale -> estateAveragePersonPerHousehold
+          EstateScale -> toNumber estatePopulation
+        timeFactor = case time of
+          Day -> (1.0 / 365.25)
+          Month -> (1.0 / 12.0)
+          Year -> 1.0
+        applyFactors qty = scaleFactor * timeFactor * qty
+        scaleQ (Weight a qty) = Weight a (applyFactors qty)
+        scaleQ (Volume a qty) = Volume a (applyFactors qty)
+        scaleQ ZeroQuantity = ZeroQuantity
+        scaleQ IncompatibleQuantity = IncompatibleQuantity
+
+scaleEntries :: SystemScale -> SystemParams -> State -> State
+scaleEntries systemScale systemParams (State entries) =
+  State $ scaledEntries
+  where
+        convertEntries (Entry entry@{quantity}) = Entry $ entry { quantity = scaleQty systemScale systemParams quantity }
+        scaledEntries = map convertEntries entries
 
 nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
   where
+    state' = scaleEntries scale systemParams state
     endState = case current of
       EatingOnly -> managingWaste processParams.managedWasteParam
-                  $ eating processParams.eatingParam state
+                  $ eating processParams.eatingParam state'
       EatingBinning -> managingWaste processParams.managedWasteParam
                      $ binning processParams.binningParam
-                     $ eating processParams.eatingParam state
+                     $ eating processParams.eatingParam state'
       EatingBinningWormComposting -> managingWaste processParams.managedWasteParam
                                    $ binning processParams.binningParam
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
-                                   $ eating processParams.eatingParam state
+                                   $ eating processParams.eatingParam state'
       _ -> State []
 
 -- nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } (SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput

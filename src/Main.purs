@@ -112,9 +112,13 @@ systemParams = systemParamsWithConstants ( 0 )
 initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}]
 
 
-scaleToString { scale : PersonScale, time: _ } = "Person"
-scaleToString { scale : HouseholdScale, time: _ }  = "HouseHold"
-scaleToString { scale : EstateScale, time: _ }  = "Estate"
+scaleToString PersonScale = "Person"
+scaleToString HouseholdScale = "HouseHold"
+scaleToString EstateScale = "Estate"
+
+timescaleToString Year = "Year"
+timescaleToString Month  = "Month"
+timescaleToString Day  = "Day"
 
 controllableParam eatedFoodRatio = initProcessParams { eatingParam = initProcessParams.eatingParam { eatedFoodRatio = Ratio Food { ratio: eatedFoodRatio } } }
 
@@ -123,13 +127,15 @@ ratio ( Ratio _ { ratio } ) = ratio
 systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
 systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
 
+mkScale s t = { scale : s, time: t}
 
 -- ui :: forall e e'. UI e (Markup e')
 --
 ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
-                                                          <*> (select "Scale" ( { scale: PersonScale, time: Year } :| [ { scale: HouseholdScale, time: Year }, { scale: EstateScale, time: Year } ]) scaleToString)
+                                                          <*> ( mkScale <$> (select "Scale" ( PersonScale :| [ HouseholdScale, EstateScale ]) scaleToString)
+                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) ) 
                                                           <*> pure systemParams
                                                           <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
                                                           <*> ( pure initState ) ) )
