@@ -120,11 +120,11 @@ arrayHex :: SystemState -> Array Token
 arrayHex ( SystemState { current: EatingOnly, state } ) = ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
                 <> ( replicate 10 emptyHex )
-                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: "..." }
+                <> ( replicate  2 emptyHex ) <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " of Shopped Food"  }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Eating", details: show $ eatedFood state }
+                                                  <> singleton { title : "Eating", details: ( show $ eatedFood state ) <> " of Food Consumed" }
                                                   <> singleton emptyHex
-                                                  <> singleton { title : "Managed Waste", details: "..." } <> ( replicate 2 emptyHex )
+                                                  <> singleton { title : "Managed Waste", details: ( show $ managedWaste state ) <> " of Managed Waste" } <> ( replicate 2 emptyHex )
                 <> ( replicate 10 emptyHex )
                 <> ( replicate  9 emptyHex )
 
@@ -190,9 +190,9 @@ arrayArrow (SystemState { current: EatingOnly, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
-                  <> ( replicate  3 emptyArrow ) <> singleton  { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
-                                                 <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: show $ foodWaste state, details: "of Waste" } <> ( replicate 3 emptyArrow )
+                  <> ( replicate  3 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Food Waste" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
 
@@ -200,11 +200,11 @@ arrayArrow (SystemState { current: EatingBinning, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
                   <> ( replicate 10 emptyArrow )
-                  <> ( replicate  2 emptyArrow ) <> singleton  { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
-                                                 <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: show $ initialBinnedFoodWaste state, details: "of Food Waste" }
-                                                 <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: show $ managedWaste state, details: "of Waste" }
+                  <> ( replicate  2 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ initialBinnedFoodWaste state, details: "of Food Waste" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Waste" }
                                                  <> ( replicate 2 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
@@ -213,12 +213,26 @@ arrayArrow (SystemState { current: EatingBinning, state } ) =
 arrayArrow (SystemState { current: EatingBinningWormComposting, state } ) =
                      ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )
-                  <> ( replicate  4 emptyArrow ) <> singleton  { title: "/", quantity: show $ initialCompostedWaste state , details: "of Food Waste " } <> ( replicate 5 emptyArrow )
-                  <> ( replicate  2 emptyArrow ) <> singleton  { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
-                                                 <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: show $ ( subQty ( initialBinnedFoodWaste state ) ( initialCompostedWaste state ) ), details: "of Food Waste" }
-                                                 <> singleton  emptyArrow
-                                                 <> singleton  { title: "_", quantity: show $ managedWaste state, details: "of Waste" }
+                  <> ( replicate  4 emptyArrow ) <> singleton { title: "/", quantity: show $ initialCompostedWaste state , details: "of Food Waste " } <> ( replicate 5 emptyArrow )
+                  <> ( replicate  2 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ ( subQty ( initialBinnedFoodWaste state ) ( initialCompostedWaste state ) ), details: "of Food Waste" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Waste" }
+                                                 <> ( replicate 2 emptyArrow )
+                  <> ( replicate 10 emptyArrow )
+                  <> ( replicate  9 emptyArrow )
+
+
+arrayArrow (SystemState { current: EatingBinningWormCompostingGarden, state } ) =
+                     ( replicate 10 emptyArrow )
+                  <> ( replicate  9 emptyArrow )
+                  <> ( replicate  4 emptyArrow ) <> singleton { title: "/", quantity: show $ initialCompostedWaste state , details: "of Food Waste " } <> ( replicate 5 emptyArrow )
+                  <> ( replicate  2 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Food" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ ( subQty ( initialBinnedFoodWaste state ) ( initialCompostedWaste state ) ), details: "of Food Waste" }
+                                                 <> singleton emptyArrow
+                                                 <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Waste" }
                                                  <> ( replicate 2 emptyArrow )
                   <> ( replicate 10 emptyArrow )
                   <> ( replicate  9 emptyArrow )

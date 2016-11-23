@@ -360,11 +360,13 @@ managingWaste  :: forall r. ProcessParam (collectedWasteRatio :: Ratio Matter | 
 managingWaste {collectedWasteRatio} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste )}
-  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: binnedWaste }
+  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty foodWaste )}
+  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste )}
+  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: ( addQty binnedWaste foodWaste ) }
   -- , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostWaste }
   ]
   where
+    foodWaste =  foldState Eating Waste AllMatterProperty state
     binnedWaste =  foldState Binning Waste AllMatterProperty state
 
 eating_EatingBinningWormCompostingFoodSharing :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
@@ -389,7 +391,8 @@ nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
   where
     endState = case current of
-      EatingOnly -> eating processParams.eatingParam state
+      EatingOnly -> managingWaste processParams.managedWasteParam
+                  $ eating processParams.eatingParam state
       EatingBinning -> managingWaste processParams.managedWasteParam
                      $ binning processParams.binningParam
                      $ eating processParams.eatingParam state
