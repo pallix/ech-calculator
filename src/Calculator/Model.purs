@@ -10,7 +10,7 @@ module Calculator.Model (Flow(Flow),
                          Options(..),
                          State(..),
                          SystemState(..),
-                         initState,
+                         initialState,
                          foldState,
                          Process(..),
                          Matter(..),
@@ -24,7 +24,8 @@ import Data.Tuple (Tuple(..))
 import Data.Generic
 import Data.Foldable (foldl)
 import Data.Array (filter, head, tail)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (maybe, Maybe(..))
+import Math (trunc)
 
 --
 -- Quantities
@@ -77,8 +78,8 @@ data Life = Life
 data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity | ZeroQuantity
 
 neg :: forall a. Quantity a -> Quantity a
-neg (Weight c qty) = Weight c 0.2
-neg (Volume c qty) = Volume c 0.5
+neg (Weight c qty) = Weight c (- qty)
+neg (Volume c qty) = Volume c (- qty)
 neg IncompatibleQuantity = IncompatibleQuantity
 neg ZeroQuantity = ZeroQuantity
 
@@ -106,7 +107,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = Food | Waste | ManagedWaste | GreyWatter | AllMatter
+data Matter = Food | Waste | ManagedWaste | GreyWater | AllMatter
 
 derive instance genericMatter :: Generic Matter
 
@@ -148,11 +149,6 @@ instance showEntry :: Show Entry where
 
 data State = State (Array Entry)
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 120.0}
-                  , Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food (-20.0)}
-                  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: Weight Waste 10.0} ]
-
-
 derive instance genericState :: Generic State
 
 instance showState :: Show State where
@@ -179,12 +175,20 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
     quantities = map getQuantity states'
     sumQuantity acc qty = acc <> qty
 
+initialState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
+initialState process matter matterProperty (State states) = maybe ZeroQuantity id $ head quantities
+  where
+    states' = filter qualifies states
+    qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
+    getQuantity (Entry {quantity: q}) = q
+    quantities = map getQuantity states'
+
 -- /model for the event sourcing
 
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
-    show ( Weight _ a ) = "Weight: " <> show a
-    show ( Volume _ a ) = "Volume: " <> show a
+    show ( Weight _ a ) = ( show $ trunc a ) <> "Kg"
+    show ( Volume _ a ) = ( show $ trunc a ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
     show ( ZeroQuantity ) = "0"
 
@@ -204,7 +208,7 @@ type ProcessParams = { eatingParam ::
                           -- missing: packaging quantity
                           { title :: String
                           , eatedFoodRatio :: Ratio Matter
-                          , allFoodWasteProcess :: Transform Matter Matter
+                          -- , allFoodWasteProcess :: Transform Matter Matter
                           , edibleWasteProcess :: Transform Matter Matter
                           , nonedibleFoodWasteProcess :: Transform Matter Matter
                           }
@@ -221,11 +225,10 @@ data SystemState = SystemState { current :: Options, scale :: Scale, state :: St
 
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
-               , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteProcess: Transform Food Waste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteProcess: Transform Food Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+              --  , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteProcess: Transform Food Food { ratio: 0.6 } -- ECH_LCA_Tool:Material Flow Summary!T7
+              --  , nonedibleFoodWasteProcess: Transform Food Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
-
 
 binningParam = { title: "Binning"
                , inputRatio: Ratio Waste { ratio: 1.0 }
@@ -245,11 +248,6 @@ applyTransform (Transform a b { ratio: r }) = createQuantity
     createQuantity ZeroQuantity = ZeroQuantity
     createQuantity IncompatibleQuantity = IncompatibleQuantity
 
--- flowParams :: EFlowParams
-flowParams = { eatingParam : eatingParam
-             , binningParam : binningParam
-             }
-
 applyRatio :: forall a. Ratio a -> Quantity a -> Quantity a
 applyRatio (Ratio a { ratio: ratio }) qty =
   appRatio ratio qty
@@ -260,12 +258,27 @@ applyRatio (Ratio a { ratio: ratio }) qty =
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
 
-eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
+complementOneRatio ( Ratio a { ratio } ) = Ratio a { ratio : ( 1.0 - ratio ) }
+complementOneTransform ( Transform a b { ratio } ) = Transform a b { ratio : ( 1.0 - ratio ) }
+complementOneRatioTransform ( Ratio a { ratio } ) = Transform a a { ratio : ( 1.0 - ratio ) }
+
+eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter | r ) -> State -> State
+eating {eatedFoodRatio} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: (neg shoppedFood)}
+  , Entry {process: Eating, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
+  , Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: wasted}
+  ]
+  where
+    shoppedFood = foldState Shopping Food AllMatterProperty state
+    eatedFood = applyRatio eatedFoodRatio shoppedFood
+    wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
+
+eatingSharing :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
                                 edibleWasteProcess :: Transform Matter Matter,
                                 nonedibleFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
-eating {eatedFoodRatio: eatedFoodRatio,
-        edibleWasteProcess: edibleWasteProcess,
-        nonedibleFoodWasteProcess: nonedibleFoodWasteProcess} state@(State entries) =
+eatingSharing {eatedFoodRatio, edibleWasteProcess, nonedibleFoodWasteProcess} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: neg eated}
@@ -277,7 +290,6 @@ eating {eatedFoodRatio: eatedFoodRatio,
     eated = applyRatio eatedFoodRatio shoppedFood
     edibleWasted = applyTransform edibleWasteProcess shoppedFood
     nonedibleWasted = applyTransform nonedibleFoodWasteProcess shoppedFood
-
 
 binning :: forall r. ProcessParam (allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
 binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
@@ -295,17 +307,12 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
 -- composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
 
 nexusSystem :: SystemState -> SystemState
--- nexusSystem scale systemP { eatingParam: eatingP } (Tuple option input) = SystemState ( Tuple option
---   case option of
---     Eating -> eating eatingP input
---     Eating -> eatingOutput
---   where
---     eatingOutput =
-
-nexusSystem (SystemState { current, scale, state, systemParams, processParams: processParams@{ eatingParam: eatingP, binningParam: binningP } } ) = SystemState $ { current, scale, systemParams, processParams, state: _ }
-  case current of
-    EatingOnly -> eating eatingP state
-    _ -> State []
+nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
+  where
+    endState = case current of
+      EatingOnly -> eating processParams.eatingParam state
+      EatingBinning -> binning processParams.binningParam ( eating processParams.eatingParam state )
+      _ -> State []
 
 -- nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } (SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput
 --   where
