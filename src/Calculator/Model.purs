@@ -188,25 +188,26 @@ instance mergeQty :: Semigroup ( Quantity a ) where
   append ZeroQuantity b = b
   append _ _ = IncompatibleQuantity
 
-type ProcessParams = { eatingParam :: { title :: String
-                                       , eatedFoodRatio :: Ratio Matter
-                                       , allFoodWasteProcess :: Transform Matter Matter
-                                       , edibleWasteRatio :: Ratio Matter
-                                       , nonedibleFoodWasteRatio :: Ratio Matter
-                                       }
-                      , binningParam :: { title :: String
-                                        , inputRatio :: Ratio Matter
-                                        , allFoodWasteProcess :: Transform Matter Matter
-                                        }
-                      }
 
+derive instance genericOptions :: Generic Options
+instance showOptions :: Show Options where
+    show = gShow
+
+type ProcessParams = { eatingParam :: { title :: String
+                     , eatedFoodRatio :: Ratio Matter
+                     , allFoodWasteProcess :: Transform Matter Matter
+                     , edibleWasteRatio :: Ratio Matter
+                     , nonedibleFoodWasteRatio :: Ratio Matter
+                     }
+    , binningParam :: { title :: String
+                      , inputRatio :: Ratio Matter
+                      , allFoodWasteProcess :: Transform Matter Matter
+                      }
+    }
 
 type ProcessParam = Record
 
-
 data SystemState = SystemState { current :: Options, scale :: Scale, state :: State, systemParams :: SystemParams, processParams :: ProcessParams }
-
--- systemFlows :: forall r. FlowType -> Record ( title :: String | r )
 
 
 eatingParam =  { title: "Eating"
@@ -224,22 +225,7 @@ binningParam = { title: "Binning"
 
 initProcessParams = { eatingParam, binningParam }
 
--- TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
---       The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
---       Currently doing this with the process functions (`eating`,...) should be enough.
---
-
 data Transform a b = Transform a b { ratio :: Number }
-
--- applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
--- applyProcess (Process a b { ratio: ratio }) = updateQty
---   where
---     updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
---       Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
---       Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
---     updateQty ( Stock _ _ ) =
---       Stock IncompatibleQuantity IncompatibleQuantity
 
 applyTransform :: Transform Matter Matter -> (Quantity Matter) -> (Quantity Matter)
 applyTransform (Transform a b { ratio: r }) = createQuantity
@@ -250,7 +236,8 @@ applyTransform (Transform a b { ratio: r }) = createQuantity
     createQuantity ZeroQuantity = ZeroQuantity
     createQuantity IncompatibleQuantity = IncompatibleQuantity
 
-processParams = { eatingParam : eatingParam
+-- flowParams :: EFlowParams
+flowParams = { eatingParam : eatingParam
              , binningParam : binningParam
              }
 
@@ -264,13 +251,8 @@ applyRatio (Ratio a { ratio: ratio }) qty =
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
 
--- eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
--- eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
---   State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
---                   binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
-
 eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
-                                 allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
+                              allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
 eating {eatedFoodRatio: eatedFoodRatio,
          allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
   State $
@@ -296,15 +278,6 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
     waste = foldState Eating Waste AllMatterProperty state
     managed = applyTransform allFoodWasteProcess waste
 
-
--- binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
--- binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
---   State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
---                   --    Stock (Weight AnyWaste 66.0) (Weight AnyWaste 66.0),
---                   -- shoppedFood =
---                   --   Stock (Weight AnyFood 66.0) (Weight AnyFood 66.0)
---                 } )
-
 -- composting :: forall r. FlowParam ( r ) -> State -> State
 -- composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
 
@@ -316,7 +289,7 @@ nexusSystem :: SystemState -> SystemState
 --   where
 --     eatingOutput =
 
-nexusSystem (SystemState { current, scale, state, systemParams, processParams: { eatingParam: eatingP, binningParam: binningP } } ) = SystemState $ { current, scale, systemParams, processParams, state: _ }
+nexusSystem (SystemState { current, scale, state, systemParams, processParams: processParams@{ eatingParam: eatingP, binningParam: binningP } } ) = SystemState $ { current, scale, systemParams, processParams, state: _ }
   case current of
     EatingOnly -> eating eatingP state
     _ -> State []

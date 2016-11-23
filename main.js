@@ -1256,13 +1256,6 @@ var PS = {};
   var Data_HeytingAlgebra = PS["Data.HeytingAlgebra"];
   var Data_Functor = PS["Data.Functor"];
   var Data_Function = PS["Data.Function"];
-
-  /**
- *  TODO: Maybe this is too cumbersome and should be dealt with when and if we implement this as a EDSL.
- *        The idea was to make processes parameters type safe, i.e. making sure that transformations inputs and outputs match.
- *        Currently doing this with the process functions (`eating`,...) should be enough.
- * 
- */  
   var Transform = (function () {
       function Transform(value0, value1, value2) {
           this.value0 = value0;
@@ -1604,20 +1597,20 @@ var PS = {};
   };
   var processEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $49 = [ a, b ];
-          if ($49.length === 2 && ($49[0] instanceof Shopping && $49[1] instanceof Shopping)) {
+          var $51 = [ a, b ];
+          if ($51.length === 2 && ($51[0] instanceof Shopping && $51[1] instanceof Shopping)) {
               return true;
           };
-          if ($49.length === 2 && ($49[0] instanceof Eating && $49[1] instanceof Eating)) {
+          if ($51.length === 2 && ($51[0] instanceof Eating && $51[1] instanceof Eating)) {
               return true;
           };
-          if ($49.length === 2 && ($49[0] instanceof Binning && $49[1] instanceof Binning)) {
+          if ($51.length === 2 && ($51[0] instanceof Binning && $51[1] instanceof Binning)) {
               return true;
           };
-          if ($49.length === 2 && $49[0] instanceof AllProcess) {
+          if ($51.length === 2 && $51[0] instanceof AllProcess) {
               return true;
           };
-          if ($49.length === 2 && $49[1] instanceof AllProcess) {
+          if ($51.length === 2 && $51[1] instanceof AllProcess) {
               return true;
           };
           return false;
@@ -1642,23 +1635,23 @@ var PS = {};
   });
   var matterProperty = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $70 = [ a, b ];
-          if ($70.length === 2 && ($70[0] instanceof Edible && $70[1] instanceof Edible)) {
+          var $72 = [ a, b ];
+          if ($72.length === 2 && ($72[0] instanceof Edible && $72[1] instanceof Edible)) {
               return true;
           };
-          if ($70.length === 2 && ($70[0] instanceof NonEdible && $70[1] instanceof NonEdible)) {
+          if ($72.length === 2 && ($72[0] instanceof NonEdible && $72[1] instanceof NonEdible)) {
               return true;
           };
-          if ($70.length === 2 && ($70[0] instanceof Shopped && $70[1] instanceof Shopped)) {
+          if ($72.length === 2 && ($72[0] instanceof Shopped && $72[1] instanceof Shopped)) {
               return true;
           };
-          if ($70.length === 2 && ($70[0] instanceof Cooked && $70[1] instanceof Cooked)) {
+          if ($72.length === 2 && ($72[0] instanceof Cooked && $72[1] instanceof Cooked)) {
               return true;
           };
-          if ($70.length === 2 && $70[0] instanceof AllMatterProperty) {
+          if ($72.length === 2 && $72[0] instanceof AllMatterProperty) {
               return true;
           };
-          if ($70.length === 2 && $70[1] instanceof AllMatterProperty) {
+          if ($72.length === 2 && $72[1] instanceof AllMatterProperty) {
               return true;
           };
           return false;
@@ -1666,17 +1659,17 @@ var PS = {};
   });
   var matterEq = new Data_Eq.Eq(function (a) {
       return function (b) {
-          var $83 = [ a, b ];
-          if ($83.length === 2 && ($83[0] instanceof Food && $83[1] instanceof Food)) {
+          var $85 = [ a, b ];
+          if ($85.length === 2 && ($85[0] instanceof Food && $85[1] instanceof Food)) {
               return true;
           };
-          if ($83.length === 2 && ($83[0] instanceof Waste && $83[1] instanceof Waste)) {
+          if ($85.length === 2 && ($85[0] instanceof Waste && $85[1] instanceof Waste)) {
               return true;
           };
-          if ($83.length === 2 && $83[0] instanceof AllMatter) {
+          if ($85.length === 2 && $85[0] instanceof AllMatter) {
               return true;
           };
-          if ($83.length === 2 && $83[1] instanceof AllMatter) {
+          if ($85.length === 2 && $85[1] instanceof AllMatter) {
               return true;
           };
           return false;
@@ -1761,10 +1754,6 @@ var PS = {};
           };
       };
   };
-
-  /**
- *  systemFlows :: forall r. FlowType -> Record ( title :: String | r )
- */  
   var eatingParam = {
       title: "Eating", 
       eatedFoodRatio: new Ratio(Food.value, {
@@ -1793,22 +1782,6 @@ var PS = {};
       eatingParam: eatingParam, 
       binningParam: binningParam
   };
-  var processParams = {
-      eatingParam: eatingParam, 
-      binningParam: binningParam
-  };
-
-  /**
- *  applyProcess :: forall a b. Process a b -> Stock ( Quantity a ) -> Stock ( Quantity b )
- *  applyProcess (Process a b { ratio: ratio }) = updateQty
- *    where
- *      updateQty ( Stock ( Weight _ qtyLeft ) ( Weight _ qtyConsumed ) ) =
- *        Stock ( Weight b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Weight b ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock ( Volume _ qtyLeft ) ( Volume _ qtyConsumed ) ) =
- *        Stock ( Volume b (qtyLeft - ( qtyLeft * ratio ) ) ) ( Volume b ( qtyConsumed + (qtyLeft * ratio) ) )
- *      updateQty ( Stock _ _ ) =
- *        Stock IncompatibleQuantity IncompatibleQuantity
- */  
   var applyTransform = function (v) {
       var createQuantity = function (v1) {
           if (v1 instanceof Weight) {
@@ -1823,7 +1796,7 @@ var PS = {};
           if (v1 instanceof IncompatibleQuantity) {
               return IncompatibleQuantity.value;
           };
-          throw new Error("Failed pattern match at Calculator.Model line 248, column 5 - line 248, column 51: " + [ v1.constructor.name ]);
+          throw new Error("Failed pattern match at Calculator.Model line 234, column 5 - line 234, column 51: " + [ v1.constructor.name ]);
       };
       return createQuantity;
   };
@@ -1843,19 +1816,12 @@ var PS = {};
                   if (v1 instanceof IncompatibleQuantity) {
                       return IncompatibleQuantity.value;
                   };
-                  throw new Error("Failed pattern match at Calculator.Model line 262, column 5 - line 262, column 51: " + [ r.constructor.name, v1.constructor.name ]);
+                  throw new Error("Failed pattern match at Calculator.Model line 249, column 5 - line 249, column 51: " + [ r.constructor.name, v1.constructor.name ]);
               };
           };
           return appRatio(v.value1.ratio)(qty);
       };
   };
-
-  /**
- *  eating :: forall r. FlowParam ( eatedFoodRatio :: Ratio Food | r ) -> State -> State
- *  eating { eatedFoodRatio: eatedFoodRatio } ( State state@{ shoppedFood: shoppedFoodStock } ) =
- *    State ( state { shoppedFood = applyRatio eatedFoodRatio shoppedFoodStock,
- *                    binnedFoodWaste = Stock (Weight AnyWaste 68.0) (Weight AnyWaste 2.0)} )
- */  
   var eating = function (v) {
       return function (v1) {
           var shoppedFood = foldState(Shopping.value)(Food.value)(AllMatterProperty.value)(v1);
@@ -1876,13 +1842,6 @@ var PS = {};
   };
 
   /**
- *  binning :: forall r. FlowParam ( allFoodWasteProcess :: Process Food Waste | r ) -> State -> State
- *  binning { allFoodWasteProcess : allFoodWasteProcess } ( State state@{ shoppedFood: shoppedFood } ) =
- *    State ( state { binnedFoodWaste = applyProcess allFoodWasteProcess shoppedFood
- *                    --    Stock (Weight AnyWaste 66.0) (Weight AnyWaste 66.0),
- *                    -- shoppedFood =
- *                    --   Stock (Weight AnyFood 66.0) (Weight AnyFood 66.0)
- *                  } )
  *  composting :: forall r. FlowParam ( r ) -> State -> State
  *  composting _ (State state@{ binnedFoodWaste: waste } ) = State ( state { binnedFoodWaste = waste } )
  *  nexusSystem scale systemP { eatingParam: eatingP } (Tuple option input) = SystemState ( Tuple option
@@ -1898,7 +1857,7 @@ var PS = {};
               current: v.value0.current, 
               scale: v.value0.scale, 
               systemParams: v.value0.systemParams, 
-              processParams: processParams, 
+              processParams: v.value0.processParams, 
               state: v1
           };
       })((function () {
@@ -3681,7 +3640,8 @@ var PS = {};
   exports["runFlareHTML"] = runFlareHTML;
 })(PS["Flare.Smolder"] = PS["Flare.Smolder"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.1
+  "use strict";
   var Prelude = PS["Prelude"];
   var Calculator_Layout = PS["Calculator.Layout"];
   var Calculator_Model = PS["Calculator.Model"];
@@ -3741,20 +3701,6 @@ var PS = {};
       };
   });
   var systemParams = systemParamsWithConstants(0);
-
-  /**
- *  eatingParam =  { title: "Eating"
- *                 , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
- *                 , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
- *                 , edibleWasteRatio: Ratio Waste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
- *                 , nonedibleFoodWasteRatio: Ratio Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
- *                 }
- * 
- *  binningParam = { title: "Binning"
- *                 , inputRatio: Ratio Waste { ratio: 1.0 }
- *                 , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
- *                 }
- */  
   var scaleToString = function (v) {
       if (v instanceof Calculator_Model.PersonScale) {
           return "Person";
@@ -3767,36 +3713,6 @@ var PS = {};
       };
       throw new Error("Failed pattern match at Main line 114, column 1 - line 115, column 1: " + [ v.constructor.name ]);
   };
-
-  /**
- *  data Action = Food
- *              | Bin
- *              | Compost
- *              | Garden
- *              | FoodGarden
- *              | Reset
- * 
- *  label :: Action -> String
- *  label Food = "Food"
- *  label Bin = "Bin"
- *  label Compost = "Compost"
- *  label Garden = "Garden"
- *  label FoodGarden = "FoodGarden"
- *  label Reset = "Reset"
- *  type State = Array Token
- *  perform :: Action -> State -> State
- *  perform Food = flip snoc { title: "Food" }
- *  perform Bin = flip snoc { title: "Bin" }
- *  perform Compost = flip snoc { title: "Compost" }
- *  perform Garden = flip snoc { title: "Garden" }
- *  perform FoodGarden = flip snoc { title: "Food Garden" }
- *  perform Reset     = const []
- *  TODO: Reuse this traverseable approach to create `optionals` and `booleans` functions
- *  controls = foldp (maybe id perform) [ { title: "Food" } ] $
- *              buttons [Food, Bin, Compost, Garden, FoodGarden, Reset] label
- *  actions = string "Add item:" "Bin" <**> button "Add" (flip const) cons
- *  list = foldp id ["Food"] actions
- */  
   var optionsLabel = function (v) {
       if (v instanceof Calculator_Model.EatingOnly) {
           return "Food";
@@ -3862,59 +3778,7 @@ var PS = {};
       })();
       return $8;
   };
-
-  /**
- *  ui :: forall e e'. UI e (Markup e')
- * 
- */  
   var ui = Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(Calculator_Layout["interface"])(Flare["boolean"]("Info")(true)))(Flare["boolean"]("Grid")(false)))(Data_Functor.map(Flare.functorUI)(Debug_Trace.spy)(Data_Functor.map(Flare.functorUI)(Calculator_Model.nexusSystem)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Control_Apply.apply(Flare.applyUI)(Data_Functor.map(Flare.functorUI)(systemState)(nexusOptions))(Flare.select(Data_Foldable.foldableArray)("Scale")(new Data_NonEmpty.NonEmpty(Calculator_Model.PersonScale.value, [ Calculator_Model.HouseholdScale.value, Calculator_Model.EstateScale.value ]))(scaleToString)))(Control_Applicative.pure(Flare.applicativeUI)(systemParams)))(Flare.fieldset("Eating Parameters")(Data_Functor.map(Flare.functorUI)(controllableParam)(Flare.numberSlider("eatedFoodRatio")(0.0)(1.0)(1.0e-2)(0.81)))))(Control_Applicative.pure(Flare.applicativeUI)(initState)))));
-
-  /**
- * 
- *  ui opt = interface <$> ( boolean "Info" true )
- *                         <*> ( boolean "Grid" false )
- *                         <*> pure opt
- *                         <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
- *                                            <*> pure systemParam
- *                                            <*> fieldset ( ( optionsLabel opt ) <> "Parameters" ) ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
- *                                            <*> pure eatingInitState
- *                                            <*> pure opt )
- * 
- *  ui EatingBinning = interface <$> ( boolean "Info" true )
- *                     <*> ( boolean "Grid" false )
- *                     <*> pure EatingBinning
- *                     <*> ( nexusSystem  <$> (select "Scale" (PersonScale :| [HouseholdScale, EstateScale]) scaleToString)
- *                           <*> pure systemParam
- *                           <*> fieldset "Eating Binning Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 0.81 ) )
- *                           <*> pure eatingInitState
- *                           <*> pure EatingBinning )
- * 
- *  ui _ = interface <$> ( boolean "Info" true )
- *                   <*> ( boolean "Grid" false )
- *                   <*> ( nexusSystem <$> pure PersonScale
- *                                     <*> pure systemParam
- *                                     <*> pure ( controllableParam 0.0 )
- *                                     <*> pure eatingInitState
- *                                     <*> pure NotImplemented )
- *  inner = runFlareHTML "controls" "output" <<< ui
- *  <> light <$> liftSF (since 1000.0) (button "Switch on" unit unit)
- *  ui = token <$> string_ "Yo"
- *             <*> (color "Color" (hsl 333.0 0.6 0.5))
- *  Below is an example of what I think the applicative interface results in
- *  where test is instantiated twice with both instance being completely independent.
- * 
- *  ui :: forall e e'. UI e (Markup e')
- *  ui = ( interface <$> ( boolean "Info" true )
- *                 <*> ( test )
- *                 <*> ( eatingBinningUI )
- *                 <*> ( optionsTokens <$> options ) )
- *    <> ( text <$>
- *          ( show <$> test ) )
- *    where
- *      test = boolean "Test" false
- * 
- *  main = runFlareWith "select" inner nexusOptions
- */  
   var main = Flare_Smolder.runFlareHTML("controls")("output")(ui);
   exports["controllableParam"] = controllableParam;
   exports["initState"] = initState;
