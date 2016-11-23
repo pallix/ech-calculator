@@ -76,6 +76,13 @@ data Life = Life
 
 data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity | ZeroQuantity
 
+neg :: forall a. Quantity a -> Quantity a
+neg (Weight c qty) = Weight c 0.2
+neg (Volume c qty) = Volume c 0.5
+neg IncompatibleQuantity = IncompatibleQuantity
+neg ZeroQuantity = ZeroQuantity
+
+
 -- -- Kg / Person / Day
 -- data Weight a =
 -- -- L / Person / Day
@@ -99,7 +106,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = Food | Waste | ManagedWaste | AllMatter
+data Matter = Food | Waste | ManagedWaste | GreyWatter | AllMatter
 
 derive instance genericMatter :: Generic Matter
 
@@ -193,17 +200,19 @@ derive instance genericOptions :: Generic Options
 instance showOptions :: Show Options where
     show = gShow
 
-type ProcessParams = { eatingParam :: { title :: String
-                     , eatedFoodRatio :: Ratio Matter
-                     , allFoodWasteProcess :: Transform Matter Matter
-                     , edibleWasteRatio :: Ratio Matter
-                     , nonedibleFoodWasteRatio :: Ratio Matter
+type ProcessParams = { eatingParam ::
+                          -- missing: packaging quantity
+                          { title :: String
+                          , eatedFoodRatio :: Ratio Matter
+                          , allFoodWasteProcess :: Transform Matter Matter
+                          , edibleWasteProcess :: Transform Matter Matter
+                          , nonedibleFoodWasteProcess :: Transform Matter Matter
+                          }
+                     , binningParam :: { title :: String
+                                       , inputRatio :: Ratio Matter
+                                       , allFoodWasteProcess :: Transform Matter Matter
+                                       }
                      }
-    , binningParam :: { title :: String
-                      , inputRatio :: Ratio Matter
-                      , allFoodWasteProcess :: Transform Matter Matter
-                      }
-    }
 
 type ProcessParam = Record
 
@@ -213,8 +222,8 @@ data SystemState = SystemState { current :: Options, scale :: Scale, state :: St
 eatingParam =  { title: "Eating"
                , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
                , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
-               , edibleWasteRatio: Ratio Food { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
-               , nonedibleFoodWasteRatio: Ratio Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
+               , edibleWasteProcess: Transform Food Waste { ratio: 0.114 } -- ECH_LCA_Tool:Material Flow Summary!T7
+               , nonedibleFoodWasteProcess: Transform Food Waste { ratio: 0.076 } -- ECH_LCA_Tool:Material Flow Summary!U7
                }
 
 
@@ -246,24 +255,28 @@ applyRatio (Ratio a { ratio: ratio }) qty =
   appRatio ratio qty
   where
     appRatio :: Number -> Quantity a -> Quantity a
-    appRatio r (Weight a w) = Weight a $ - (r * w)
-    appRatio r (Volume a v) = Volume a $ - (r * v)
+    appRatio r (Weight a w) = Weight a $ r * w
+    appRatio r (Volume a v) = Volume a $ r * v
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
 
 eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
-                              allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
+                                edibleWasteProcess :: Transform Matter Matter,
+                                nonedibleFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
 eating {eatedFoodRatio: eatedFoodRatio,
-         allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
+        edibleWasteProcess: edibleWasteProcess,
+        nonedibleFoodWasteProcess: nonedibleFoodWasteProcess} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: consumed}
-  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: wasted}
+  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: neg eated}
+  , Entry {process: Eating, matter: Waste, matterProperty: Edible, quantity: edibleWasted}
+  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: nonedibleWasted}
   ]
   where
     shoppedFood = foldState Shopping Food AllMatterProperty state
-    consumed = applyRatio eatedFoodRatio shoppedFood
-    wasted = applyTransform allFoodWasteProcess shoppedFood
+    eated = applyRatio eatedFoodRatio shoppedFood
+    edibleWasted = applyTransform edibleWasteProcess shoppedFood
+    nonedibleWasted = applyTransform nonedibleFoodWasteProcess shoppedFood
 
 
 binning :: forall r. ProcessParam (allFoodWasteProcess :: Transform Matter Matter | r ) -> State -> State
@@ -271,8 +284,8 @@ binning {allFoodWasteProcess: allFoodWasteProcess} state@(State entries) =
   State $
   entries <>
   [
-    -- TODO: issue an entry to remove EWaste
-    Entry {process: Binning, matter: ManagedWaste, matterProperty: NonEdible, quantity: managed}
+    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: neg waste}
+  , Entry {process: Binning, matter: ManagedWaste, matterProperty: AllMatterProperty, quantity: managed}
   ]
   where
     waste = foldState Eating Waste AllMatterProperty state
