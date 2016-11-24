@@ -156,7 +156,7 @@ type SystemScale = { scale:: Scale, time:: Time}
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting | Living
 
 derive instance genericProcess :: Generic Process
 
@@ -403,13 +403,31 @@ eating {eatedFoodRatio} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: (negQty shoppedFood)}
-  , Entry {process: Eating, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
+  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
   , Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: wasted}
   ]
   where
     shoppedFood = foldState Shopping Food AllMatterProperty state
     eatedFood = applyRatio eatedFoodRatio shoppedFood
     wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
+
+eating_EatingBinningWormCompostingFoodSharing :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
+                                edibleWasteProcess :: Transform Matter Matter | r ) -> State -> State
+eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProcess } state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: negQty eatedFood}
+  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
+  , Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: edibleWasted}
+  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: nonedibleWasted}
+  ]
+  where
+    shoppedFood = foldState Shopping Food AllMatterProperty state
+    eatedFood = applyRatio eatedFoodRatio shoppedFood
+    wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
+    edibleWasted = applyTransform edibleWasteProcess wasted
+    nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) wasted
+
 
 binning :: forall r. ProcessParam ( r ) -> State -> State
 binning _ state@(State entries) =
@@ -533,23 +551,6 @@ managingWaste {collectedWasteRatio} state@(State entries) =
   where
     foodWaste =  foldState Eating Waste AllMatterProperty state
     binnedWaste =  foldState Binning Waste AllMatterProperty state
-
-eating_EatingBinningWormCompostingFoodSharing :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
-                                edibleWasteProcess :: Transform Matter Matter | r ) -> State -> State
-eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProcess } state@(State entries) =
-  State $
-  entries <>
-  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: negQty eatedFood}
-  , Entry {process: Eating, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
-  , Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: edibleWasted}
-  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: nonedibleWasted}
-  ]
-  where
-    shoppedFood = foldState Shopping Food AllMatterProperty state
-    eatedFood = applyRatio eatedFoodRatio shoppedFood
-    wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
-    edibleWasted = applyTransform edibleWasteProcess wasted
-    nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) wasted
 
 scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
 scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
