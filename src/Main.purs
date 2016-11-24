@@ -80,23 +80,23 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 optionsLabel EatingOnly = "Food"
 optionsLabel EatingBinning = "Food & Waste"
 optionsLabel EatingBinningWormComposting = "Wormery"
-optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
+-- optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
 optionsLabel EatingBinningWormCompostingFoodGardening = "Wormery & Food Garden"
-optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
+-- optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
 optionsLabel EatingBinningWormCompostingFoodGardenWatering = "Food Garden Watering "
-optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
+-- optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
 optionsLabel EatingBinningWormCompostingFoodGardenRainwater = "Rainwater Collection & Food Garden"
-optionsLabel EatingBinningWormCompostingFoodSharing = "Food Sharing"
-optionsLabel NotImplemented = "Not Implemented Yet"
+
+optionsLabel EatingBinningFoodSharing = "Food Sharing"
+optionsLabel EatingBinningWormCompostingFoodSharing = "Wormery & Food Sharing"
+optionsLabel _ = "Not Implemented Yet"
 
 nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
                                                , EatingBinningWormComposting
-                                               , EatingBinningWormCompostingGarden
                                                , EatingBinningWormCompostingFoodGardening
-                                               , EatingBinningWormCompostingGardenWatering
                                                , EatingBinningWormCompostingFoodGardenWatering
-                                               , EatingBinningWormCompostingGardenRainwater
                                                , EatingBinningWormCompostingFoodGardenRainwater
+                                               , EatingBinningFoodSharing
                                                , EatingBinningWormCompostingFoodSharing ] ) optionsLabel
 
 systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
@@ -135,7 +135,7 @@ ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
                                                           <*> ( mkScale <$> (select "Scale" ( PersonScale :| [ HouseholdScale, EstateScale ]) scaleToString)
-                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) ) 
+                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) )
                                                           <*> pure systemParams
                                                           <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
                                                           <*> ( pure initState ) ) )
@@ -190,7 +190,7 @@ ui = interface <$> ( boolean "Info" true )
 
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit
 -- main = runFlareWith "select" inner nexusOptions
-main = runFlareHTML "controls" "output" ui
+main = runFlareHTML "flare-controls" "output" ui
 
   -- runFlareWith "controls" "output" ui2
   -- runFlareDrawing "controls1" "output1" uidrawing

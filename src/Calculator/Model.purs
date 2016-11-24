@@ -67,12 +67,13 @@ data SystemParams = SystemParams { houseHoldSize :: Int
 data Options = EatingOnly
              | EatingBinning
              | EatingBinningWormComposting
-             | EatingBinningWormCompostingGarden
+            --  | EatingBinningWormCompostingGarden
              | EatingBinningWormCompostingFoodGardening
-             | EatingBinningWormCompostingGardenWatering
+            --  | EatingBinningWormCompostingGardenWatering
              | EatingBinningWormCompostingFoodGardenWatering
-             | EatingBinningWormCompostingGardenRainwater
+            --  | EatingBinningWormCompostingGardenRainwater
              | EatingBinningWormCompostingFoodGardenRainwater
+             | EatingBinningFoodSharing
              | EatingBinningWormCompostingFoodSharing
              | NotImplemented
 
@@ -166,6 +167,8 @@ instance processEq :: Eq Process where
     [Binning, Binning] -> true
     [ManagingWaste, ManagingWaste] -> true
     [WormComposting, WormComposting] -> true
+    [FoodGardening, FoodGardening] -> true
+    [RainwaterCollecting, RainwaterCollecting] -> true
     [AllProcess, _] -> true
     [_, AllProcess] -> true
     _ -> false
@@ -193,13 +196,13 @@ derive instance genericMatterProperty :: Generic MatterProperty
 
 instance matterProperty :: Eq MatterProperty where
   eq a b = case [a, b] of
+    [AllMatterProperty, _] -> true
+    [_, AllMatterProperty] -> true
     [Edible, Edible] -> true
     [NonEdible, NonEdible] -> true
     [Shopped, Shopped] -> true
     [Cooked, Cooked] -> true
     [GreyWater, GreyWater] -> true
-    [AllMatterProperty, _] -> true
-    [_, AllMatterProperty] -> true
     _ -> false
 
 data Entry = Entry { process :: Process
@@ -255,8 +258,8 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
 
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
-    show ( Weight _ a ) = ( show $ ( trunc a * 10.0 ) / 10.0 ) <> "Kg"
-    show ( Volume _ a ) = ( show $ ( trunc a * 10.0 ) / 10.0 ) <> "L"
+    show ( Weight _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "Kg"
+    show ( Volume _ a ) = ( show $ ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
     show ( ZeroQuantity ) = "0"
 
@@ -343,7 +346,7 @@ wormCompostingParam = { title: "Wormery"
 
 
 foodSharingParam = { title: "Food Sharing"
-                  , sharedFoodRatio: Ratio Food { ratio: 0.9 } -- TODO: What is the ratio of available food for sharing to food actually shared?
+                  , sharedFoodRatio: Ratio Food { ratio: 0.5 } -- TODO: What is the ratio of available food for sharing to food actually shared?
                   }
 
 foodGardeningParam = { title: "Food Garden"
@@ -565,7 +568,7 @@ eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProces
     eatedFood = applyRatio eatedFoodRatio shoppedFood
     wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
     edibleWasted = applyTransform edibleWasteProcess wasted
-    nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) shoppedFood
+    nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) wasted
 
 scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
 scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
@@ -619,6 +622,12 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
+      EatingBinningFoodSharing -> managingWaste processParams.managedWasteParam
+                                 $ binning processParams.binningParam
+                                 -- TODO replug on eating?
+                                 -- $ eating ...
+                                 $ foodSharing processParams.foodSharingParam
+                                 $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
       EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
                                    $ binning processParams.binningParam
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
