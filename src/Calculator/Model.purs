@@ -3,6 +3,8 @@ module Calculator.Model (Flow(Flow),
                          Ratio(..),
                          Transform(..),
                          Quantity(..),
+                         SurfaceArea(..),
+                         Plant(..),
                          Scale(..),
                          Time(..),
                          SystemScale(..),
@@ -30,7 +32,7 @@ import Data.Foldable (foldl)
 import Data.Array (filter, head, tail)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Int (toNumber)
-import Math (trunc)
+import Math (trunc, abs)
 
 --
 -- Quantities
@@ -66,7 +68,7 @@ data Options = EatingOnly
              | EatingBinning
              | EatingBinningWormComposting
              | EatingBinningWormCompostingGarden
-             | EatingBinningWormCompostingFoodGarden
+             | EatingBinningWormCompostingFoodGardening
              | EatingBinningWormCompostingGardenWatering
              | EatingBinningWormCompostingFoodGardenWatering
              | EatingBinningWormCompostingGardenRainwater
@@ -79,6 +81,30 @@ data Life = Life
 -- Units
 
 data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity | ZeroQuantity
+
+instance quantityEq :: Eq (Quantity a) where
+  eq (Weight _ w1) (Weight _ w2) = w1 == w2
+  eq (Volume _ v1) (Volume _ v2) = v1 == v2
+  eq IncompatibleQuantity _ = false
+  eq _ IncompatibleQuantity = false
+  eq ZeroQuantity ZeroQuantity = true
+  eq ZeroQuantity (Weight _ w) = abs (w - 0.0) < 0.0001
+  eq (Weight _ w) ZeroQuantity = abs (w - 0.0) < 0.0001
+  eq _ _ = false
+
+instance quantityOrd :: Ord (Quantity a) where
+  compare (Weight _ w1) (Weight _ w2) = compare w1 w2
+  compare (Volume _ v1) (Volume _ v2) = compare v1 v2
+  compare ZeroQuantity (Weight _ w) = compare 0.0 w
+  compare (Weight _ w) ZeroQuantity = compare w 0.0
+  compare (Volume _ v) ZeroQuantity = compare v 0.0
+  compare ZeroQuantity (Volume _ v) = compare 0.0 v
+  compare ZeroQuantity ZeroQuantity = EQ
+  -- IncompatibleQuantity cannot be propagated on a comparison
+  compare (Weight _ _) (Volume _ _) = GT
+  compare (Volume _ _) (Weight _ _) = LT
+  compare IncompatibleQuantity _ = LT
+  compare _ IncompatibleQuantity = GT
 
 negQty :: forall a. Quantity a -> Quantity a
 negQty (Weight c qty) = Weight c (- qty)
@@ -100,10 +126,26 @@ addQty q ZeroQuantity = q
 addQty ZeroQuantity q = q
 addQty _ _ = IncompatibleQuantity
 
+-- mulQty :: forall a. Quantity a -> Quantity a -> Quantity a
+-- mulQty (Weight c qty1) (Weight _ qty2) = Weight c (qty1 * qty2)
+-- mulQty (Volume c qty1) (Volume _ qty2) = Weight c (qty1 * qty2)
+-- mulQty q ZeroQuantity = ZeroQuantity
+-- mulQty ZeroQuantity q = ZeroQuantity
+-- mulQty _ _ = IncompatibleQuantity
+
+mulQty :: forall a. Number -> Quantity a -> Quantity a
+mulQty n (Weight c qty) = Weight c (n * qty)
+mulQty n (Volume c qty) = Volume c (n * qty)
+mulQty _ ZeroQuantity = ZeroQuantity
+mulQty _ IncompatibleQuantity = IncompatibleQuantity
+
 -- -- Kg / Person / Day
 -- data Weight a =
 -- -- L / Person / Day
 -- data Volume a =
+
+-- Surface Area in square meters
+data SurfaceArea = SurfaceArea Number
 
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
@@ -113,7 +155,7 @@ type SystemScale = { scale:: Scale, time:: Time}
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting
 
 derive instance genericProcess :: Generic Process
 
@@ -128,7 +170,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = AllMatter | Food | Waste | GreyWater | Compost
+data Matter = AllMatter | Food | Waste | Water | Compost | Fertilizer
 
 derive instance genericMatter :: Generic Matter
 
@@ -139,11 +181,13 @@ instance matterEq :: Eq Matter where
   eq a b = case [a, b] of
     [Food, Food] -> true
     [Waste, Waste] -> true
+    [Compost, Compost] -> true
+    [Fertilizer, Fertilizer] -> true
     [AllMatter, _] -> true
     [_, AllMatter] -> true
     _ -> false
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 
@@ -153,6 +197,7 @@ instance matterProperty :: Eq MatterProperty where
     [NonEdible, NonEdible] -> true
     [Shopped, Shopped] -> true
     [Cooked, Cooked] -> true
+    [GreyWater, GreyWater] -> true
     [AllMatterProperty, _] -> true
     [_, AllMatterProperty] -> true
     _ -> false
@@ -174,6 +219,8 @@ derive instance genericState :: Generic State
 
 instance showState :: Show State where
     show = gShow
+
+data Plant = Tomato -- TODO other plants!
 
 hasProcess :: Process -> Entry -> Boolean
 hasProcess process (Entry {process: p}) =
@@ -243,6 +290,22 @@ type ProcessParams = { eatingParam ::
                      , foodSharingParam :: { title :: String
                                            , sharedFoodRatio :: Ratio Matter
                                            }
+                     , foodGardeningParam :: { title :: String
+                                             , surfaceArea :: SurfaceArea
+                                               -- fertilizer need for one square meter per type of plant
+                                             , fertilizerNeed :: { tomato :: Quantity Matter
+                                                                 }
+                                             , greyWaterNeed :: { tomato :: Quantity Matter
+                                                                 }
+                                             , plant :: Plant
+                                               -- production per square meter
+                                             , productionCapacity :: { tomato :: Quantity Matter
+                                                                 }
+                                             }
+                     , rainwaterCollectingParam :: { title :: String
+                                                   , surfaceArea :: SurfaceArea
+                                                     -- L of water collected per square meter
+                                                   , collectingCapacity :: Quantity Matter }
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
                                            }
@@ -278,9 +341,27 @@ wormCompostingParam = { title: "Wormery"
 
 
 foodSharingParam = { title: "Food Sharing"
-                  , sharedFoodRatio: Ratio Food { ratio: 1.0 } -- TODO: What is the ratio of available food for sharing to food actually shared?
+                  , sharedFoodRatio: Ratio Food { ratio: 0.9 } -- TODO: What is the ratio of available food for sharing to food actually shared?
                   }
 
+foodGardeningParam = { title: "Food Garden"
+                  , surfaceArea: SurfaceArea 100.0
+                    -- 'Material Flow Summary'!O14
+                  , fertilizerNeed: { tomato: Weight Fertilizer 2.17
+                                    }
+                  , greyWaterNeed: { tomato: Volume Water 60.0 -- liter per sqm
+                    }
+                  , plant: Tomato
+                    -- 'Material Flow Summary'!AA14
+                  , productionCapacity: { tomato: Weight Food 2.44
+                    }
+                  }
+
+rainwaterCollectingParam = { title: "Water collectin"
+                           , surfaceArea: SurfaceArea 100.0
+                             -- 'Material Flow Summary'!M12
+                           , collectingCapacity: Volume Water 540.0
+                           }
 managedWasteParam = { title: "Managed Waste"
                   , collectedWasteRatio: Ratio Waste  { ratio: 1.0 }
                   }
@@ -290,6 +371,8 @@ initProcessParams = { eatingParam
                     , wormCompostingParam
                     , managedWasteParam
                     , foodSharingParam
+                    , foodGardeningParam
+                    , rainwaterCollectingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
@@ -343,10 +426,86 @@ binning _ state@(State entries) =
     foodWaste = foldState Eating Waste AllMatterProperty state
     foodWormComposting = foldState WormComposting Waste AllMatterProperty state
 
+foodGardening_EatingBinningWormCompostingFoodGardening :: forall r. ProcessParam (
+  surfaceArea :: SurfaceArea,
+  fertilizerNeed :: { tomato :: Quantity Matter },
+  plant :: Plant,
+  productionCapacity :: { tomato :: Quantity Matter} | r) -> State -> State
+foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
+                                                        fertilizerNeed,
+                                                        plant,
+                                                        productionCapacity} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
+  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
+  ]
+  where
+    availableCompost = foldState WormComposting Compost AllMatterProperty state
+    fertilizerNeeded = case surfaceArea of SurfaceArea area -> mulQty area (case plant of Tomato -> fertilizerNeed.tomato)
+    usedCompost = if fertilizerNeeded > availableCompost then
+                    availableCompost else subQty availableCompost fertilizerNeeded
+    -- TODO: in a more accurate model the production should also be a function of the fertilizer
+    producedFood = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> productionCapacity.tomato)
+
+foodGardening_EatingBinningWormCompostingFoodGardenRainwater :: forall r. ProcessParam (
+  surfaceArea :: SurfaceArea,
+  fertilizerNeed :: { tomato :: Quantity Matter },
+  greyWaterNeed :: { tomato :: Quantity Matter },
+  plant :: Plant,
+  productionCapacity :: { tomato :: Quantity Matter} | r) -> State -> State
+foodGardening_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
+                                                              fertilizerNeed,
+                                                              greyWaterNeed,
+                                                              plant,
+                                                              productionCapacity} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
+  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: ( negQty usedGreyWater )}
+  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
+  ]
+  where
+    availableCompost = foldState WormComposting Compost AllMatterProperty state
+    fertilizerNeeded = case surfaceArea of SurfaceArea area -> mulQty area (case plant of Tomato -> fertilizerNeed.tomato)
+    usedCompost = if fertilizerNeeded > availableCompost then
+                    availableCompost else subQty availableCompost fertilizerNeeded
+    availableGreyWater = foldState RainwaterCollecting Water GreyWater state
+    greyWaterNeeded = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> greyWaterNeed.tomato)
+    usedGreyWater = if greyWaterNeeded > availableGreyWater then
+                      availableGreyWater else subQty availableGreyWater greyWaterNeeded
+    producedFood = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> productionCapacity.tomato)
+
+
+rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater :: forall r. ProcessParam (
+  surfaceArea :: SurfaceArea,
+  collectingCapacity ::Quantity Matter | r) -> State -> State
+rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
+                                                                    collectingCapacity} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
+  ]
+  where
+    collectedWater = mulQty (case surfaceArea of SurfaceArea area -> area) collectingCapacity
+
+
+foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter | r ) -> State -> State
+foodSharing {sharedFoodRatio} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: ( negQty edibleShared )}
+  , Entry {process: FoodSharing, matter: Food, matterProperty: Edible, quantity: edibleShared}
+  ]
+  where
+    edibleWasted = foldState Eating Food Edible state
+    edibleShared = applyRatio sharedFoodRatio edibleWasted
+
+
 composting_EatingBinningWormComposting :: forall r. ProcessParam (compostableRatio :: Ratio Matter,
                                       compostingYield :: Transform Matter Matter | r ) -> State -> State
 composting_EatingBinningWormComposting {compostingYield,
-                  compostableRatio} state@(State entries) =
+                                        compostableRatio} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty compostableWaste )}
@@ -429,54 +588,26 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ binning processParams.binningParam
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
+      EatingBinningWormCompostingFoodGardening -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
+                                   $ eating processParams.eatingParam state'
+             -- EatingBinningWormCompostingGardenWatering
+             -- EatingBinningWormCompostingFoodGardenWatering
+             -- EatingBinningWormCompostingGardenRainwater
+      EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam
+                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
+                                   $ eating processParams.eatingParam state'
+      EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
+                                   -- TODO replug on eating?
+                                   -- $ eating ...
+                                   $ foodSharing processParams.foodSharingParam
+                                   $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+
       _ -> State []
-
--- nexusSystem scale systemP { eatingParam: eatingP, binningParam: binningP } (SystemState ( Tuple EatingBinning input ) ) = SystemState $ Tuple EatingBinning binningOutput
---   where
---     eatingOutput = eating eatingP state
---     binningOutput = binning binningP eatingOutput
---     -- eatingBinningOutput = eatingOutput -- <> binningOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingOnly input ) ) = SystemState $ Tuple CompostingOnly eatingBinningOutput
---   where
---     eatingOutput = eating eatingP input
---     -- compostingOutput = composting compostingP eatingOutput
---     -- binningOutput = binning binningP eatingOutput
---     eatingBinningOutput = eatingOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingGarden input ) ) = SystemState $ Tuple CompostingGarden eatingBinningOutput
---   where
---     eatingOutput = eating eatingP input
---     -- compostingOutput = composting compostingP eatingOutput
---     -- binningOutput = binning binningP eatingOutput
---     eatingBinningOutput = eatingOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple CompostingFoodGarden input ) ) = SystemState $ Tuple CompostingFoodGarden eatingBinningOutput
---   where
---     eatingOutput = eating eatingP input
---     -- compostingOutput = composting compostingP eatingOutput
---     -- binningOutput = binning binningP eatingOutput
---     eatingBinningOutput = eatingOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple WateringGarden input ) ) = SystemState $ Tuple WateringGarden eatingBinningOutput
---   where
---     eatingOutput = eating eatingP input
---     -- compostingOutput = composting compostingP eatingOutput
---     -- binningOutput = binning binningP eatingOutput
---     eatingBinningOutput = eatingOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple RainwaterWateringGarden input ) ) = SystemState $ Tuple RainwaterWateringGarden eatingBinningOutput
---   where
---     eatingOutput = eating eatingP input
---     -- compostingOutput = composting compostingP eatingOutput
---     -- binningOutput = binning binningP eatingOutput
---     eatingBinningOutput = eatingOutput
---
--- nexusSystem scale systemP { eatingParam: eatingP } (SystemState ( Tuple NotImplemented input ) ) = SystemState $ Tuple NotImplemented $ State []
-
-
--- eatingBinning systemP eatingP compostingP binningP input = do
---                         eatingOutput <- eating eatingP input
---                         compostingOutput <- composting compostingP eatingOutput
---                         binningOutput <- binning binningP (eatingOutput <> compostingOutput)
---                         pure eatingOutput <> compostingOutput <> binningOutput
