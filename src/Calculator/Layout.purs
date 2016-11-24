@@ -120,7 +120,7 @@ displayState title available consumed = ( showAvailable available) <> " " <> ( s
 
 emptyHex = { title: "", details: "" }
 
-eatedFood = initialState Eating Food AllMatterProperty
+eatedFood = foldState Living Food AllMatterProperty
 
 gardenFood = foldState FoodGardening Food AllMatterProperty
 
