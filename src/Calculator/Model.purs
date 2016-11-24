@@ -161,17 +161,9 @@ data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | Mana
 derive instance genericProcess :: Generic Process
 
 instance processEq :: Eq Process where
-  eq a b = case [a, b] of
-    [Shopping, Shopping] -> true
-    [Eating, Eating] -> true
-    [Binning, Binning] -> true
-    [ManagingWaste, ManagingWaste] -> true
-    [WormComposting, WormComposting] -> true
-    [FoodGardening, FoodGardening] -> true
-    [RainwaterCollecting, RainwaterCollecting] -> true
-    [AllProcess, _] -> true
-    [_, AllProcess] -> true
-    _ -> false
+  eq AllProcess _ = true
+  eq _ AllProcess = true
+  eq a b= gEq a b
 
 data Matter = AllMatter | Food | Waste | Water | Compost | Fertilizer
 
@@ -181,29 +173,18 @@ instance showMatter :: Show Matter where
   show = gShow
 
 instance matterEq :: Eq Matter where
-  eq a b = case [a, b] of
-    [Food, Food] -> true
-    [Waste, Waste] -> true
-    [Compost, Compost] -> true
-    [Fertilizer, Fertilizer] -> true
-    [AllMatter, _] -> true
-    [_, AllMatter] -> true
-    _ -> false
+  eq AllMatter _ = true
+  eq _ AllMatter = true
+  eq a b = gEq a b
 
 data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 
 instance matterProperty :: Eq MatterProperty where
-  eq a b = case [a, b] of
-    [AllMatterProperty, _] -> true
-    [_, AllMatterProperty] -> true
-    [Edible, Edible] -> true
-    [NonEdible, NonEdible] -> true
-    [Shopped, Shopped] -> true
-    [Cooked, Cooked] -> true
-    [GreyWater, GreyWater] -> true
-    _ -> false
+  eq AllMatterProperty _ = true
+  eq _ AllMatterProperty = true
+  eq a b = gEq a b
 
 data Entry = Entry { process :: Process
                    , matter :: Matter
@@ -346,7 +327,7 @@ wormCompostingParam = { title: "Wormery"
 
 
 foodSharingParam = { title: "Food Sharing"
-                  , sharedFoodRatio: Ratio Food { ratio: 0.5 } -- TODO: What is the ratio of available food for sharing to food actually shared?
+                  , sharedFoodRatio: Ratio Food { ratio: 0.55 } -- TODO: What is the ratio of available food for sharing to food actually shared?
                   }
 
 foodGardeningParam = { title: "Food Garden"
