@@ -3,6 +3,7 @@ module Calculator.Model (Flow(Flow),
                          Ratio(..),
                          Transform(..),
                          Quantity(..),
+                         SurfaceArea(..),
                          Scale(..),
                          Time(..),
                          SystemScale(..),
@@ -105,6 +106,9 @@ addQty _ _ = IncompatibleQuantity
 -- -- L / Person / Day
 -- data Volume a =
 
+-- Surface Area in square meters
+data SurfaceArea = SurfaceArea Number
+
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
 
@@ -128,7 +132,7 @@ instance processEq :: Eq Process where
     [_, AllProcess] -> true
     _ -> false
 
-data Matter = AllMatter | Food | Waste | GreyWater | Compost
+data Matter = AllMatter | Food | Waste | GreyWater | Compost | Fertilizer
 
 derive instance genericMatter :: Generic Matter
 
@@ -139,6 +143,8 @@ instance matterEq :: Eq Matter where
   eq a b = case [a, b] of
     [Food, Food] -> true
     [Waste, Waste] -> true
+    [Compost, Compost] -> true
+    [Fertilizer, Fertilizer] -> true
     [AllMatter, _] -> true
     [_, AllMatter] -> true
     _ -> false
@@ -243,6 +249,12 @@ type ProcessParams = { eatingParam ::
                      , foodSharingParam :: { title :: String
                                            , sharedFoodRatio :: Ratio Matter
                                            }
+                     , foodGardeningParam :: { title :: String
+                                          , surfaceArea :: SurfaceArea
+                                            -- fertilizer need for one square meter per type of plant
+                                          , fertilizerNeed :: { tomato :: Quantity Matter
+                                                              }
+                                          }
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
                                            }
@@ -281,6 +293,13 @@ foodSharingParam = { title: "Food Sharing"
                   , sharedFoodRatio: Ratio Food { ratio: 0.9 } -- TODO: What is the ratio of available food for sharing to food actually shared?
                   }
 
+foodGardeningParam = { title: "Food Garden"
+                  , surfaceArea: SurfaceArea 100.0
+                    -- 'Material Flow Summary'!O14
+                  , fertilizerNeed: { tomato: Weight Fertilizer 2.17
+                                    }
+                  }
+
 managedWasteParam = { title: "Managed Waste"
                   , collectedWasteRatio: Ratio Waste  { ratio: 1.0 }
                   }
@@ -290,6 +309,7 @@ initProcessParams = { eatingParam
                     , wormCompostingParam
                     , managedWasteParam
                     , foodSharingParam
+                    , foodGardeningParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
