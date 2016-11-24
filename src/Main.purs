@@ -135,7 +135,7 @@ ui = interface <$> ( boolean "Info" true )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
                                                           <*> ( mkScale <$> (select "Scale" ( PersonScale :| [ HouseholdScale, EstateScale ]) scaleToString)
-                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) ) 
+                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) )
                                                           <*> pure systemParams
                                                           <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
                                                           <*> ( pure initState ) ) )
@@ -190,7 +190,7 @@ ui = interface <$> ( boolean "Info" true )
 
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit
 -- main = runFlareWith "select" inner nexusOptions
-main = runFlareHTML "controls" "output" ui
+main = runFlareHTML "flare-controls" "output" ui
 
   -- runFlareWith "controls" "output" ui2
   -- runFlareDrawing "controls1" "output1" uidrawing
