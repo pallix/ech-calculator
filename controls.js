@@ -45,7 +45,7 @@ $( document ).ready(function() {
 
   // Time
 
-  $("#controls").append('<div id="swiper-time" class="swiper-container"><h4>Time</h2><div class="swiper-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>')
+  $("#controls").append('<div id="swiper-time" class="swiper-container"><h4>Period</h2><div class="swiper-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>')
 
   $('#flare-component-5 > option').each(function(i, e) {
     $("#swiper-time .swiper-wrapper").append('<div class="swiper-slide"><h2>' + e.text + '</h2></div>')
