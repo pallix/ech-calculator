@@ -3,8 +3,8 @@ $( document ).ready(function() {
   // and what types of mutations trigger the callback
 
   $('#cog').on('click', function () {
-      $('#cog').hide();
-      $("#controls").show();
+      $('#cog').addClass("hidden");
+      $("#controls").removeClass("hidden");
       swiperScenario.update()
       swiperScale.update()
       swiperTime.update()
@@ -13,9 +13,8 @@ $( document ).ready(function() {
   $("#controls").append('<img src="/images/close.svg" height="22px" id="close"/>');
 
   $('#close').on('click', function () {
-    console.log("yo")
-    $("#controls").hide();
-    $('#cog').show();
+    $("#controls").addClass("hidden");
+    $('#cog').removeClass("hidden");
   })
 
   // Scale
@@ -94,28 +93,34 @@ $( document ).ready(function() {
   })
 
 
-  var hammertime = new Hammer(document);
-  hammertime.get('swipe').set({ direction: Hammer.DIRECTION_VERTICAL });
+  var hammertime = new Hammer($("#layer .hexGrid").get(0));
+  hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 
-  // function nextOpt(sel, previous) {
-  //   console.log(sel)
-  //   console.log(sel.options)
-  //   var i = sel.selectedIndex;
-  //   if (previous) {
-  //     sel.options[Math.abs(--i%sel.options.length)].selected = true;
-  //   } else {
-  //     sel.options[++i%sel.options.length].selected = true;
-  //   }
-  //   var ev = new Event('change');
-  //   sel.dispatchEvent(ev);
-  // }
+  function nextOpt(sel, previous) {
+    console.log(sel)
+    console.log(sel.options)
+    var i = sel.selectedIndex + sel.options.length * 100;
+    if (previous) {
+      sel.options[--i%sel.options.length].selected = true;
+    } else {
+      sel.options[++i%sel.options.length].selected = true;
+    }
+    var ev = new Event('change');
+    sel.dispatchEvent(ev);
+  }
 
   hammertime.on('swipe', function(ev) {
+    console.log(ev)
     if (ev.direction == Hammer.DIRECTION_UP) {
-      $("#controls").show();
-      swiper.update()
+      $('#cog').addClass("hidden");
+      $("#controls").removeClass("hidden");
+      swiperScenario.update()
+      swiperScale.update()
+      swiperTime.update()
     }
     if (ev.direction == Hammer.DIRECTION_DOWN) $("#controls").hide();
+    if (ev.direction == Hammer.DIRECTION_RIGHT) nextOpt(scenarioSelect, true)
+    if (ev.direction == Hammer.DIRECTION_LEFT) nextOpt(scenarioSelect)
   });
 
   eatedFoodRatioOriginal = $('#flare-component-6')
@@ -134,21 +139,21 @@ $( document ).ready(function() {
 
   eatedFoodRatioLayered = $('#eatedFoodRatioLayered').get(0)
 
-  noUiSlider.create(eatedFoodRatioLayered, {
-    start: [ eatedFoodRatioOriginal.val()*100 ],
-  	range: {
-  		'min': [  0 ],
-  		'max': [ 100 ]
-  	}
-  })
-
-  eatedFoodRatioLayered.noUiSlider.on('end', function(values){
-    eatedFoodRatioOriginal.val(values[0]/100);
-    var elem = eatedFoodRatioOriginal.get(0);
-    var ev = new Event('input');
-    elem.dispatchEvent(ev);
-    // return true;
-  });
+  // noUiSlider.create(eatedFoodRatioLayered, {
+  //   start: [ eatedFoodRatioOriginal.val()*100 ],
+  // 	range: {
+  // 		'min': [  0 ],
+  // 		'max': [ 100 ]
+  // 	}
+  // })
+  //
+  // eatedFoodRatioLayered.noUiSlider.on('end', function(values){
+  //   eatedFoodRatioOriginal.val(values[0]/100);
+  //   var elem = eatedFoodRatioOriginal.get(0);
+  //   var ev = new Event('input');
+  //   elem.dispatchEvent(ev);
+  //   // return true;
+  // });
 
   scaleControl = $('#layer #Scale')
   timeControl = $('#layer #Time')

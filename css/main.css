@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    opacity: 1;
 }
 body {
     background: rgb(123, 158, 158);
@@ -38,7 +39,6 @@ p {
 
 #controls {
   text-align: center;
-  display: none;
   bottom: 10px;
   position: absolute;
   width: 100%;
@@ -149,6 +149,12 @@ fieldset label {
 .left {
 	border-width: 20px 20px 5px 5px;
 	border-color: transparent transparent #fff #fff;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.25s, opacity 0.25s linear;
 }
 
 /*

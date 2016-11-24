@@ -93,6 +93,10 @@ a.hexIn.grid {
   transform: translateX(50%) rotate(-120deg) skewY(+30deg) translateZ(0);
 }
 
+.flows li.hex.rotate-2 {
+  transform: translateX(50%) rotate(0deg) skewY(+30deg) translateZ(0);
+}
+
 .hex h2:after {
     content: '';
     position: absolute;

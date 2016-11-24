@@ -80,23 +80,23 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 optionsLabel EatingOnly = "Food"
 optionsLabel EatingBinning = "Food & Waste"
 optionsLabel EatingBinningWormComposting = "Wormery"
-optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
+-- optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
 optionsLabel EatingBinningWormCompostingFoodGardening = "Wormery & Food Garden"
-optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
+-- optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
 optionsLabel EatingBinningWormCompostingFoodGardenWatering = "Food Garden Watering "
-optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
+-- optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
 optionsLabel EatingBinningWormCompostingFoodGardenRainwater = "Rainwater Collection & Food Garden"
-optionsLabel EatingBinningWormCompostingFoodSharing = "Food Sharing"
-optionsLabel NotImplemented = "Not Implemented Yet"
+
+optionsLabel EatingBinningFoodSharing = "Food Sharing"
+optionsLabel EatingBinningWormCompostingFoodSharing = "Wormery & Food Sharing"
+optionsLabel _ = "Not Implemented Yet"
 
 nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
                                                , EatingBinningWormComposting
-                                               , EatingBinningWormCompostingGarden
                                                , EatingBinningWormCompostingFoodGardening
-                                               , EatingBinningWormCompostingGardenWatering
                                                , EatingBinningWormCompostingFoodGardenWatering
-                                               , EatingBinningWormCompostingGardenRainwater
                                                , EatingBinningWormCompostingFoodGardenRainwater
+                                               , EatingBinningFoodSharing
                                                , EatingBinningWormCompostingFoodSharing ] ) optionsLabel
 
 systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
