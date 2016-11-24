@@ -131,7 +131,7 @@ mkScale s t = { scale : s, time: t}
 
 -- ui :: forall e e'. UI e (Markup e')
 --
-ui = interface <$> ( boolean "Info" true )
+ui = interface <$> ( boolean "Info" false )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
                                                           <*> ( mkScale <$> (select "Scale" ( PersonScale :| [ HouseholdScale, EstateScale ]) scaleToString)

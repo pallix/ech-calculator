@@ -2,6 +2,15 @@ $( document ).ready(function() {
   // define what element should be observed by the observer
   // and what types of mutations trigger the callback
 
+  //
+
+  $(document).on('tap', '#Shopping', function(){ alert('hi')})
+
+  //
+  // Bottom Menu
+  //
+  //
+
   $('#cog').on('click', function () {
       $('#cog').addClass("hidden");
       $("#controls").removeClass("hidden");
@@ -93,7 +102,7 @@ $( document ).ready(function() {
   })
 
 
-  var hammertime = new Hammer($("#layer .hexGrid").get(0));
+  var hammertime = new Hammer($("#layer .hexGrid").get(0), {domEvents: true});
   hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 
   function nextOpt(sel, previous) {
@@ -108,6 +117,10 @@ $( document ).ready(function() {
     var ev = new Event('change');
     sel.dispatchEvent(ev);
   }
+
+  hammertime.on('tap', 'li', function(ev) {
+    console.log(ev)
+  })
 
   hammertime.on('swipe', function(ev) {
     console.log(ev)
