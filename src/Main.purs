@@ -81,7 +81,7 @@ optionsLabel EatingOnly = "Food"
 optionsLabel EatingBinning = "Food & Waste"
 optionsLabel EatingBinningWormComposting = "Wormery"
 optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
-optionsLabel EatingBinningWormCompostingFoodGarden = "Wormery & Food Garden"
+optionsLabel EatingBinningWormCompostingFoodGardening = "Wormery & Food Garden"
 optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
 optionsLabel EatingBinningWormCompostingFoodGardenWatering = "Food Garden Watering "
 optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
@@ -92,7 +92,7 @@ optionsLabel NotImplemented = "Not Implemented Yet"
 nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
                                                , EatingBinningWormComposting
                                                , EatingBinningWormCompostingGarden
-                                               , EatingBinningWormCompostingFoodGarden
+                                               , EatingBinningWormCompostingFoodGardening
                                                , EatingBinningWormCompostingGardenWatering
                                                , EatingBinningWormCompostingFoodGardenWatering
                                                , EatingBinningWormCompostingGardenRainwater
