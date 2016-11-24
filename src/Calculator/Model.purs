@@ -156,7 +156,7 @@ type SystemScale = { scale:: Scale, time:: Time}
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting | Living
+data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting | Living | Raining
 
 derive instance genericProcess :: Generic Process
 
@@ -290,7 +290,7 @@ type ProcessParams = { eatingParam ::
                      , rainwaterCollectingParam :: { title :: String
                                                    , surfaceArea :: SurfaceArea
                                                      -- L of water collected per square meter
-                                                   , collectingCapacity :: Quantity Matter
+                                                   , collectingCapacity :: Number
                                                    }
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
@@ -346,8 +346,8 @@ foodGardeningParam = { title: "Food Garden"
 
 rainwaterCollectingParam = { title: "Water collectin"
                            , surfaceArea: SurfaceArea 100.0
-                             -- 'Material Flow Summary'!M12
-                           , collectingCapacity: Volume Water 540.0
+                              -- liter per sqm (assuming 1000mm of rain, 60% efficency, Rainwater!D20)
+                           , collectingCapacity: 600.0
                            }
 managedWasteParam = { title: "Managed Waste"
                   , collectedWasteRatio: Ratio Waste  { ratio: 1.0 }
@@ -498,16 +498,17 @@ foodGardening_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
 
 rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater :: forall r. ProcessParam (
   surfaceArea :: SurfaceArea,
-  collectingCapacity ::Quantity Matter | r) -> State -> State
+  collectingCapacity :: Number | r) -> State -> State
 rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
                                                                     collectingCapacity} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
+  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater}
+  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
   ]
   where
-    collectedWater = mulQty (case surfaceArea of SurfaceArea area -> area) collectingCapacity
-
+    rainingWater = foldState Raining Water AllMatterProperty state
+    collectedWater = Volume Water $ (case surfaceArea of SurfaceArea area -> area) * collectingCapacity
 
 foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter | r ) -> State -> State
 foodSharing {sharedFoodRatio} state@(State entries) =
