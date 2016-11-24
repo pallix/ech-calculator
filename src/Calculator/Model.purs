@@ -301,11 +301,13 @@ type ProcessParams = { eatingParam ::
                                                -- production per square meter
                                              , productionCapacity :: { tomato :: Quantity Matter
                                                                  }
+                                             , irrigationEfficiency :: Ratio Matter
                                              }
                      , rainwaterCollectingParam :: { title :: String
                                                    , surfaceArea :: SurfaceArea
                                                      -- L of water collected per square meter
-                                                   , collectingCapacity :: Quantity Matter }
+                                                   , collectingCapacity :: Quantity Matter
+                                                   }
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
                                            }
@@ -355,6 +357,7 @@ foodGardeningParam = { title: "Food Garden"
                     -- 'Material Flow Summary'!AA14
                   , productionCapacity: { tomato: Weight Food 2.44
                     }
+                  , irrigationEfficiency: Ratio Water { ratio: 0.45 }
                   }
 
 rainwaterCollectingParam = { title: "Water collectin"
@@ -395,6 +398,17 @@ applyRatio (Ratio a { ratio: ratio }) qty =
     appRatio r (Volume a v) = Volume a $ r * v
     appRatio r ZeroQuantity = ZeroQuantity
     appRatio r IncompatibleQuantity = IncompatibleQuantity
+
+
+divByRatio :: forall a. Quantity a -> Ratio a -> Quantity a
+divByRatio qty (Ratio a { ratio: ratio }) =
+  divRatio qty ratio
+  where
+    divRatio :: Quantity a -> Number -> Quantity a
+    divRatio (Weight a w) r = Weight a $ r / w
+    divRatio (Volume a v) r = Volume a $ r / v
+    divRatio ZeroQuantity r = ZeroQuantity -- should be an error here or InfinityQuantity
+    divRatio IncompatibleQuantity r = IncompatibleQuantity
 
 complementOneRatio ( Ratio a { ratio } ) = Ratio a { ratio : ( 1.0 - ratio ) }
 complementOneTransform ( Transform a b { ratio } ) = Transform a b { ratio : ( 1.0 - ratio ) }
@@ -453,16 +467,18 @@ foodGardening_EatingBinningWormCompostingFoodGardenRainwater :: forall r. Proces
   fertilizerNeed :: { tomato :: Quantity Matter },
   greyWaterNeed :: { tomato :: Quantity Matter },
   plant :: Plant,
-  productionCapacity :: { tomato :: Quantity Matter} | r) -> State -> State
+  productionCapacity :: { tomato :: Quantity Matter},
+  irrigationEfficiency :: Ratio Matter | r) -> State -> State
 foodGardening_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
                                                               fertilizerNeed,
                                                               greyWaterNeed,
                                                               plant,
-                                                              productionCapacity} state@(State entries) =
+                                                              productionCapacity,
+                                                              irrigationEfficiency} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
-  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: ( negQty usedGreyWater )}
+  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost}
+  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater}
   , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
   ]
   where
@@ -471,7 +487,8 @@ foodGardening_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
     usedCompost = if fertilizerNeeded > availableCompost then
                     availableCompost else subQty availableCompost fertilizerNeeded
     availableGreyWater = foldState RainwaterCollecting Water GreyWater state
-    greyWaterNeeded = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> greyWaterNeed.tomato)
+    greyWaterUsedByPlants = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> greyWaterNeed.tomato)
+    greyWaterNeeded = divByRatio greyWaterUsedByPlants irrigationEfficiency
     usedGreyWater = if greyWaterNeeded > availableGreyWater then
                       availableGreyWater else subQty availableGreyWater greyWaterNeeded
     producedFood = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> productionCapacity.tomato)
