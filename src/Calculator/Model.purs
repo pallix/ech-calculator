@@ -493,7 +493,6 @@ foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
   ]
   where
     availableCompost = foldState WormComposting Compost AllMatterProperty state
---    surfaceArea' = scaleGardenSurface systemScale surfaceArea
     surfaceArea' = case (scaleGardenSurface systemScale surfaceArea) of SurfaceArea area -> area
     fertilizerNeeded = scaleQtyOnTime systemScale $ mulQty surfaceArea' (case plant of Tomato -> fertilizerNeed.tomato)
     usedCompost = if fertilizerNeeded > availableCompost then
@@ -510,13 +509,13 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater :: forall r. Pro
   greyWaterNeed :: { tomato :: Quantity Matter },
   plant :: Plant,
   productionCapacity :: { tomato :: Quantity Matter},
-  irrigationEfficiency :: Ratio Matter | r) -> State -> State
+  irrigationEfficiency :: Ratio Matter | r) -> SystemScale -> State -> State
 foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
                                                               fertilizerNeed,
                                                               greyWaterNeed,
                                                               plant,
                                                               productionCapacity,
-                                                              irrigationEfficiency} state@(State entries) =
+                                                              irrigationEfficiency} systemScale state@(State entries) =
   State $
   entries <>
   [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost}
@@ -529,18 +528,19 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
     usedCompost = if fertilizerNeeded > availableCompost then
                     availableCompost else subQty availableCompost fertilizerNeeded
     availableGreyWater = foldState RainwaterCollecting Water GreyWater state
-    greyWaterUsedByPlants = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> greyWaterNeed.tomato)
+    surfaceArea' = case (scaleGardenSurface systemScale surfaceArea) of SurfaceArea area -> area
+    greyWaterUsedByPlants = scaleQtyOnTime systemScale $ mulQty surfaceArea' (case plant of Tomato -> greyWaterNeed.tomato)
     greyWaterNeeded = divByRatio greyWaterUsedByPlants irrigationEfficiency
     usedGreyWater = if greyWaterNeeded > availableGreyWater then
                       availableGreyWater else subQty availableGreyWater greyWaterNeeded
-    producedFood = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> productionCapacity.tomato)
+    producedFood = mulQty surfaceArea' (case plant of Tomato -> productionCapacity.tomato)
 
 
 rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater :: forall r. ProcessParam (
   surfaceArea :: SurfaceArea,
-  collectingCapacity :: Number | r) -> State -> State
+  collectingCapacity :: Number | r) -> SystemScale -> State -> State
 rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
-                                                                    collectingCapacity} state@(State entries) =
+                                                                    collectingCapacity} systemScale state@(State entries) =
   State $
   entries <>
   [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater}
@@ -548,7 +548,8 @@ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
   ]
   where
     rainingWater = foldState Raining Water AllMatterProperty state
-    collectedWater = Volume Water $ (case surfaceArea of SurfaceArea area -> area) * collectingCapacity
+    surfaceArea' = (case scaleRooftopSurface systemScale surfaceArea of SurfaceArea area -> area)
+    collectedWater = Volume Water $ surfaceArea' * (scaleNumberOnTime systemScale collectingCapacity)
 
 foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter | r ) -> State -> State
 foodSharing {sharedFoodRatio} state@(State entries) =
@@ -632,12 +633,24 @@ scaleQtyOnTime {time} q =
     scaleQ ZeroQuantity = ZeroQuantity
     scaleQ IncompatibleQuantity = IncompatibleQuantity
 
+scaleNumberOnTime :: forall a. SystemScale -> Number -> Number
+scaleNumberOnTime {time} n =
+  timeFactor * n
+  where
+    timeFactor = case time of
+      Day -> (1.0 / 365.25)
+      Month -> (1.0 / 12.0)
+      Year -> 1.0
+
+
 scaleGardenSurface :: SystemScale -> SurfaceArea -> SurfaceArea
 scaleGardenSurface {scale} _ =
   case scale of
     PersonScale -> SurfaceArea 10.0
     HouseholdScale -> SurfaceArea 10.0
     EstateScale -> SurfaceArea 100.0
+
+scaleRooftopSurface = scaleGardenSurface
 
 scaleEntries :: SystemScale -> SystemParams -> State -> State
 scaleEntries systemScale systemParams (State entries) =
@@ -662,21 +675,18 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ eating processParams.eatingParam state'
       EatingBinningWormCompostingFoodGardening -> managingWaste processParams.managedWasteParam
                                    $ binning processParams.binningParam
-                                   -- TODO: scale
                                    $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
       EatingBinningWormCompostingFoodGardenWatering -> managingWaste processParams.managedWasteParam
                                    $ binning processParams.binningParam
-                                   -- TODO: scale
                                    $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
       EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams.managedWasteParam
                                    $ binning processParams.binningParam
-                                   -- TODO: scale
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater processParams.foodGardeningParam
-                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater processParams.foodGardeningParam scale
+                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam scale
                                    $ composting_EatingBinningWormComposting processParams.wormCompostingParam
                                    $ eating processParams.eatingParam state'
       EatingBinningFoodSharing -> managingWaste processParams.managedWasteParam
