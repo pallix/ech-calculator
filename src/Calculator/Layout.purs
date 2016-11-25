@@ -260,6 +260,12 @@ initialCompost = initialState WormComposting Compost AllMatterProperty
 
 initialFoodShared = initialState FoodSharing Food AllMatterProperty
 
+initialFoodGardeningTapWater = initialState FoodGardening Water TapWater
+
+initialRainwater = initialState Raining Water GreyWater
+
+initialFoodGardeningRainwater = initialState FoodGardening Water GreyWater
+
 managedWaste = foldState ManagingWaste Waste AllMatterProperty
 
 emptyArrow = { title: "", quantity: "", details: "" }
@@ -307,7 +313,7 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodGardenWatering
                                                 <> singleton emptyArrow
                                                 <> singleton { title: "_", quantity: show $ initialCompost state, details: "of Fertiliser" }
                                                 <> ( replicate 1 emptyArrow )
-                  <> ( replicate 5 emptyArrow ) <> singleton { title: "/", quantity: show $ initialFoodShared state , details: "of Irrigation Water" } <> ( replicate 3 emptyArrow )
+                  <> ( replicate 5 emptyArrow ) <> singleton { title: "/", quantity: show $ initialFoodGardeningTapWater state , details: "of Irrigation Water" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 7 emptyArrow )
 
 arrayArrow (SystemState { current: EatingBinningWormCompostingFoodGardenRainwater, state } ) =
@@ -320,8 +326,8 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodGardenRainwate
                                                 <> singleton emptyArrow
                                                 <> singleton { title: "_", quantity: show $ initialCompost state, details: "of Fertiliser" }
                                                 <> ( replicate 1 emptyArrow )
-                  <> ( replicate 5 emptyArrow ) <> singleton { title: "/", quantity: show $ initialFoodShared state , details: "of Irrigation Water" } <> ( replicate 1 emptyArrow )
-                  <> ( replicate 3 emptyArrow ) <> singleton { title: "_", quantity: show $ initialFoodShared state , details: "of Rainwater" }
+                  <> ( replicate 5 emptyArrow ) <> singleton { title: "/", quantity: show $ initialFoodGardeningRainwater state , details: "of Irrigation Water" } <> ( replicate 1 emptyArrow )
+                  <> ( replicate 3 emptyArrow ) <> singleton { title: "_", quantity: show $ initialRainwater state , details: "of Rainwater" }
                   <> ( replicate 7 emptyArrow )
 
 

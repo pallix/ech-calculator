@@ -111,7 +111,9 @@ systemParams = systemParamsWithConstants ( 0 )
 
 initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}
                     -- surface are of the estate = 12 000m² * 1000mm (1Meter) of water in Liters
-                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0}]
+                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0}
+                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0}
+                  ]
 
 
 scaleToString PersonScale = "Person"
