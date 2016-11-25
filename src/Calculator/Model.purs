@@ -122,23 +122,22 @@ subQty _ _ = IncompatibleQuantity
 
 addQty :: forall a. Quantity a -> Quantity a -> Quantity a
 addQty (Weight c qty1) (Weight _ qty2) = Weight c (qty1 + qty2)
-addQty (Volume c qty1) (Volume _ qty2) = Weight c (qty1 + qty2)
+addQty (Volume c qty1) (Volume _ qty2) = Volume c (qty1 + qty2)
 addQty q ZeroQuantity = q
 addQty ZeroQuantity q = q
 addQty _ _ = IncompatibleQuantity
-
--- mulQty :: forall a. Quantity a -> Quantity a -> Quantity a
--- mulQty (Weight c qty1) (Weight _ qty2) = Weight c (qty1 * qty2)
--- mulQty (Volume c qty1) (Volume _ qty2) = Weight c (qty1 * qty2)
--- mulQty q ZeroQuantity = ZeroQuantity
--- mulQty ZeroQuantity q = ZeroQuantity
--- mulQty _ _ = IncompatibleQuantity
 
 mulQty :: forall a. Number -> Quantity a -> Quantity a
 mulQty n (Weight c qty) = Weight c (n * qty)
 mulQty n (Volume c qty) = Volume c (n * qty)
 mulQty _ ZeroQuantity = ZeroQuantity
 mulQty _ IncompatibleQuantity = IncompatibleQuantity
+
+toVolume :: forall a. Number -> Quantity a -> Quantity a
+toVolume bulkDensity (Weight c w) = Volume c $ w / bulkDensity
+toVolume _ v@(Volume _ _) = v
+toVolume _ ZeroQuantity = ZeroQuantity
+toVolume _ IncompatibleQuantity = IncompatibleQuantity
 
 -- -- Kg / Person / Day
 -- data Weight a =
@@ -240,7 +239,7 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
     show ( Weight _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "Kg"
-    show ( Volume _ a ) = ( show $ ( a * 10.0 ) / 10.0 ) <> "L"
+    show ( Volume _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
     show ( ZeroQuantity ) = "0"
 
@@ -266,6 +265,7 @@ type ProcessParams = { eatingParam ::
                           }
                      , binningParam :: { title :: String
                                        , compactingRatio :: Ratio Matter
+                                       , bulkDensity :: Number
                                        }
                      , wormCompostingParam :: { title :: String
                                           , compostableRatio :: Ratio Matter
@@ -294,6 +294,7 @@ type ProcessParams = { eatingParam ::
                                                    }
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
+                                           , bulkDensity :: Number
                                            }
 
                      }
@@ -315,8 +316,10 @@ eatingParam =  { title: "Eating"
                }
 
 binningParam = { title: "Binning"
-               , compactingRatio: Ratio Waste { ratio: 0.0 }
+               , compactingRatio: Ratio Waste { ratio: 0.8 } -- 0.8 == compactor
               --  , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
+                 -- Compactor!C8:G8
+               , bulkDensity: 0.8 -- kg/L
                }
 
 wormCompostingParam = { title: "Wormery"
@@ -351,6 +354,7 @@ rainwaterCollectingParam = { title: "Water collectin"
                            }
 managedWasteParam = { title: "Managed Waste"
                   , collectedWasteRatio: Ratio Waste  { ratio: 1.0 }
+                  , bulkDensity: 0.8 -- kg/L
                   }
 
 initProcessParams = { eatingParam
@@ -429,18 +433,21 @@ eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProces
     nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) wasted
 
 
-binning :: forall r. ProcessParam ( r ) -> State -> State
-binning _ state@(State entries) =
+binning :: forall r. ProcessParam ( compactingRatio :: Ratio Matter,
+                                    bulkDensity :: Number | r ) -> State -> State
+binning {compactingRatio, bulkDensity} state@(State entries) =
   State $
   entries <>
   [
     Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWaste  }
   , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWormComposting }
-  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( addQty foodWaste foodWormComposting ) }
+  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume }
   ]
   where
     foodWaste = foldState Eating Waste AllMatterProperty state
     foodWormComposting = foldState WormComposting Waste AllMatterProperty state
+    allWaste = addQty foodWormComposting foodWaste
+    allWasteVolume = applyRatio (complementOneRatio compactingRatio) $ toVolume bulkDensity allWaste
 
 foodGardening_EatingBinningWormCompostingFoodGardening :: forall r. ProcessParam (
   surfaceArea :: SurfaceArea,
@@ -540,18 +547,21 @@ composting_EatingBinningWormComposting {compostingYield,
     compostProduct = applyTransform compostingYield compostableWaste
     -- compostWaste = subQty compostableWaste compostProduct
 
-managingWaste  :: forall r. ProcessParam (collectedWasteRatio :: Ratio Matter | r ) -> State -> State
-managingWaste {collectedWasteRatio} state@(State entries) =
+managingWaste :: forall r. ProcessParam (collectedWasteRatio :: Ratio Matter,
+                                         bulkDensity :: Number | r ) -> State -> State
+managingWaste {collectedWasteRatio,
+               bulkDensity} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty foodWaste )}
   , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste )}
-  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: ( addQty binnedWaste foodWaste ) }
+  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume }
   -- , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostWaste }
   ]
   where
     foodWaste =  foldState Eating Waste AllMatterProperty state
     binnedWaste =  foldState Binning Waste AllMatterProperty state
+    allWasteVolume = addQty (toVolume bulkDensity binnedWaste) (toVolume bulkDensity foodWaste)
 
 scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
 scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
