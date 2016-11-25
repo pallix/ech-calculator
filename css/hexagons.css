@@ -12,6 +12,35 @@ a.hexIn.grid {
     font-size: 1.2em;
     position: absolute;
 }
+
+/*Macbook width 1920 / heigh 1200 / device-aspect-ratio 8/5 / -webkit-device-pixel-ratio 2*/
+
+/*chromebook width 1366 / height 765 / ratio: no support / -webkit-device-pixel-ratio 1*/
+
+/*iPad width 980 / heigh 716 / aspect ratio 3/4 / -webkit-device-pixel-ratio 2*/
+
+@media screen  {
+  .hexGrid {
+      width: 60%;
+      margin: 0px 0 0 22%;
+  }
+}
+
+@media screen and (device-aspect-ratio: 3/4) {
+  .hexGrid {
+    /*These dimensions work on iPad*/
+    width: 98%;
+    margin: 0px 0 0 2%;
+  }
+}
+
+@media screen and (device-aspect-ratio: 8/5) {
+  .hexGrid {
+    width: 75%;
+    margin: 0px 0 0 14%;
+  }
+}
+
 .hexGrid:after {
     content: "";
     display: block;

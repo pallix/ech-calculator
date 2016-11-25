@@ -102,7 +102,16 @@ $( document ).ready(function() {
   })
 
 
-  var hammertime = new Hammer($("#layer .hexGrid").get(0), {domEvents: true});
+  // var layer = $("#layer ul").get(0);
+  // var layer_item = $("#layer ul li");
+  // var hammertime = new Hammer(layer, {domEvents: true});
+  // hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+
+  var layer = $("#layer ul")
+
+  layer.hammer({domEvents: true})
+  var hammertime = layer.data("hammer");
+
   hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 
   function nextOpt(sel, previous) {
@@ -118,7 +127,7 @@ $( document ).ready(function() {
     sel.dispatchEvent(ev);
   }
 
-  hammertime.on('tap', 'li', function(ev) {
+  hammertime.on('tap', function(ev) {
     console.log(ev)
   })
 
