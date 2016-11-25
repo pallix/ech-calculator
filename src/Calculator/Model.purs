@@ -598,9 +598,8 @@ managingWaste {collectedWasteRatio,
   where
     foodWaste =  foldState Eating Waste AllMatterProperty state
     binnedWaste =  foldState Binning Waste AllMatterProperty state
-    allWasteWeight = addQty (toWeight bulkDensity foodWaste) (toWeight bulkDensity binnedWaste)
-    allWasteVolume = toVolume bulkDensity allWasteWeight
-    ghgEmitted = mulQty ghgProduction allWasteWeight
+    allWasteVolume = addQty (toVolume bulkDensity foodWaste) (toVolume bulkDensity binnedWaste)
+    ghgEmitted = mulQty ghgProduction allWasteVolume
 
 scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
 scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
