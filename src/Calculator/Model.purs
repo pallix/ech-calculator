@@ -139,6 +139,12 @@ toVolume _ v@(Volume _ _) = v
 toVolume _ ZeroQuantity = ZeroQuantity
 toVolume _ IncompatibleQuantity = IncompatibleQuantity
 
+toWeight :: forall a. Number -> Quantity a -> Quantity a
+toWeight bulkDensity (Volume c w) = Weight c $ w * bulkDensity
+toWeight _ w@(Weight _ _) = w
+toWeight _ ZeroQuantity = ZeroQuantity
+toWeight _ IncompatibleQuantity = IncompatibleQuantity
+
 -- -- Kg / Person / Day
 -- data Weight a =
 -- -- L / Person / Day
@@ -164,7 +170,7 @@ instance processEq :: Eq Process where
   eq _ AllProcess = true
   eq a b= gEq a b
 
-data Matter = AllMatter | Food | Waste | Water | Compost | Fertilizer
+data Matter = AllMatter | Food | Waste | Water | Compost | Fertilizer | GreenhouseGas
 
 derive instance genericMatter :: Generic Matter
 
@@ -295,6 +301,8 @@ type ProcessParams = { eatingParam ::
                      , managedWasteParam :: { title :: String
                                            , collectedWasteRatio :: Ratio Matter
                                            , bulkDensity :: Number
+                                              --  amount of CO2e produced in kg per kg of waste
+                                           , ghgProduction :: Number
                                            }
 
                      }
@@ -355,6 +363,7 @@ rainwaterCollectingParam = { title: "Water collectin"
 managedWasteParam = { title: "Managed Waste"
                   , collectedWasteRatio: Ratio Waste  { ratio: 1.0 }
                   , bulkDensity: 0.8 -- kg/L
+                  , ghgProduction: 3.0 * 1.3 / 1000.0 -- 3km * 1.3 GHG EF / 1000kg
                   }
 
 initProcessParams = { eatingParam
@@ -548,20 +557,25 @@ composting_EatingBinningWormComposting {compostingYield,
     -- compostWaste = subQty compostableWaste compostProduct
 
 managingWaste :: forall r. ProcessParam (collectedWasteRatio :: Ratio Matter,
-                                         bulkDensity :: Number | r ) -> State -> State
+                                         bulkDensity :: Number,
+                                         ghgProduction :: Number | r ) -> State -> State
 managingWaste {collectedWasteRatio,
-               bulkDensity} state@(State entries) =
+               bulkDensity,
+               ghgProduction} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty foodWaste )}
   , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste )}
   , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume }
+  , Entry {process: ManagingWaste, matter: GreenhouseGas, matterProperty: AllMatterProperty, quantity: ghgEmitted }
   -- , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostWaste }
   ]
   where
     foodWaste =  foldState Eating Waste AllMatterProperty state
     binnedWaste =  foldState Binning Waste AllMatterProperty state
-    allWasteVolume = addQty (toVolume bulkDensity binnedWaste) (toVolume bulkDensity foodWaste)
+    allWasteWeight = addQty (toWeight bulkDensity foodWaste) (toWeight bulkDensity binnedWaste)
+    allWasteVolume = toVolume bulkDensity allWasteWeight
+    ghgEmitted = mulQty ghgProduction allWasteWeight
 
 scaleQty :: forall a. SystemScale -> SystemParams -> Quantity a -> Quantity a
 scaleQty {scale, time} (SystemParams {estateAveragePersonPerHousehold, estatePopulation}) q =
