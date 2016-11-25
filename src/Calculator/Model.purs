@@ -520,6 +520,7 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
   entries <>
   [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost}
   , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater}
+  , Entry {process: FoodGardening, matter: Water, matterProperty: GreyWater, quantity: usedGreyWater}
   , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
   ]
   where
