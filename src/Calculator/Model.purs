@@ -29,7 +29,7 @@ import Prelude
 import Data.Tuple (Tuple(..))
 import Data.Generic
 import Data.Foldable (foldl)
-import Data.Array (filter, head, tail)
+import Data.Array (filter, head, tail, uncons, (:))
 import Data.Maybe (maybe, Maybe(..))
 import Data.Int (toNumber)
 import Math (trunc, abs)
@@ -652,17 +652,17 @@ scaleGardenSurface {scale} _ =
 
 scaleRooftopSurface = scaleGardenSurface
 
-scaleEntries :: SystemScale -> SystemParams -> State -> State
-scaleEntries systemScale systemParams (State entries) =
-  State $ scaledEntries
-  where
-        convertEntries (Entry entry@{quantity}) = Entry $ entry { quantity = scaleQty systemScale systemParams quantity }
-        scaledEntries = map convertEntries entries
+scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
+scaleFirstEntry systemScale systemParams (State entries) =
+  State $ case uncons entries of
+    Nothing -> []
+    Just {head: h,
+          tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
 
 nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
   where
-    state' = scaleEntries scale systemParams state
+    state' = scaleFirstEntry scale systemParams state
     endState = case current of
       EatingOnly -> managingWaste processParams.managedWasteParam
                   $ eating processParams.eatingParam state'
