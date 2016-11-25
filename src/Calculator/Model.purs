@@ -160,6 +160,9 @@ data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | Mana
 
 derive instance genericProcess :: Generic Process
 
+instance showProcess :: Show Process where
+  show = gShow
+
 instance processEq :: Eq Process where
   eq AllProcess _ = true
   eq _ AllProcess = true

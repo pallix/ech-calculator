@@ -11,6 +11,14 @@ a.hexIn.grid {
     font-family: 'Raleway', sans-serif;
     font-size: 1.2em;
     position: absolute;
+    opacity: 0;
+}
+
+.hexGrid.fadeIn {
+  opacity:1;
+    transition: opacity .25s ease-in-out;
+  -moz-transition: opacity .25s ease-in-out;
+  -webkit-transition: opacity .25s ease-in-out;
 }
 
 /*Macbook width 1920 / heigh 1200 / device-aspect-ratio 8/5 / -webkit-device-pixel-ratio 2*/
@@ -51,7 +59,7 @@ a.hexIn.grid {
     list-style-type: none;
     float: left;
     overflow: hidden;
-    visibility: hidden;
+    /*visibility: hidden;*/
     outline:1px solid transparent; /* fix for jagged edges in FF on hover transition */
     -webkit-transform: rotate(-60deg) skewY(30deg) translatez(-1px);
         -ms-transform: rotate(-60deg) skewY(30deg) translatez(-1px);

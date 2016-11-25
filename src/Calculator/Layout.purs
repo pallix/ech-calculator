@@ -62,8 +62,8 @@ hex hover grid item = li ! className "hex" ! id item.title $ do
                                      img ! src ( image item.title )
                                      h2 $ text title
                                      p $ text item.details
-                        tokenToHex _  = a ! hoverClass hover grid $ do
-                                     img ! src ( image item.title )
+                        -- tokenToHex _  = a ! hoverClass hover grid $ do
+                        --              img ! src ( image item.title )
                         image "Eating" = "/images/cooking.svg"
                         image "Binning" = "/images/rubbish_bin.svg"
                         image "Wormery" = "/images/composting.svg"
@@ -245,9 +245,9 @@ arrayHex _  = ( replicate 7 emptyHex )
            <> ( replicate 6 emptyHex )
 
 hexes :: forall e. Boolean -> Boolean -> SystemState -> Markup e
-hexes hover grid state = do
-             ul ! className "hexGrid" $ do
-               foldMap ( hex hover grid ) ( arrayHex  state )
+hexes hover grid (SystemState state@{current}) = do
+             ul ! className "hexGrid processes" ! id ( show current ) $ do
+               foldMap ( hex hover grid ) ( arrayHex (SystemState state) )
 
 initialShoppedFood = initialState Shopping Food AllMatterProperty
 foodWaste = foldState Eating Waste AllMatterProperty

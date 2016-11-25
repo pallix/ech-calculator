@@ -2,9 +2,7 @@ $( document ).ready(function() {
   // define what element should be observed by the observer
   // and what types of mutations trigger the callback
 
-  //
-
-  $(document).on('tap', '#Shopping', function(){ alert('hi')})
+  $("#output .hexGrid").addClass("fadeIn");
 
   //
   // Bottom Menu
@@ -15,7 +13,7 @@ $( document ).ready(function() {
       $('#cog').addClass("hidden");
       $("#controls").removeClass("hidden");
       swiperScenario.update()
-      swiperScale.update()
+      // swiperScale.update()
       swiperTime.update()
   })
 
@@ -27,29 +25,29 @@ $( document ).ready(function() {
   })
 
   // Scale
-
-  $("#controls").append('<div id="swiper-scale" class="swiper-container"><h4>Scale</h2><div class="swiper-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>')
-
-  $('#flare-component-4 > option').each(function(i, e) {
-    $("#swiper-scale .swiper-wrapper").append('<div class="swiper-slide"><h2>' + e.text + '</h2></div>')
-  })
-
-  var swiperScale = new Swiper('#swiper-scale', {
-      pagination: '#swiper-scale .swiper-pagination',
-      paginationClickable: true,
-      nextButton: '#swiper-scale .swiper-button-next',
-      prevButton: '#swiper-scale .swiper-button-prev',
-      spaceBetween: 30
-  });
-
-
-  scaleSelect = $('#flare-component-4').get(0);
-
-  swiperScale.on("slideChangeEnd", function(ev) {
-    scaleSelect.options[ev.activeIndex].selected = true
-    var ev = new Event('change');
-    scaleSelect.dispatchEvent(ev);
-  })
+  //
+  // $("#controls").append('<div id="swiper-scale" class="swiper-container"><h4>Scale</h2><div class="swiper-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>')
+  //
+  // $('#flare-component-4 > option').each(function(i, e) {
+  //   $("#swiper-scale .swiper-wrapper").append('<div class="swiper-slide"><h2>' + e.text + '</h2></div>')
+  // })
+  //
+  // var swiperScale = new Swiper('#swiper-scale', {
+  //     pagination: '#swiper-scale .swiper-pagination',
+  //     paginationClickable: true,
+  //     nextButton: '#swiper-scale .swiper-button-next',
+  //     prevButton: '#swiper-scale .swiper-button-prev',
+  //     spaceBetween: 30
+  // });
+  //
+  //
+  // scaleSelect = $('#flare-component-4').get(0);
+  //
+  // swiperScale.on("slideChangeEnd", function(ev) {
+  //   scaleSelect.options[ev.activeIndex].selected = true
+  //   var ev = new Event('change');
+  //   scaleSelect.dispatchEvent(ev);
+  // })
 
 
   // Time
@@ -96,54 +94,80 @@ $( document ).ready(function() {
   scenarioSelect = $('#flare-component-3').get(0);
 
   swiperScenario.on("slideChangeEnd", function(ev) {
+    $("#output .hexGrid").fadeOut();
     scenarioSelect.options[ev.activeIndex].selected = true
     var ev = new Event('change');
     scenarioSelect.dispatchEvent(ev);
+    window.setTimeout(function() {
+      $("#output .hexGrid").addClass("fadeIn");
+    },250);
   })
 
 
-  // var layer = $("#layer ul").get(0);
-  // var layer_item = $("#layer ul li");
-  // var hammertime = new Hammer(layer, {domEvents: true});
-  // hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+  var hexes = $("#grid").hammer({domEvents:true})
 
-  var layer = $("#layer ul")
+  hexes.on('tap', '.hex', function(ev) {
+    var scenario = $("#output .processes").attr('id');
+    console.log(ev.target.id.split("-")[0])
+    switch(scenario) {
+      case "Calculator.Model.EatingOnly":
+        if (ev.target.id == "Eating-0") $("#output .hexGrid #Eating a").toggleClass("hover")
+        if (ev.target.id == "Shopping-0") $("#output .hexGrid #Shopping a").toggleClass("hover")
+        break;
+      case "Calculator.Model.EatingBinning":
+        $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+        if (ev.target.id == "Composting") $("#output .hexGrid #Binning a").toggleClass("hover")
+        break;
+      case "Calculator.Model.EatingBinningWormComposting":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+      case "Calculator.Model.EatingBinningFoodSharing":
+      case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+        break;
+      default:
+        if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+    }
 
-  layer.hammer({domEvents: true})
-  var hammertime = layer.data("hammer");
-
-  hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+    if (ev.target.id) console.log($("#output .hexGrid #"+ ev.target.id.split("-")[0] + " a"))
+  })
 
   function nextOpt(sel, previous) {
-    console.log(sel)
-    console.log(sel.options)
-    var i = sel.selectedIndex + sel.options.length * 100;
+    var i = sel.selectedIndex;
     if (previous) {
-      sel.options[--i%sel.options.length].selected = true;
+      if (i>0) {
+        swiperScenario.slideTo(--i)
+      }
     } else {
-      sel.options[++i%sel.options.length].selected = true;
+      if (i<sel.options.length) {
+        swiperScenario.slideTo(++i)
+      }
     }
-    var ev = new Event('change');
-    sel.dispatchEvent(ev);
   }
 
-  hammertime.on('tap', function(ev) {
-    console.log(ev)
-  })
+  var layer = $("#grid").hammer();
+  // layer.data("hammer").get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 
-  hammertime.on('swipe', function(ev) {
+  layer.on('swipe', function(ev) {
     console.log(ev)
-    if (ev.direction == Hammer.DIRECTION_UP) {
-      $('#cog').addClass("hidden");
-      $("#controls").removeClass("hidden");
-      swiperScenario.update()
-      swiperScale.update()
-      swiperTime.update()
+    if (ev.gesture) {
+      if (ev.gesture.direction == Hammer.DIRECTION_UP) {
+        $('#cog').addClass("hidden");
+        $("#controls").removeClass("hidden");
+        swiperScenario.update()
+        // swiperScale.update()
+        swiperTime.update()
+      }
+      if (ev.gesture.direction == Hammer.DIRECTION_DOWN) $("#controls").hide();
+      if (ev.gesture.direction == Hammer.DIRECTION_RIGHT) nextOpt(scenarioSelect, true)
+      if (ev.gesture.direction == Hammer.DIRECTION_LEFT) nextOpt(scenarioSelect)
     }
-    if (ev.direction == Hammer.DIRECTION_DOWN) $("#controls").hide();
-    if (ev.direction == Hammer.DIRECTION_RIGHT) nextOpt(scenarioSelect, true)
-    if (ev.direction == Hammer.DIRECTION_LEFT) nextOpt(scenarioSelect)
   });
+    // var layer = $("#layer ul").get(0);
+    // var layer_item = $("#layer ul li");
+    // var hammertime = new Hammer(layer, {domEvents: true});
+
+
 
   eatedFoodRatioOriginal = $('#flare-component-6')
   $('#layer #Eating').prepend('<div id="eatedFoodRatioLayered" class="layer-control"></div>')
