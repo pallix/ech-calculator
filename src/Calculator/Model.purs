@@ -601,46 +601,59 @@ scaleEntries systemScale systemParams (State entries) =
         convertEntries (Entry entry@{quantity}) = Entry $ entry { quantity = scaleQty systemScale systemParams quantity }
         scaledEntries = map convertEntries entries
 
+scaleProcessParams :: SystemScale -> ProcessParams -> ProcessParams
+scaleProcessParams {scale} params =
+  params { foodGardeningParam = params.foodGardeningParam { surfaceArea = case scale of
+                                                               PersonScale -> SurfaceArea 10.0
+                                                               HouseholdScale -> SurfaceArea 10.0
+                                                               EstateScale -> SurfaceArea 100.0 }
+         , rainwaterCollectingParam = params.rainwaterCollectingParam { surfaceArea = case scale of
+                                                                            PersonScale -> SurfaceArea 10.0
+                                                                            HouseholdScale -> SurfaceArea 10.0
+                                                                            EstateScale -> SurfaceArea 100.0}
+         }
+
 nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
   where
     state' = scaleEntries scale systemParams state
+    processParams' = scaleProcessParams scale processParams
     endState = case current of
-      EatingOnly -> managingWaste processParams.managedWasteParam
-                  $ eating processParams.eatingParam state'
-      EatingBinning -> managingWaste processParams.managedWasteParam
-                     $ binning processParams.binningParam
-                     $ eating processParams.eatingParam state'
-      EatingBinningWormComposting -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
-                                   $ eating processParams.eatingParam state'
-      EatingBinningWormCompostingFoodGardening -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
-                                   $ eating processParams.eatingParam state'
+      EatingOnly -> managingWaste processParams'.managedWasteParam
+                  $ eating processParams'.eatingParam state'
+      EatingBinning -> managingWaste processParams'.managedWasteParam
+                     $ binning processParams'.binningParam
+                     $ eating processParams'.eatingParam state'
+      EatingBinningWormComposting -> managingWaste processParams'.managedWasteParam
+                                   $ binning processParams'.binningParam
+                                   $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
+                                   $ eating processParams'.eatingParam state'
+      EatingBinningWormCompostingFoodGardening -> managingWaste processParams'.managedWasteParam
+                                   $ binning processParams'.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams'.foodGardeningParam
+                                   $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
+                                   $ eating processParams'.eatingParam state'
              -- EatingBinningWormCompostingGardenWatering
              -- EatingBinningWormCompostingFoodGardenWatering
              -- EatingBinningWormCompostingGardenRainwater
-      EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam
-                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
-                                   $ eating processParams.eatingParam state'
-      EatingBinningFoodSharing -> managingWaste processParams.managedWasteParam
-                                 $ binning processParams.binningParam
+      EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams'.managedWasteParam
+                                   $ binning processParams'.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams'.foodGardeningParam
+                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams'.rainwaterCollectingParam
+                                   $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
+                                   $ eating processParams'.eatingParam state'
+      EatingBinningFoodSharing -> managingWaste processParams'.managedWasteParam
+                                 $ binning processParams'.binningParam
                                  -- TODO replug on eating?
                                  -- $ eating ...
-                                 $ foodSharing processParams.foodSharingParam
-                                 $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
-      EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam
+                                 $ foodSharing processParams'.foodSharingParam
+                                 $ eating_EatingBinningWormCompostingFoodSharing processParams'.eatingParam state'
+      EatingBinningWormCompostingFoodSharing -> managingWaste processParams'.managedWasteParam
+                                   $ binning processParams'.binningParam
+                                   $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
                                    -- TODO replug on eating?
                                    -- $ eating ...
-                                   $ foodSharing processParams.foodSharingParam
-                                   $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+                                   $ foodSharing processParams'.foodSharingParam
+                                   $ eating_EatingBinningWormCompostingFoodSharing processParams'.eatingParam state'
 
       _ -> State []
