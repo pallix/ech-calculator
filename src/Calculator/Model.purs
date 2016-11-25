@@ -115,7 +115,7 @@ negQty ZeroQuantity = ZeroQuantity
 
 subQty :: forall a. Quantity a -> Quantity a -> Quantity a
 subQty (Weight c qty1) (Weight _ qty2) = Weight c (qty1 - qty2)
-subQty (Volume c qty1) (Volume _ qty2) = Weight c (qty1 - qty2)
+subQty (Volume c qty1) (Volume _ qty2) = Volume c (qty1 - qty2)
 subQty q ZeroQuantity = q
 subQty ZeroQuantity q = negQty q
 subQty _ _ = IncompatibleQuantity
@@ -161,7 +161,19 @@ type SystemScale = { scale:: Scale, time:: Time}
 data Ratio a = Ratio a { ratio :: Number }
 
 -- model for the event sourcing
-data Process =  AllProcess | Shopping | Eating | Binning | WormComposting | ManagingWaste | FoodSharing | FoodGardening | RainwaterCollecting | Living | Raining
+data Process =  AllProcess |
+                Shopping |
+                Eating |
+                Binning |
+                WormComposting |
+                ManagingWaste |
+                FoodSharing |
+                FoodGardening |
+                RainwaterCollecting |
+                Living |
+                Raining |
+                TapWaterSupplying |
+                Debug
 
 derive instance genericProcess :: Generic Process
 
@@ -182,7 +194,7 @@ instance matterEq :: Eq Matter where
   eq _ AllMatter = true
   eq a b = gEq a b
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | TapWater | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 
@@ -402,8 +414,8 @@ divByRatio qty (Ratio a { ratio: ratio }) =
   divRatio qty ratio
   where
     divRatio :: Quantity a -> Number -> Quantity a
-    divRatio (Weight a w) r = Weight a $ r / w
-    divRatio (Volume a v) r = Volume a $ r / v
+    divRatio (Weight a w) r = Weight a $ w / r
+    divRatio (Volume a v) r = Volume a $ v / r
     divRatio ZeroQuantity r = ZeroQuantity -- should be an error here or InfinityQuantity
     divRatio IncompatibleQuantity r = IncompatibleQuantity
 
@@ -458,18 +470,24 @@ binning {compactingRatio, bulkDensity} state@(State entries) =
     allWaste = addQty foodWormComposting foodWaste
     allWasteVolume = applyRatio (complementOneRatio compactingRatio) $ toVolume bulkDensity allWaste
 
+-- food gardening with tap water
 foodGardening_EatingBinningWormCompostingFoodGardening :: forall r. ProcessParam (
   surfaceArea :: SurfaceArea,
   fertilizerNeed :: { tomato :: Quantity Matter },
+  greyWaterNeed :: { tomato :: Quantity Matter },
   plant :: Plant,
-  productionCapacity :: { tomato :: Quantity Matter} | r) -> State -> State
+  productionCapacity :: { tomato :: Quantity Matter},
+  irrigationEfficiency :: Ratio Matter | r) -> State -> State
 foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
                                                         fertilizerNeed,
                                                         plant,
-                                                        productionCapacity} state@(State entries) =
+                                                        productionCapacity,
+                                                        irrigationEfficiency,
+                                                        greyWaterNeed} state@(State entries) =
   State $
   entries <>
   [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
+  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: negQty tapWaterNeeded}
   , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
   ]
   where
@@ -477,6 +495,9 @@ foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
     fertilizerNeeded = case surfaceArea of SurfaceArea area -> mulQty area (case plant of Tomato -> fertilizerNeed.tomato)
     usedCompost = if fertilizerNeeded > availableCompost then
                     availableCompost else subQty availableCompost fertilizerNeeded
+    availableTapWater = foldState TapWaterSupplying Water TapWater state
+    tapWaterUsedByPlants = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> greyWaterNeed.tomato)
+    tapWaterNeeded = divByRatio tapWaterUsedByPlants irrigationEfficiency
     -- TODO: in a more accurate model the production should also be a function of the fertilizer
     producedFood = mulQty (case surfaceArea of SurfaceArea area -> area) (case plant of Tomato -> productionCapacity.tomato)
 
@@ -633,9 +654,11 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ foodGardening_EatingBinningWormCompostingFoodGardening processParams'.foodGardeningParam
                                    $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
                                    $ eating processParams'.eatingParam state'
-             -- EatingBinningWormCompostingGardenWatering
-             -- EatingBinningWormCompostingFoodGardenWatering
-             -- EatingBinningWormCompostingGardenRainwater
+      EatingBinningWormCompostingFoodGardenWatering -> managingWaste processParams'.managedWasteParam
+                                   $ binning processParams'.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams'.foodGardeningParam
+                                   $ composting_EatingBinningWormComposting processParams'.wormCompostingParam
+                                   $ eating processParams'.eatingParam state'
       EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams'.managedWasteParam
                                    $ binning processParams'.binningParam
                                    $ foodGardening_EatingBinningWormCompostingFoodGardening processParams'.foodGardeningParam
