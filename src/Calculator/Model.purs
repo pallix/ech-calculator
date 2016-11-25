@@ -488,6 +488,7 @@ foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
   entries <>
   [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
   , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: negQty tapWaterNeeded}
+  , Entry {process: FoodGardening, matter: Water, matterProperty: TapWater, quantity: tapWaterNeeded}
   , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
   ]
   where
