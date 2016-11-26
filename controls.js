@@ -1,13 +1,14 @@
 $( document ).ready(function() {
   // define what element should be observed by the observer
   // and what types of mutations trigger the callback
-
   $("#output .hexGrid").addClass("fadeIn");
 
   //
   // Bottom Menu
   //
   //
+  $('#cog').addClass("hidden");
+  $("#controls").removeClass("hidden");
 
   $('#cog').on('click', function () {
       $('#cog').addClass("hidden");
@@ -17,7 +18,7 @@ $( document ).ready(function() {
       swiperTime.update()
   })
 
-  $("#controls").append('<img src="/images/close.svg" height="22px" id="close"/>');
+  // $("#controls").append('<img src="/images/close.svg" height="22px" id="close"/>');
 
   $('#close').on('click', function () {
     $("#controls").addClass("hidden");
@@ -70,9 +71,11 @@ $( document ).ready(function() {
   timeSelect = $('#flare-component-5').get(0);
 
   swiperTime.on("slideChangeEnd", function(ev) {
+    $(".control-layer").remove()
     timeSelect.options[ev.activeIndex].selected = true
     var ev = new Event('change');
     timeSelect.dispatchEvent(ev);
+    $("#output .hexGrid").addClass("fadeIn");
   })
 
   // Scenario
@@ -94,43 +97,263 @@ $( document ).ready(function() {
   scenarioSelect = $('#flare-component-3').get(0);
 
   swiperScenario.on("slideChangeEnd", function(ev) {
+    $(".control-layer").remove()
     $("#output .hexGrid").fadeOut();
     scenarioSelect.options[ev.activeIndex].selected = true
     var ev = new Event('change');
     scenarioSelect.dispatchEvent(ev);
+    setupControls()
     window.setTimeout(function() {
       $("#output .hexGrid").addClass("fadeIn");
-    },250);
+    },50);
   })
 
+  function isClosed(control, process, ev) {
+    return ev.target.id == control + "-Control" && !$("#output .hexGrid [id='" + process + "'] a").hasClass("hover")
+  }
+
+  function isOpened(control, process, ev) {
+    return ev.target.id == control + "-Close" && $("#output .hexGrid [id='" + process + "'] a").hasClass("hover")
+  }
+
+  function Open(control, process) {
+    $("#output .hexGrid [id='" + process + "'] a").addClass("hover")
+    $("#" + control + "-Control").append('<img id="' + control + '-Close" class="control-layer" src="/images/close.svg" height="8px">')
+  }
+
+  function Close(control, process) {
+    $("#output .hexGrid [id='" + process + "'] a").removeClass("hover")
+    $("#" + control + "-Control img").remove();
+  }
+
+  function Handle(control, process, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+    } else if (isOpened(control, process, ev)) {
+      Close(control, process)
+    }
+  }
+
+  var evFlareInput = new Event('input');
+
+  var numberEatingHouseholdsFlare = $('#flare-component-6')
+
+  function HandleEating(control, process, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="eatingControl" class="control-layer range"><p id="eatingNumberControl"># of Flats</p><div id="eatingNumberControl" class="slider"></div></div>')
+      var numberEatingHouseholdsSlider = $("#" + control + "-Control div#eatingControl div.slider").get(0)
+      noUiSlider.create(numberEatingHouseholdsSlider, {
+      	start: [numberEatingHouseholdsFlare.val()],
+        step: 1,
+      	tooltips: [true],
+        range: {
+      		'min': 0,
+      		'max': 121
+      	},
+        format: wNumb({decimals: 0})
+      });
+      numberEatingHouseholdsSlider.noUiSlider.on("change", function(value) {
+        numberEatingHouseholdsFlare.val(value)
+        console.log(value)
+        numberEatingHouseholdsFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!="eatingControl") {
+      $("#" + control + "-Control #eatingControl").remove()
+      Close(control, process)
+    }
+  }
+
+  var numberCompactorFlare = $('#flare-component-7')
+
+  function HandleCompactor(control, process, control2, process2, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="compactorControl" class="control-layer range"><p id="compactorNumberControl"># of Compactors</p><div id="compactorNumberControl" class="slider"></div></div>')
+      var numberCompactorSlider = $("#" + control + "-Control div#compactorControl div.slider").get(0)
+      noUiSlider.create(numberCompactorSlider, {
+      	start: [numberCompactorFlare.val()],
+        step: 1,
+      	tooltips: [true],
+        range: {
+      		'min': 0,
+      		'max': 121
+      	},
+        format: wNumb({decimals: 0})
+      });
+
+      numberCompactorSlider.noUiSlider.on("change", function(ev) {
+        numberCompactorFlare.val(ev)
+        numberCompactorFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        Open(control2, process2)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!="compactorControl") {
+      console.log(ev)
+      $("#" + control + "-Control #compactorControl").remove()
+      Close(control, process)
+    }
+  }
+
+  var numberWormeriesFlare = $('#flare-component-8')
+
+  function HandleWormery(control, process, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="' + control + 'Control" class="control-layer range"><p id="' + control + 'Control"># of Wormeries</p><div id="' + control + 'Control" class="slider"></div></div>')
+      var numberWormeriesSlider = $("#" + control + "-Control div#" + control + "Control div.slider").get(0)
+      noUiSlider.create(numberWormeriesSlider, {
+      	start: [numberWormeriesFlare.val()],
+        step: 1,
+      	tooltips: [true],
+        range: {
+      		'min': 0,
+      		'max': 10
+      	},
+        format: wNumb({decimals: 0})
+      });
+      numberWormeriesSlider.noUiSlider.on("change", function(value) {
+        numberWormeriesFlare.val(value)
+        console.log(value)
+        numberWormeriesFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!= (control + 'Control')) {
+      $("#" + control + "-Control #" + control + "Control").remove()
+      Close(control, process)
+    }
+  }
+
+  //
+  // function ToggleCompactor(control, process, control2, process2, ev) {
+  //   // if (ev.target.id=="compactorControl" && toggleCompactorFlare.val() == '0' ) {
+  //   //   $("#" + control + "-Control div#compactorControl").addClass("on");
+  //   //   toggleCompactorFlare.val('0.3')
+  //   //   toggleCompactorFlare.get(0).dispatchEvent(evFlareInput);
+  //   //   Open(control, process)
+  //   //   Open(control2, process2)
+  //   //   $("#" + control + "-Control div p.toggle").replaceWith('<p id="compactorControl" class="toggle">On (30%)</p>')
+  //   //   $("#output .hexGrid").addClass("fadeIn");
+  //   // } else if (ev.target.id=="compactorControl" && !toggleCompactorFlare.val() == '0') {
+  //   //   $("#" + control + "-Control div#compactorControl").removeClass("on");
+  //   //   toggleCompactorFlare.val('0')
+  //   //   toggleCompactorFlare.get(0).dispatchEvent(evFlareInput);
+  //   //   Open(control, process)
+  //   //   Open(control2, process2)
+  //   //   $("#" + control + "-Control div p.toggle").replaceWith('<p id="compactorControl" class="toggle">Off (0%)</p>')
+  //   //   $("#output .hexGrid").addClass("fadeIn");
+  //   // }
+  // }
 
   var hexes = $("#grid").hammer({domEvents:true})
 
   hexes.on('tap', '.hex', function(ev) {
     var scenario = $("#output .processes").attr('id');
-    console.log(ev.target.id.split("-")[0])
-    switch(scenario) {
-      case "Calculator.Model.EatingOnly":
-        if (ev.target.id == "Eating-0") $("#output .hexGrid #Eating a").toggleClass("hover")
-        if (ev.target.id == "Shopping-0") $("#output .hexGrid #Shopping a").toggleClass("hover")
-        break;
-      case "Calculator.Model.EatingBinning":
-        $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
-        if (ev.target.id == "Composting") $("#output .hexGrid #Binning a").toggleClass("hover")
-        break;
-      case "Calculator.Model.EatingBinningWormComposting":
-      case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
-      case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
-      case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
-      case "Calculator.Model.EatingBinningFoodSharing":
-      case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
-        break;
-      default:
-        if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+    if (ev.target.id) {
+      switch(scenario) {
+        case "Calculator.Model.EatingOnly":
+          HandleEating("Eating-0", "Eating", ev)
+          Handle("Shopping-0", "Shopped Food", ev)
+          Handle("ManagedWaste-0", "Managed Waste", ev)
+          break;
+        case "Calculator.Model.EatingBinning":
+          HandleEating("Eating", "Eating", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("Garden", "Managed Waste", ev)
+          HandleCompactor("Composting", "Binning", "Garden", "Managed Waste", ev)
+          break;
+        case "Calculator.Model.EatingBinningWormComposting":
+          $("#Binning-Control").addClass("side");
+          HandleEating("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
+          $("#Binning-Control").addClass("side");
+          HandleEating("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
+          HandleEating("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+          HandleEating("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        case "Calculator.Model.EatingBinningFoodSharing":
+          HandleEating("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+          Handle("Eating", "Eating", ev)
+          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+          Handle("Shopping", "Shopped Food", ev)
+          Handle("ManagedWaste", "Managed Waste", ev)
+          HandleWormery("Composting", "Wormery", ev)
+          break;
+        default:
+          if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+      }
     }
 
-    if (ev.target.id) console.log($("#output .hexGrid #"+ ev.target.id.split("-")[0] + " a"))
+
+    // if (ev.target.id) console.log($("#output .hexGrid #"+ ev.target.id.split("-")[0] + " a"))
   })
+
+  // hexes.on('tap', '.hex div', function(ev) {
+  //   var scenario = $("#output .processes").attr('id');
+  //   if (ev.target.id) {
+  //     switch(scenario) {
+  //       case "Calculator.Model.EatingOnly":
+  //         // ToggleEating("Eating-0", "Eating", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinning":
+  //         ToggleCompactor("Composting", "Binning", "Garden", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningWormComposting":
+  //         ToggleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
+  //         ToggleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
+  //         ToggleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+  //         ToggleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningFoodSharing":
+  //         ToggleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+  //         break;
+  //       case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+  //         break;
+  //       default:
+  //         if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+  //     }
+  //   }
+  //
+  //
+  //   // if (ev.target.id) console.log($("#output .hexGrid #"+ ev.target.id.split("-")[0] + " a"))
+  // })
 
   function nextOpt(sel, previous) {
     var i = sel.selectedIndex;
@@ -149,7 +372,6 @@ $( document ).ready(function() {
   // layer.data("hammer").get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 
   layer.on('swipe', function(ev) {
-    console.log(ev)
     if (ev.gesture) {
       if (ev.gesture.direction == Hammer.DIRECTION_UP) {
         $('#cog').addClass("hidden");
@@ -167,39 +389,27 @@ $( document ).ready(function() {
     // var layer_item = $("#layer ul li");
     // var hammertime = new Hammer(layer, {domEvents: true});
 
+  function setupControls() {
+    var scenario = $("#output .processes").attr('id');
+    switch(scenario) {
+      case "Calculator.Model.EatingOnly":
+        $('#eatedFoodRatioLayered').remove()
+        break;
+      case "Calculator.Model.EatingBinning":
 
+        break;
+      case "Calculator.Model.EatingBinningWormComposting":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
+      case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+      case "Calculator.Model.EatingBinningFoodSharing":
+      case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+        break;
+      default:
+        if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
+    }
+  }
 
-  eatedFoodRatioOriginal = $('#flare-component-6')
-  $('#layer #Eating').prepend('<div id="eatedFoodRatioLayered" class="layer-control"></div>')
-
-  // eatedFoodRatioLayered = $('#eatedFoodRatioLayered').slider({
-  //   value: eatedFoodRatioOriginal.val()*100,
-  //   start: function(event, ui) {
-  //     eatedFoodRatioOriginal.val(ui.value/100);
-  //     var elem = eatedFoodRatioOriginal.get(0)
-  //     var ev = new Event('input')
-  //     elem.dispatchEvent(ev);
-  //     return true;
-  //   }
-  // });
-
-  eatedFoodRatioLayered = $('#eatedFoodRatioLayered').get(0)
-
-  // noUiSlider.create(eatedFoodRatioLayered, {
-  //   start: [ eatedFoodRatioOriginal.val()*100 ],
-  // 	range: {
-  // 		'min': [  0 ],
-  // 		'max': [ 100 ]
-  // 	}
-  // })
-  //
-  // eatedFoodRatioLayered.noUiSlider.on('end', function(values){
-  //   eatedFoodRatioOriginal.val(values[0]/100);
-  //   var elem = eatedFoodRatioOriginal.get(0);
-  //   var ev = new Event('input');
-  //   elem.dispatchEvent(ev);
-  //   // return true;
-  // });
 
   scaleControl = $('#layer #Scale')
   timeControl = $('#layer #Time')

@@ -11,13 +11,16 @@ body {
 h1 {
   font-family: 'Raleway', sans-serif;
   text-align: center;
-  margin-top: 24px;
+  font-size: 1.4em;
+  margin-top: 20px;
   margin-bottom: 12px;
+  color: #FFF;
 }
 
 h2, h4 {
   font-family: 'Raleway', sans-serif;
   text-align: center;
+  color: #FFF;
 }
 
 p {
@@ -51,12 +54,16 @@ p {
 
 #controls #flare-component-3 { display:none; }
 
-#close { width: 100%; }
+#close {
+  width: 100%;
+  filter: invert(100%);
+}
 #cog {
   width: 100%;
   margin: 0 auto;
   bottom: 20px;
   position: absolute;
+  filter: invert(100%);
 }
 
 #swiper-time { width:15%}
@@ -64,7 +71,7 @@ p {
 #swiper-scenario { width: 35%}
 
 .swiper-container {
-  height: 144px;
+  height: 104px;
   display: inline-block;
   margin: 0 50px;
 }
@@ -72,7 +79,7 @@ p {
 #flare-controls { display: none;}
 
 .swiper-slide {
-  top: 25%;
+  top: 14%;
   font-family: 'Raleway', sans-serif;
 }
 .flare-input {
@@ -90,6 +97,22 @@ input:invalid {
 fieldset {
     border: none;
     padding: 0px;
+}
+
+.swiper-button-next {
+  filter: brightness(0) invert(1);
+}
+
+.swiper-button-prev {
+  filter: brightness(0) invert(1);
+}
+
+.swiper-pagination-bullet {
+  filter: brightness(0) invert(1) brightness(50);
+}
+
+.swiper-pagination-bullet.swiper-pagination-bullet-active {
+  filter: brightness(0) invert(1);
 }
 
 fieldset legend {
@@ -169,8 +192,9 @@ fieldset label {
     background-color: #ebdd13;
 }*/
 
+/*
 #layer .layer-control {
   margin-top: 130%;
   margin-left: 100%;
   width: 100%;
-}
+}*/

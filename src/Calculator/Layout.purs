@@ -124,6 +124,8 @@ eatedFood = foldState Living Food AllMatterProperty
 
 gardenFood = foldState FoodGardening Food AllMatterProperty
 
+ghgEmitted = initialState ManagingWaste GreenhouseGas AllMatterProperty
+
 arrayHex :: SystemState -> Array Token
                       -- displayState "Food: " availableFood consumedFood
                       -- displayState "FoodWaste: " availableBinnedFoodWaste consumedBinnedFoodWaste
@@ -131,35 +133,35 @@ arrayHex :: SystemState -> Array Token
 arrayHex ( SystemState { current: EatingOnly, state } ) =
                    ( replicate 7 emptyHex )
                 <> ( replicate  6 emptyHex )
-                <> ( replicate 1 emptyHex ) <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " of Shopped Food"  }
+                <> ( replicate 1 emptyHex ) <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate"  }
                                             <> singleton emptyHex
-                                            <> singleton { title : "Eating", details: ( show $ eatedFood state ) <> " of Food Consumed" }
+                                            <> singleton { title : "Eating", details: ( show $ eatedFood state ) <> " eaten" }
                                             <> singleton emptyHex
-                                            <> singleton { title : "Managed Waste", details: ( show $ managedWaste state ) <> " of Managed Waste" }
+                                            <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " CO2 emitted" }
                 <> ( replicate 6 emptyHex )
                 <> ( replicate  7 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinning, state } ) =
                      ( replicate 7 emptyHex )
                   <> ( replicate  6 emptyHex )
-                  <> singleton { title : "Shopped Food", details: "..." }
+                  <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                   <> singleton emptyHex
-                  <> singleton { title : "Eating", details: show $ eatedFood state }
+                  <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                   <> ( replicate 1 emptyHex )
-                  <> singleton { title: "Binning", details: "" }
+                  <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }
                   <> singleton emptyHex
-                  <> singleton { title : "Managed Waste", details: "..." }
+                  <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " CO2 emitted" }
                   <> ( replicate 6 emptyHex )
                   <> ( replicate 7 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinningWormComposting, state } ) =
-                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "" }
-                                              <> singleton emptyHex <> singleton { title : "Managed Waste", details: "..." }
+                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }
+                                              <> singleton emptyHex <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " CO2 emitted" }
                                               <> singleton emptyHex
                      <> ( replicate 6 emptyHex )
-                     <> singleton { title : "Shopped Food", details: "..." }
+                     <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 1 emptyHex )
                      <> singleton  {title: "Wormery", details: ""}
                      <> singleton emptyHex
@@ -167,11 +169,11 @@ arrayHex ( SystemState { current: EatingBinningWormComposting, state } ) =
                      <> ( replicate 7 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardening, state } ) =
-                     ( replicate 3 emptyHex ) <> singleton  { title: "Binning", details: "" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
+                     ( replicate 3 emptyHex ) <> singleton  { title: "Binning", details: "Manual compactors shrink waste by 30%" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " of CO2" }  <> ( replicate 1 emptyHex )
                      <> ( replicate 6 emptyHex )
-                     <> singleton { title : "Shopped Food", details: "..." }
+                     <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 1 emptyHex )
                      <> singleton {title: "Wormery", details: ""}
                      <> singleton emptyHex
@@ -180,11 +182,11 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardening, stat
                      <> ( replicate 7 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardenWatering, state } ) =
-                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
+                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " of CO2" }  <> ( replicate 1 emptyHex )
                      <> ( replicate  6 emptyHex )
-                     <> singleton { title : "Shopped Food", details: "..." }
+                     <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten"}
                      <> ( replicate 1 emptyHex )
                      <> singleton {title: "Wormery", details: ""}
                      <> singleton emptyHex
@@ -195,9 +197,9 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardenWatering,
 arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardenRainwater, state } ) =
                      ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
                      <> ( replicate  6 emptyHex )
-                     <> singleton { title : "Shopped Food", details: "..." }
+                     <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 1 emptyHex )
                      <> singleton {title: "Wormery", details: ""}
                      <> singleton emptyHex
@@ -206,21 +208,21 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodGardenRainwater
                      <> ( replicate 3 emptyHex ) <> singleton {title: "Rainwater", details: ""} <> singleton emptyHex <> singleton {title: "Rainwater Collection", details: ""} <> singleton emptyHex
 
 arrayHex ( SystemState { current: EatingBinningFoodSharing, state } ) =
-                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
+                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
                      <> ( replicate  6 emptyHex )
                      <> singleton { title : "Shopped Food", details: "..." }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 4 emptyHex )
                      <> ( replicate 6 emptyHex )
                      <> ( replicate 3 emptyHex ) <> singleton {title: "Food Sharing", details: ""}  <> ( replicate 3 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinningWormCompostingFoodSharing, state } ) =
-                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
+                     ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: "..." }  <> ( replicate 1 emptyHex )
                      <> ( replicate  6 emptyHex )
-                     <> singleton { title : "Shopped Food", details: "..." }
+                     <> singleton { title : "Shopped Food", details: ( show $ initialShoppedFood state ) <> " for the whole Estate" }
                      <> singleton emptyHex
-                     <> singleton { title : "Eating", details: show $ eatedFood state }
+                     <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 1 emptyHex )
                      <> singleton {title: "Wormery", details: ""}
                      <> singleton emptyHex
@@ -266,7 +268,7 @@ initialRainwater = initialState Raining Water GreyWater
 
 initialFoodGardeningRainwater = initialState FoodGardening Water GreyWater
 
-managedWaste = foldState ManagingWaste Waste AllMatterProperty
+managedWaste = initialState ManagingWaste Waste AllMatterProperty
 
 emptyArrow = { title: "", quantity: "", details: "" }
 

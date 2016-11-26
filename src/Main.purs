@@ -34,7 +34,7 @@ import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
 import Data.NonEmpty ((:|))
 import Data.Traversable (traverse)
-import Flare (UI, lift, fieldset, numberSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
+import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
 import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
@@ -92,7 +92,7 @@ optionsLabel EatingBinningWormCompostingFoodSharing = "Wormery & Food Sharing"
 optionsLabel _ = "Not Implemented Yet"
 
 nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
-                                               , EatingBinningWormComposting
+                                              --  , EatingBinningWormComposting
                                                , EatingBinningWormCompostingFoodGardening
                                                , EatingBinningWormCompostingFoodGardenWatering
                                                , EatingBinningWormCompostingFoodGardenRainwater
@@ -124,7 +124,11 @@ timescaleToString Year = "Year"
 timescaleToString Month  = "Month"
 timescaleToString Day  = "Day"
 
-controllableParam eatedFoodRatio = initProcessParams { eatingParam = initProcessParams.eatingParam { eatedFoodRatio = Ratio Food { ratio: eatedFoodRatio } } }
+controllableParam numberHouseholdEating
+                  numberCompactors
+                  numberWormeries = initProcessParams { eatingParam = initProcessParams.eatingParam { numberHouseholdEating = numberHouseholdEating }
+                                                       , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
+                                                       , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  } }
 
 ratio ( Ratio _ { ratio } ) = ratio
 
@@ -138,10 +142,12 @@ mkScale s t = { scale : s, time: t}
 ui = interface <$> ( boolean "Info" false )
                <*> ( boolean "Grid" false )
                <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
-                                                          <*> ( mkScale <$> (select "Scale" ( PersonScale :| [ HouseholdScale, EstateScale ]) scaleToString)
-                                                                        <*> (select "Time" (  Year :| [ Month, Day ]) timescaleToString) )
+                                                          <*> ( mkScale <$> (select "Scale" ( EstateScale :| [ HouseholdScale, PersonScale ]) scaleToString)
+                                                                        <*> (select "Time" (  Day :| [ Month, Year ]) timescaleToString) )
                                                           <*> pure systemParams
-                                                          <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( numberSlider "eatedFoodRatio" 0.0 1.0 0.01 ( ratio initProcessParams.eatingParam.eatedFoodRatio ) ) ) )
+                                                          <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( intSlider "numberHouseholdEating" 0 121 ( initProcessParams.eatingParam.numberHouseholdEating ) )
+                                                                                                                 <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
+                                                                                                                 <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) ) ) )
                                                           <*> ( pure initState ) ) )
 
 --

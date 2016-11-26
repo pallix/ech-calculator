@@ -14,51 +14,53 @@
         <h1>Engineering Comes Home - Calculator</h1>
         <div id="select" class="center"></div>
         <div id="output"></div>
-        <ul id="grid" class="hexGrid">
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="Binning"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="WasteManagement"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="Shopping"></li>
-          <li class="hex control" id="Shopped Food-0"></li>
-          <li class="hex control" id="Eating"></li>
-          <li class="hex control" id="Eating-0"></li>
-          <li class="hex control" id="Composting"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="Garden"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="Rainwater"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id="RainwaterCollecting"></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-          <li class="hex control" id=""></li>
-        </ul>
+        <div>
+          <ul id="grid" class="hexGrid">
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control" id="Binning-Control"></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id="ManagedWaste-Control"></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id="Shopping-Control"></li>
+            <li class="hex control" id="Shopping-0-Control"></li>
+            <li class="hex control" id="Eating-Control"></li>
+            <li class="hex control" id="Eating-0-Control"></li>
+            <li class="hex control" id="Composting-Control"></li>
+            <li class="hex control" id="ManagedWaste-0-Control"></li>
+            <li class="hex control" id="Garden-Control"></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id="Rainwater-Control"></li>
+            <li class="hex control off" id=""></li>
+            <li class="hex control" id="RainwaterCollecting-Control"></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+            <li class="hex control" id=""></li>
+          </ul>
+        </div>
         <div id="controls" class="hidden">
           <div id="flare-controls" class="center"></div>
         </div>
-        <img src="/images/cog.svg" height="42px" id="cog" class="center"/>
+        <!-- <img src="/images/cog.svg" height="42px" id="cog" class="center"/> -->
         <!-- <div id="controls1"></div>
         <canvas id="output1" width="800" height="200"></canvas>
         <div id="controls2"></div>
@@ -77,8 +79,9 @@
         </script> -->
         <script src="/vendor/jquery.hammer.js"></script>
         <script src="/vendor/swiper.min.js"></script>
+        <script src="/vendor/wNumb.js"></script>
         <script src="/vendor/nouislider.min.js"></script>
-        <script src="main2.js" type="text/javascript"></script>
+        <script src="main.js" type="text/javascript"></script>
         <script src="controls.js" type="text/javascript"></script>
     </body>
 </html>

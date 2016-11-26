@@ -133,6 +133,15 @@ mulQty n (Volume c qty) = Volume c (n * qty)
 mulQty _ ZeroQuantity = ZeroQuantity
 mulQty _ IncompatibleQuantity = IncompatibleQuantity
 
+maxQty :: forall a. Quantity a  -> Quantity a -> Quantity a
+maxQty (Weight c qty1) (Weight _ qty2) | qty1 < qty2 = Weight c (qty2)
+maxQty (Weight c qty1) (Weight _ qty2) = Weight c (qty1)
+maxQty (Volume c qty1) (Volume _ qty2) | qty1 < qty2 = Volume c (qty2)
+maxQty (Volume c qty1) (Volume _ qty2) = Volume c (qty1)
+maxQty q ZeroQuantity = q
+maxQty ZeroQuantity q = q
+maxQty _ _ = IncompatibleQuantity
+
 toVolume :: forall a. Number -> Quantity a -> Quantity a
 toVolume bulkDensity (Weight c w) = Volume c $ w / bulkDensity
 toVolume _ v@(Volume _ _) = v
@@ -259,6 +268,7 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
 
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
+    show ( Weight _ a ) | a >= 1000.0 = ( show $ trunc ( a * 1.0 ) / 1000.0 ) <> " Tons"
     show ( Weight _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "Kg"
     show ( Volume _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
@@ -280,20 +290,24 @@ type ProcessParams = { eatingParam ::
                           -- missing: packaging quantity
                           { title :: String
                           , eatedFoodRatio :: Ratio Matter
+                          , numberHouseholdEating :: Int
                           -- , allFoodWasteProcess :: This is now 1 - eatedFoodRatio
                           , edibleWasteProcess :: Transform Matter Matter
                           -- , nonedibleFoodWasteProcess :: This is now 1 - edibleWasteProcess
                           }
                      , binningParam :: { title :: String
                                        , compactingRatio :: Ratio Matter
+                                       , numberCompactors :: Int
                                        , bulkDensity :: Number
                                        }
                      , wormCompostingParam :: { title :: String
                                           , compostableRatio :: Ratio Matter
+                                          , numberWormeries :: Int
                                           , compostingYield :: Transform Matter Matter
                                           }
                      , foodSharingParam :: { title :: String
                                            , sharedFoodRatio :: Ratio Matter
+                                           , numberSharingHouseholds :: Int
                                            }
                      , foodGardeningParam :: { title :: String
                                              , surfaceArea :: SurfaceArea
@@ -332,6 +346,7 @@ data SystemState = SystemState { current :: Options
 
 
 eatingParam =  { title: "Eating"
+               , numberHouseholdEating: 121
                , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
               --  , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                , edibleWasteProcess: Transform Food Food { ratio: 0.6 } -- ECH_LCA_Tool:Material Flow Summary!T7
@@ -339,21 +354,24 @@ eatingParam =  { title: "Eating"
                }
 
 binningParam = { title: "Binning"
-               , compactingRatio: Ratio Waste { ratio: 0.8 } -- 0.8 == compactor
+               , compactingRatio: Ratio Waste { ratio: 0.30 } -- 0.8 == compactor
               --  , allFoodWasteProcess: Transform Food Waste { ratio: 0.19 } -- ECH_LCA_Tool:Material Flow Summary!T7 + ECH_LCA_Tool:Material Flow Summary!U7
                  -- Compactor!C8:G8
+               , numberCompactors: 0
                , bulkDensity: 0.8 -- kg/L
                }
 
 wormCompostingParam = { title: "Wormery"
                     -- 'Wormery compost'!B9 * 4 (four turnover per year)
                   , compostableRatio: Ratio Waste { ratio: 0.6 } -- TODO: it is missing in the sheet, arbitrary number taken
+                  , numberWormeries: 0
                   , compostingYield: Transform Waste Compost { ratio: 0.125 * 4.0 }
                   }
 
 
 foodSharingParam = { title: "Food Sharing"
                   , sharedFoodRatio: Ratio Food { ratio: 0.55 } -- TODO: What is the ratio of available food for sharing to food actually shared?
+                  , numberSharingHouseholds: 40
                   }
 
 foodGardeningParam = { title: "Food Garden"
@@ -426,8 +444,8 @@ complementOneRatio ( Ratio a { ratio } ) = Ratio a { ratio : ( 1.0 - ratio ) }
 complementOneTransform ( Transform a b { ratio } ) = Transform a b { ratio : ( 1.0 - ratio ) }
 complementOneRatioTransform ( Ratio a { ratio } ) = Transform a a { ratio : ( 1.0 - ratio ) }
 
-eating :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter | r ) -> State -> State
-eating {eatedFoodRatio} state@(State entries) =
+eating :: forall r. ProcessParam ( numberHouseholdEating :: Int, eatedFoodRatio :: Ratio Matter | r ) -> State -> State
+eating {eatedFoodRatio, numberHouseholdEating} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: (negQty shoppedFood)}
@@ -436,8 +454,8 @@ eating {eatedFoodRatio} state@(State entries) =
   ]
   where
     shoppedFood = foldState Shopping Food AllMatterProperty state
-    eatedFood = applyRatio eatedFoodRatio shoppedFood
-    wasted = applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
+    eatedFood = rangeScale (toNumber numberHouseholdEating) 121.0 $ applyRatio eatedFoodRatio shoppedFood
+    wasted = rangeScale (toNumber numberHouseholdEating) 121.0 $ applyTransform ( complementOneRatioTransform eatedFoodRatio ) shoppedFood
 
 eating_EatingBinningWormCompostingFoodSharing :: forall r. ProcessParam ( eatedFoodRatio :: Ratio Matter,
                                 edibleWasteProcess :: Transform Matter Matter | r ) -> State -> State
@@ -456,10 +474,20 @@ eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProces
     edibleWasted = applyTransform edibleWasteProcess wasted
     nonedibleWasted = applyTransform  ( complementOneTransform edibleWasteProcess ) wasted
 
+rangeScale a b (Weight t v)  = Weight t $ ( a / b) * v
+rangeScale a b (Volume t v)  = Volume t $ ( a / b) * v
+rangeScale _ _ IncompatibleQuantity = IncompatibleQuantity
+rangeScale _ _ ZeroQuantity = ZeroQuantity
+
+invertRangeScale a b (Weight t v)  = Weight t $ ( 1.0 - a / b) * v
+invertRangeScale a b (Volume t v)  = Volume t $ ( 1.0 - a / b) * v
+invertRangeScale _ _ IncompatibleQuantity = IncompatibleQuantity
+invertRangeScale _ _ ZeroQuantity = ZeroQuantity
 
 binning :: forall r. ProcessParam ( compactingRatio :: Ratio Matter,
+                                    numberCompactors :: Int,
                                     bulkDensity :: Number | r ) -> State -> State
-binning {compactingRatio, bulkDensity} state@(State entries) =
+binning {compactingRatio, bulkDensity, numberCompactors} state@(State entries) =
   State $
   entries <>
   [
@@ -471,7 +499,8 @@ binning {compactingRatio, bulkDensity} state@(State entries) =
     foodWaste = foldState Eating Waste AllMatterProperty state
     foodWormComposting = foldState WormComposting Waste AllMatterProperty state
     allWaste = addQty foodWormComposting foodWaste
-    allWasteVolume = applyRatio (complementOneRatio compactingRatio) $ toVolume bulkDensity allWaste
+    compactedWasteVolume = rangeScale (toNumber numberCompactors) 121.0 $  applyRatio compactingRatio $ toVolume ( bulkDensity ) allWaste
+    allWasteVolume = subQty ( toVolume ( bulkDensity ) allWaste) compactedWasteVolume
 
 -- food gardening with tap water
 foodGardening_EatingBinningWormCompostingFoodGardening :: forall r. ProcessParam (
@@ -568,9 +597,11 @@ foodSharing {sharedFoodRatio} state@(State entries) =
 
 
 composting_EatingBinningWormComposting :: forall r. ProcessParam (compostableRatio :: Ratio Matter,
-                                      compostingYield :: Transform Matter Matter | r ) -> State -> State
-composting_EatingBinningWormComposting {compostingYield,
-                                        compostableRatio} state@(State entries) =
+                                      compostingYield :: Transform Matter Matter
+                                      , numberWormeries :: Int | r ) -> State -> State
+composting_EatingBinningWormComposting {compostingYield
+                                       ,numberWormeries
+                                       ,compostableRatio} state@(State entries) =
   State $
   entries <>
   [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty compostableWaste )}
@@ -582,7 +613,9 @@ composting_EatingBinningWormComposting {compostingYield,
   where
     wastedFood =  foldState Eating Waste AllMatterProperty state
     compostableWaste = applyRatio compostableRatio wastedFood
-    compostProduct = applyTransform compostingYield compostableWaste
+    -- 100L wormeries. i.e. 80kg
+    wormeryCapacity = applyRatio ( Ratio Compost { ratio: toNumber(numberWormeries) } ) ( Weight Compost 80.0 )
+    compostProduct = applyTransform compostingYield $ maxQty wormeryCapacity compostableWaste
     -- compostWaste = subQty compostableWaste compostProduct
 
 managingWaste :: forall r. ProcessParam (collectedWasteRatio :: Ratio Matter,
