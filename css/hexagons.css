@@ -40,8 +40,8 @@ a.hexIn.grid {
 @media screen and (device-aspect-ratio: 3/4) {
   .hexGrid {
     /*These dimensions work on iPad*/
-    width: 98%;
-    margin: 0px 0 0 2%;
+    width: 94%;
+    margin: 0px 0 0 4%;
   }
 }
 
@@ -274,6 +274,14 @@ a.hexIn.grid {
   border: none;
 }
 
+
+.hex.control.top > div {
+  margin-top: -130%;
+}
+
+.hex.control.top > div > p {
+  margin-top: -23%;
+}
 
 .hex.control.side > div {
   margin-top: 0%;

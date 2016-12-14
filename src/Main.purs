@@ -18,7 +18,8 @@ import Calculator.Model ( nexusSystem
                         , Transform(..)
                         , SystemParams(..)
                         , ProcessParams(..)
-                        , Options(..))
+                        , Options(..)
+                        , SurfaceArea(..))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Debug.Trace (spy)
@@ -26,7 +27,7 @@ import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc)
 import Data.Foldable (foldMap)
-import Data.Int (toNumber)
+import Data.Int (toNumber, fromNumber)
 import Data.Tuple (Tuple(..))
 import Data.Maybe (maybe)
 import Data.Monoid (mempty)
@@ -85,18 +86,18 @@ optionsLabel EatingBinningWormCompostingFoodGardening = "Wormery & Food Garden"
 -- optionsLabel EatingBinningWormCompostingGardenWatering = "Garden Watering "
 optionsLabel EatingBinningWormCompostingFoodGardenWatering = "Food Garden Watering "
 -- optionsLabel EatingBinningWormCompostingGardenRainwater = "Rainwater Collection & Garden"
-optionsLabel EatingBinningWormCompostingFoodGardenRainwater = "Rainwater Collection & Food Garden"
+optionsLabel EatingBinningWormCompostingFoodGardenRainwater = "Rainwater Collection"
 
 optionsLabel EatingBinningFoodSharing = "Food Sharing"
-optionsLabel EatingBinningWormCompostingFoodSharing = "Wormery & Food Sharing"
+optionsLabel EatingBinningWormCompostingFoodSharing = "Food Sharing"
 optionsLabel _ = "Not Implemented Yet"
 
 nexusOptions = select "Options" (EatingOnly :| [ EatingBinning
                                               --  , EatingBinningWormComposting
                                                , EatingBinningWormCompostingFoodGardening
-                                               , EatingBinningWormCompostingFoodGardenWatering
+                                              --  , EatingBinningWormCompostingFoodGardenWatering
                                                , EatingBinningWormCompostingFoodGardenRainwater
-                                               , EatingBinningFoodSharing
+                                              --  , EatingBinningFoodSharing
                                                , EatingBinningWormCompostingFoodSharing ] ) optionsLabel
 
 systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
@@ -126,9 +127,15 @@ timescaleToString Day  = "Day"
 
 controllableParam numberHouseholdEating
                   numberCompactors
-                  numberWormeries = initProcessParams { eatingParam = initProcessParams.eatingParam { numberHouseholdEating = numberHouseholdEating }
-                                                       , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
-                                                       , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  } }
+                  numberWormeries
+                  gardenSurface
+                  roofSurface
+                  numberSharingHouseholds = initProcessParams { eatingParam = initProcessParams.eatingParam { numberHouseholdEating = numberHouseholdEating }
+                                                     , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
+                                                     , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  }
+                                                     , foodGardeningParam = initProcessParams.foodGardeningParam { surfaceArea = gardenSurface }
+                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { surfaceArea = roofSurface }
+                                                     , foodSharingParam = initProcessParams.foodSharingParam { numberSharingHouseholds = numberSharingHouseholds }}
 
 ratio ( Ratio _ { ratio } ) = ratio
 
@@ -136,6 +143,9 @@ systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State 
 systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
 
 mkScale s t = { scale : s, time: t}
+
+areaToInt :: SurfaceArea -> Number
+areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
 
 -- ui :: forall e e'. UI e (Markup e')
 --
@@ -147,7 +157,10 @@ ui = interface <$> ( boolean "Info" false )
                                                           <*> pure systemParams
                                                           <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( intSlider "numberHouseholdEating" 0 121 ( initProcessParams.eatingParam.numberHouseholdEating ) )
                                                                                                                  <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
-                                                                                                                 <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) ) ) )
+                                                                                                                 <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
+                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
+                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "roofSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.rainwaterCollectingParam.surfaceArea ) ) )
+                                                                                                                 <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                                           <*> ( pure initState ) ) )
 
 --
