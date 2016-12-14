@@ -200,7 +200,7 @@ $( document ).ready(function() {
 
   var numberWormeriesFlare = $('#flare-component-8')
 
-  function HandleWormery(control, process, ev) {
+  function HandleWormery(control, process, control2, process2, ev) {
     if (isClosed(control, process, ev)) {
       Open(control, process)
       $("#" + control + "-Control").append('<div id="' + control + 'Control" class="control-layer range"><p id="' + control + 'Control"># of Wormeries</p><div id="' + control + 'Control" class="slider"></div></div>')
@@ -220,6 +220,7 @@ $( document ).ready(function() {
         console.log(value)
         numberWormeriesFlare.get(0).dispatchEvent(evFlareInput);
         Open(control, process)
+        Open(control2, process2)
         $("#output .hexGrid").addClass("fadeIn");
       })
     } else if (isOpened(control, process, ev) && ev.target.id!= (control + 'Control')) {
@@ -228,6 +229,104 @@ $( document ).ready(function() {
     }
   }
 
+  var gardenSurfaceFlare = $('#flare-component-9')
+
+  function HandleGarden(control, process, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="' + control + 'Control" class="control-layer range"><p id="' + control + 'Control">Garden Surface (m2)</p><div id="' + control + 'Control" class="slider"></div></div>')
+      var gardenSurfaceSlider = $("#" + control + "-Control div#" + control + "Control div.slider").get(0)
+      noUiSlider.create(gardenSurfaceSlider, {
+      	start: [gardenSurfaceFlare.val()],
+        step: 1,
+      	tooltips: [true],
+        range: {
+      		'min': 0,
+      		'max': 100
+      	},
+        format: wNumb({decimals: 0})
+      });
+      gardenSurfaceSlider.noUiSlider.on("change", function(value) {
+        gardenSurfaceFlare.val(value)
+        console.log(value)
+        gardenSurfaceFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        // Open(control2, process2)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!= (control + 'Control')) {
+      $("#" + control + "-Control #" + control + "Control").remove()
+      Close(control, process)
+    }
+  }
+
+  var roofSurfaceFlare = $('#flare-component-10')
+
+  function HandleCollecting(control, process, ev) {
+    console.log(control)
+    console.log(process)
+    console.log(ev)
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="' + control + 'Control" class="control-layer range"><p id="' + control + 'Control"># block roofs</p><div id="' + control + 'Control" class="slider"></div></div>')
+      var roofSurfaceSlider = $("#" + control + "-Control div#" + control + "Control div.slider").get(0)
+      noUiSlider.create(roofSurfaceSlider, {
+        start: [roofSurfaceFlare.val()],
+        step: 1,
+        tooltips: [true],
+        range: {
+          'min': 0,
+          'max': 8
+        },
+        format: wNumb({decimals: 0})
+      });
+      roofSurfaceSlider.noUiSlider.on("change", function(value) {
+        roofSurfaceFlare.val(value)
+        console.log(value)
+        roofSurfaceFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        // Open(control2, process2)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!= (control + 'Control')) {
+      $("#" + control + "-Control #" + control + "Control").remove()
+      Close(control, process)
+    }
+  }
+
+  var sharingHouseholdsFlare = $('#flare-component-11')
+
+  function HandleSharing(control, process, ev) {
+    console.log(control)
+    console.log(process)
+    console.log(ev)
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="' + control + 'Control" class="control-layer range"><p id="' + control + 'Control"># sharing flats</p><div id="' + control + 'Control" class="slider"></div></div>')
+      var sharingHouseholdSlider = $("#" + control + "-Control div#" + control + "Control div.slider").get(0)
+      noUiSlider.create(sharingHouseholdSlider, {
+        start: [sharingHouseholdsFlare.val()],
+        step: 1,
+        tooltips: [true],
+        range: {
+          'min': 0,
+          'max': 121
+        },
+        format: wNumb({decimals: 0})
+      });
+      sharingHouseholdSlider.noUiSlider.on("change", function(value) {
+        sharingHouseholdsFlare.val(value)
+        console.log(value)
+        sharingHouseholdsFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        // Open(control2, process2)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!= (control + 'Control')) {
+      $("#" + control + "-Control #" + control + "Control").remove()
+      Close(control, process)
+    }
+  }
   //
   // function ToggleCompactor(control, process, control2, process2, ev) {
   //   // if (ev.target.id=="compactorControl" && toggleCompactorFlare.val() == '0' ) {
@@ -266,49 +365,64 @@ $( document ).ready(function() {
           Handle("Garden", "Managed Waste", ev)
           HandleCompactor("Composting", "Binning", "Garden", "Managed Waste", ev)
           break;
-        case "Calculator.Model.EatingBinningWormComposting":
-          $("#Binning-Control").addClass("side");
-          HandleEating("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
-          break;
+        // case "Calculator.Model.EatingBinningWormComposting":
+        //   $("#Binning-Control").addClass("side");
+        //   HandleEating("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleWormery("Composting", "Wormery", ev)
+        //   break;
         case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
           $("#Binning-Control").addClass("side");
+          $("#Garden-Control").addClass("top");
           HandleEating("Eating", "Eating", ev)
           HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
           Handle("Shopping", "Shopped Food", ev)
           Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
+          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
+          HandleGarden("Garden", "Food Garden", ev)
           break;
-        case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
-          HandleEating("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
-          break;
+        // case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
+        //   HandleEating("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleGarden("Garden", "Food Garden", ev)
+        //   HandleCollecting("RainwaterCollecting", "Rainwater Collection", ev)
+        //   HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
+        //   break;
         case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+          $("#Binning-Control").addClass("side");
+          $("#Garden-Control").addClass("top");
           HandleEating("Eating", "Eating", ev)
           HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
           Handle("Shopping", "Shopped Food", ev)
           Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
+          HandleGarden("Garden", "Food Garden", ev)
+          HandleCollecting("RainwaterCollecting", "Rainwater Collection", ev)
+          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
           break;
-        case "Calculator.Model.EatingBinningFoodSharing":
-          HandleEating("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
-          break;
+        // case "Calculator.Model.EatingBinningFoodSharing":
+        //   $("#Binning-Control").addClass("side");
+        //   $("#Garden-Control").addClass("top");
+        //   HandleEating("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleGarden("Garden", "Food Garden", ev)
+        //   HandleWormery("Composting", "Wormery", ev)
+        //   break;
         case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+          $("#Binning-Control").addClass("side");
+          $("#Garden-Control").addClass("top");
           Handle("Eating", "Eating", ev)
           HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
           Handle("Shopping", "Shopped Food", ev)
           Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", ev)
+          HandleSharing("Rainwater", "Food Sharing", ev)
+          HandleGarden("Garden", "Food Garden", ev)
+          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
           break;
         default:
           if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
