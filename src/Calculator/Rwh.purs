@@ -2,8 +2,8 @@
 module Rwh
        ( TimeWindow(..)
        , TimeResolution(..)
-       , toRange
-       , nextDay
+       , dates
+       , tomorrow
        )
        where
 
@@ -17,8 +17,9 @@ import Data.Map (Map, fromFoldable)
 import Data.Maybe (fromJust, Maybe(..))
 import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
+import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (($), (+), (/), (<<<))
+import Prelude (($), (+), (/), (/=), (<<<), (==), (>))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -26,17 +27,22 @@ data TimeWindow = TimeWindow { start :: Date
 data TimeResolution = OneDay | OneMonth
 
 
--- dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
--- dateEnd = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) March (fromJust $ toEnum 30)
+dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
+dateEnd = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) March (fromJust $ toEnum 30)
+tw = TimeWindow { start : dateStart, end: dateEnd }
 
-toRange :: TimeWindow -> TimeResolution -> Array Int
-toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ duration)
-  where
-    duration :: Duration.Days
-    duration = Duration.toDuration $ diff tw.end tw.start
-    nbIntervals = case tr of
-      OneMonth -> 30.0
-      OneDay -> 1.0
+-- toRange :: TimeWindow -> TimeResolution -> Array Int
+-- toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ duration)
+--   where
+--     duration :: Duration.Days
+--     duration = Duration.toDuration $ diff tw.end tw.start
+--     nbIntervals = case tr of
+--       OneMonth -> 30.0
+--       OneDay -> 1.0
+
+dates :: TimeWindow -> Array Date
+dates (TimeWindow {start, end}) =
+  unfoldr (\date -> if date > end then Nothing else Just (Tuple date (tomorrow date))) start
 
 type HasRemainder = Boolean
 
