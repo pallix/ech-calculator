@@ -4,12 +4,13 @@ module Rwh
        , TimeResolution(..)
        , dates
        , tomorrow
+       , tw -- example
        )
        where
 
 import Data.Date.Component
 import Data.Time.Duration as Duration
-import Data.Array (range)
+import Data.Array (catMaybes, range)
 import Data.Date (Date, year, month, day, diff, canonicalDate)
 import Data.Enum (fromEnum, toEnum, succ)
 import Data.Int (round)
@@ -19,7 +20,7 @@ import Data.Newtype (unwrap)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (($), (+), (/), (/=), (<<<), (==), (>))
+import Prelude (($), (+), (/), (/=), (<<<), (<=), (==), (>))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -42,12 +43,17 @@ tw = TimeWindow { start : dateStart, end: dateEnd }
 
 dates :: TimeWindow -> Array Date
 dates (TimeWindow {start, end}) =
-  unfoldr (\date -> if date > end then Nothing else Just (Tuple date (tomorrow date))) start
+  unfoldr (\maybeDate -> case maybeDate of
+              Just date ->
+                if date <= end then Just (Tuple date (tomorrow date)) else Nothing
+              Nothing -> Nothing) (Just start)
 
 type HasRemainder = Boolean
 
-tomorrow :: Date -> Date
-tomorrow date = unsafePartial $ canonicalDate y (fst m) (fst d)
+tomorrow :: Date -> Maybe Date
+tomorrow date = case y of
+                     Just vy -> Just $ canonicalDate vy (fst m) (fst d)
+                     Nothing -> Nothing
   where d :: Tuple Day HasRemainder
         d = case toEnum $ 1 + fromEnum (day date) of
           Just v -> Tuple v false
@@ -58,13 +64,8 @@ tomorrow date = unsafePartial $ canonicalDate y (fst m) (fst d)
                 Just v -> Tuple v false
                 Nothing -> Tuple (unsafePartial $ fromJust $ toEnum 1) true
             else Tuple (month date) false
-        y :: Year
-        y = if snd m then
-              case toEnum $ 1 + fromEnum (year date) of
-                Just v -> v
-                -- use 2018 arbitrarly if the conversion from int to Date fails
-                Nothing -> unsafePartial $ fromJust $ toEnum 2018
-            else (year date)
+        y :: Maybe Year
+        y = if snd m then toEnum $ 1 + fromEnum (year date) else Just $ year date
 
 
 type RainfallTimeseries = Map Month Number
