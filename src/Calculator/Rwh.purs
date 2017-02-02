@@ -3,21 +3,22 @@ module Rwh
        ( TimeWindow(..)
        , TimeResolution(..)
        , toRange
+       , nextDay
        )
        where
 
 import Data.Date.Component
 import Data.Time.Duration as Duration
 import Data.Array (range)
-import Data.Date (Date, diff, canonicalDate)
-import Data.Enum (toEnum)
+import Data.Date (Date, year, month, day, diff, canonicalDate)
+import Data.Enum (fromEnum, toEnum, succ)
 import Data.Int (round)
 import Data.Map (Map, fromFoldable)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, Maybe(..))
 import Data.Newtype (unwrap)
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Partial.Unsafe (unsafePartial)
-import Prelude (($), (/), (<<<))
+import Prelude (($), (+), (/), (<<<))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -36,6 +37,28 @@ toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ d
     nbIntervals = case tr of
       OneMonth -> 30.0
       OneDay -> 1.0
+
+type HasRemainder = Boolean
+
+tomorrow :: Date -> Date
+tomorrow date = unsafePartial $ canonicalDate y (fst m) (fst d)
+  where d :: Tuple Day HasRemainder
+        d = case toEnum $ 1 + fromEnum (day date) of
+          Just v -> Tuple v false
+          Nothing -> Tuple (unsafePartial $ fromJust $ toEnum 1) true
+        m :: Tuple Month HasRemainder
+        m = if snd d then
+              case toEnum $ 1 + fromEnum (month date) of
+                Just v -> Tuple v false
+                Nothing -> Tuple (unsafePartial $ fromJust $ toEnum 1) true
+            else Tuple (month date) false
+        y :: Year
+        y = if snd m then
+              case toEnum $ 1 + fromEnum (year date) of
+                Just v -> v
+                -- use 2018 arbitrarly if the conversion from int to Date fails
+                Nothing -> unsafePartial $ fromJust $ toEnum 2018
+            else (year date)
 
 
 type RainfallTimeseries = Map Month Number
