@@ -6,17 +6,18 @@ module Rwh
        )
        where
 
-import Prelude
-import Data.Date (Date, diff, canonicalDate)
 import Data.Date.Component
 import Data.Time.Duration as Duration
-import Data.Enum (toEnum)
-import Data.Maybe (fromJust)
-import Partial.Unsafe (unsafePartial)
-import Data.Newtype (unwrap)
 import Data.Array (range)
+import Data.Date (Date, diff, canonicalDate)
+import Data.Enum (toEnum)
 import Data.Int (round)
-import Data.Map (Map)
+import Data.Map (Map, fromFoldable)
+import Data.Maybe (fromJust)
+import Data.Newtype (unwrap)
+import Data.Tuple (Tuple(..))
+import Partial.Unsafe (unsafePartial)
+import Prelude (($), (/), (<<<))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -40,16 +41,76 @@ toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ d
 type RainfallTimeseries = Map Month Number
 
 -- todo: efficiency, living time
+-- noize?
+-- https://www.rainwaterharvesting.org.au/rainwater-harvesting-maintenance-advice/pumps-and-switching-devices
+-- http://www.ajdesigner.com/phppump/pump_equations_water_horse_power.php
+
 data Pump = LowQuality | HighQuality
 
-type TankParam = { size :: Number
-                 , pump :: Pump
-                 , elevation :: Number
-                 , distanceToIrrigationPoint :: Number }
+type Tank = { size :: Number
+            , waterButtHeight :: Number
+            , evaporation :: Number
+            }
 
-rwhParam :: Array TankParam
-rwhParam = []
+energyNeeded :: Installation -> Number
+energyNeeded param = 33.9
 
+type TimeSerie a = Map Month a
+
+rainfallData2012 :: TimeSerie Number
+rainfallData2012 = fromFoldable [ Tuple January 1.0
+                                , Tuple February 1.0
+                                , Tuple March 1.0
+                                , Tuple April 1.0
+                                , Tuple May 1.0
+                                , Tuple June 1.0
+                                , Tuple July 1.0
+                                , Tuple August 1.0
+                                , Tuple September 1.0
+                                , Tuple October 1.0
+                                , Tuple November 1.0
+                                , Tuple December 1.0
+                                ]
+
+rainfallData2000Drought :: TimeSerie Number
+rainfallData2000Drought = fromFoldable [ Tuple January 1.0
+                                       , Tuple February 1.0
+                                       , Tuple March 1.0
+                                       , Tuple April 1.0
+                                       , Tuple May 1.0
+                                       , Tuple June 1.0
+                                       , Tuple July 1.0
+                                       , Tuple August 1.0
+                                       , Tuple September 1.0
+                                       , Tuple October 1.0
+                                       , Tuple November 1.0
+                                       , Tuple December 1.0
+                                       ]
+
+
+rainfallData :: { year2012 :: TimeSerie Number
+                , year0000Drought :: TimeSerie Number
+                }
+rainfallData = { year2012 : rainfallData2012
+               , year0000Drought : rainfallData2000Drought
+               }
+
+type Installation = { tank :: Tank
+                    , pump :: Pump
+                    , irrigationPoints :: Array { height :: Number
+                                                , flowRate :: Number
+                                                }
+                    , roofSurfaceArea :: Number
+                    , roofRunOff :: Number
+                    }
+
+rwhParam :: { installations :: Array Installation
+            }
+rwhParam = { installations : []
+           }
+
+type RwhOutput = { energy :: Number
+                 }
 
 
 -- 1. Time series rainfall data
@@ -59,8 +120,9 @@ rwhParam = []
 -- 5. Tank (size, position, number of tank, material used)
 -- 6. Distribution ( length of the pipes and material used)
 -- 7. Pumping energy (energy consumption, energy source, number of pumps)
+-- 8. First flush device (http://www.urbanfoodgarden.org/main/water-management/calculating--roof-runoff.htm)
+-- 9. Pollution / Filtering
 
--- todo: influence of the pipes?
 -- todo: Pumping energy is determined by the flowrate and the head
 -- (i.e. different between tank and irrigation point)
 

@@ -169,7 +169,7 @@ toWeight _ IncompatibleQuantity = IncompatibleQuantity
 -- data Volume a =
 
 -- Surface Area in square meters
-data SurfaceArea = SurfaceArea Number
+data SurfaceArea = SurfaceArea Number -- ,,
 
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
