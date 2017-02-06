@@ -9,18 +9,20 @@ module Rwh
        where
 
 import Data.Date.Component
+import Data.DateTime as DT
 import Data.Time.Duration as Duration
 import Data.Array (catMaybes, range)
 import Data.Date (Date, year, month, day, diff, canonicalDate)
 import Data.Enum (fromEnum, toEnum, succ)
 import Data.Int (round)
 import Data.Map (Map, fromFoldable)
-import Data.Maybe (fromJust, Maybe(..))
+import Data.Maybe (fromJust, maybe, Maybe(..))
 import Data.Newtype (unwrap)
+import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (($), (+), (/), (/=), (<<<), (<=), (==), (>))
+import Prelude (bottom, ($), (+), (/), (/=), (<<<), (<=), (==), (>))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -43,29 +45,13 @@ tw = TimeWindow { start : dateStart, end: dateEnd }
 
 dates :: TimeWindow -> Array Date
 dates (TimeWindow {start, end}) =
-  unfoldr (\maybeDate -> case maybeDate of
-              Just date ->
-                if date <= end then Just (Tuple date (tomorrow date)) else Nothing
-              Nothing -> Nothing) (Just start)
+  unfoldr (\date -> if date <= end then
+                      Just (Tuple date (tomorrow date))
+                    else Nothing) start
 
-type HasRemainder = Boolean
 
-tomorrow :: Date -> Maybe Date
-tomorrow date = case y of
-                     Just vy -> Just $ canonicalDate vy (fst m) (fst d)
-                     Nothing -> Nothing
-  where d :: Tuple Day HasRemainder
-        d = case toEnum $ 1 + fromEnum (day date) of
-          Just v -> Tuple v false
-          Nothing -> Tuple (unsafePartial $ fromJust $ toEnum 1) true
-        m :: Tuple Month HasRemainder
-        m = if snd d then
-              case toEnum $ 1 + fromEnum (month date) of
-                Just v -> Tuple v false
-                Nothing -> Tuple (unsafePartial $ fromJust $ toEnum 1) true
-            else Tuple (month date) false
-        y :: Maybe Year
-        y = if snd m then toEnum $ 1 + fromEnum (year date) else Just $ year date
+tomorrow :: DT.Date -> DT.Date
+tomorrow dt = maybe dt DT.date $ DT.adjust (Days 1.0) (DT.DateTime dt bottom)
 
 
 type RainfallTimeseries = Map Month Number
