@@ -43,11 +43,12 @@ tw = TimeWindow { start : dateStart, end: dateEnd }
 --       OneMonth -> 30.0
 --       OneDay -> 1.0
 
-dates :: TimeWindow -> Array Date
-dates (TimeWindow {start, end}) =
+dates :: TimeWindow -> TimeResolution -> Array Date
+dates (TimeWindow {start, end}) OneDay =
   unfoldr (\date -> if date <= end then
                       Just (Tuple date (tomorrow date))
                     else Nothing) start
+dates _ _ = undefined
 
 
 tomorrow :: DT.Date -> DT.Date
@@ -128,6 +129,81 @@ rwhParam = { installations : []
 type RwhOutput = { energy :: Number
                  }
 
+raining :: forall r. ProcessParam (
+          location :: RainwaterLocation | r) -> SystemScale -> Date -> State -> State
+raining { location } systemScale@{window, resolution} date state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
+  ]
+  where
+    timeSeries = timeSeriesbyLocation location
+    rainingWater = timeSeries date
+
+tank :: forall r. ProcessParam (
+          surfaceArea :: SurfaceArea,
+          collectingCapacity :: Number | r) -> SystemScale -> Date -> State -> State
+tank {surfaceArea, collectingCapacity} systemScale@{window, resolution} state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater}
+  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
+  ]
+  where
+    rainingWater = foldState Raining Water AllMatterProperty state
+    surfaceArea' = blockToRoofSurface surfaceArea
+    collectedWater = Volume Water $ surfaceArea' * (scaleNumberOnTime systemScale collectingCapacity)
+
+-- scanl :: ( State -> Date -> State  ) -> InitState -> [ Date ] -> [ States ]
+
+scanNexus :: SystemScale -> SystemState -> [ SystemState ]
+scanNexus { window, resolution } = scanl nexusSystem ( dates window resolution )
+
+nexusSystem :: SystemState -> Date -> SystemState
+nexusSystem (SystemState sys@{ current, scale@{window, resolution}, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
+  where
+    state' = scaleFirstEntry scale systemParams state
+    endState = case current of
+      EatingOnly -> managingWaste processParams.managedWasteParam
+                  $ eating processParams.eatingParam state'
+      EatingBinning -> managingWaste processParams.managedWasteParam
+                     $ binning processParams.binningParam
+                     $ eating processParams.eatingParam state'
+      EatingBinningWormComposting -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
+                                   $ eating processParams.eatingParam state'
+      EatingBinningWormCompostingFoodGardening -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
+                                   $ eating processParams.eatingParam state'
+      EatingBinningWormCompostingFoodGardenWatering -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
+                                   $ eating processParams.eatingParam state'
+      EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater processParams.foodGardeningParam scale
+                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam scale
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
+                                   $ eating processParams.eatingParam state'
+      EatingBinningFoodSharing -> managingWaste processParams.managedWasteParam
+                                 $ binning processParams.binningParam
+                                 -- TODO replug on eating?
+                                 -- $ eating ...
+                                 $ foodSharing processParams.foodSharingParam
+                                 $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+      EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
+                                   $ binning processParams.binningParam
+                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
+                                   -- TODO replug on eating?
+                                   -- $ eating ...
+                                   $ foodSharing processParams.foodSharingParam
+                                   $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+
+      _ -> State []
 
 -- 1. Time series rainfall data
 -- 2. Roof area

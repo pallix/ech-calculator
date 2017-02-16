@@ -174,7 +174,7 @@ data SurfaceArea = SurfaceArea Number -- ,,
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale, time:: Time}
+type SystemScale = { scale:: Scale, window :: TimeWindow, resolution:: TimeResolution}
 
 data Ratio a = Ratio a { ratio :: Number }
 

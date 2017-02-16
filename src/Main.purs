@@ -116,7 +116,6 @@ initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shop
                   , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0}
                   ]
 
-
 scaleToString PersonScale = "Person"
 scaleToString HouseholdScale = "HouseHold"
 scaleToString EstateScale = "Estate"
