@@ -2,39 +2,22 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model ( nexusSystem
-                        , initProcessParams
-                        , State(..)
-                        , Matter(..)
-                        , MatterProperty(..)
-                        , Entry(..)
-                        , SystemState(..)
-                        , Scale(..)
-                        , Time(..)
-                        , SystemScale(..)
-                        , Quantity(..)
-                        , Ratio(..)
-                        , Process(..)
-                        , Transform(..)
-                        , SystemParams(..)
-                        , ProcessParams(..)
-                        , Options(..)
-                        , SurfaceArea(..))
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), ProcessParams(..), Quantity(..), Ratio(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale(..), SystemState(..), Time(..), Transform(..), initProcessParams, nexusSystem)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Debug.Trace (spy)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
-import Data.Tuple (Tuple(..))
 import Data.Maybe (maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
 import Data.NonEmpty ((:|))
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
+import Debug.Trace (spy)
 import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
 import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
@@ -45,6 +28,7 @@ import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
+import Time (TimeResolution(..), tw)
 
 -- data Action = Food
 --             | Bin
@@ -106,6 +90,7 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
                                            , estateFlatsOneBedroom : 70
                                            , estateFlatsTwoBedroom : 23
                                            , estateFlatsThreeBedroom : 15
+                                           , estateSurfaceArea: SurfaceArea 12011.50
                                            }
 
 systemParams = systemParamsWithConstants ( 0 )
@@ -142,7 +127,8 @@ ratio ( Ratio _ { ratio } ) = ratio
 systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
 systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
 
-mkScale s t = { scale : s, time: t}
+-- TODO specify a real time window here
+mkScale s t = { scale : s, time: t, resolution: OneDay}
 
 areaToInt :: SurfaceArea -> Number
 areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
