@@ -1,69 +1,25 @@
 -- Rainwater harvesting
-module Rwh
-       ( TimeWindow(..)
-       , TimeResolution(..)
-       , dates
-       , tomorrow
-       , nextMonth
-       , tw -- example
-       , dateStart
-       )
-       where
+module Rwh where
 
 import Data.Date.Component
 import Data.DateTime as DT
 import Data.Time.Duration as Duration
-import Data.Array (catMaybes, range)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..))
+import Data.Array (catMaybes, index, range)
 import Data.Date (Date, canonicalDate, day, diff, month, year)
-import Data.Enum (fromEnum, toEnum, succ)
+import Data.Enum (fromEnum, succ, toEnum)
 import Data.Int (round)
-import Data.Map (Map, fromFoldable)
+import Data.Map (Map, empty, fromFoldable, lookup)
 import Data.Maybe (fromJust, maybe, Maybe(..))
+import Data.Monoid ((<>))
 import Data.Newtype (unwrap)
 import Data.Time.Duration (Days(..))
+import Data.Traversable (sum)
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, id, ($), (+), (/), (/=), (<<<), (<=), (==), (>))
-
-data TimeWindow = TimeWindow { start :: Date
-                             , end :: Date }
-
-data TimeResolution = OneDay | OneMonth
-
-
-dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
-dateEnd = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) March (fromJust $ toEnum 30)
-tw = TimeWindow { start : dateStart, end: dateEnd }
-
--- toRange :: TimeWindow -> TimeResolution -> Array Int
--- toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ duration)
---   where
---     duration :: Duration.Days
---     duration = Duration.toDuration $ diff tw.end tw.start
---     nbIntervals = case tr of
---       OneMonth -> 30.0
---       OneDay -> 1.0
-
-dates :: TimeWindow -> TimeResolution -> Array Date
-dates (TimeWindow {start, end}) resolution =
-  unfoldr (\date -> if date <= end then
-                      Just (Tuple date (case resolution of
-                                          OneDay -> tomorrow date
-                                          OneMonth -> nextMonth date))
-                    else Nothing) start
-
-
-tomorrow :: DT.Date -> DT.Date
-tomorrow dt = maybe dt DT.date $ DT.adjust (Days 1.0) (DT.DateTime dt bottom)
-
-nextMonth :: Date -> Date
-nextMonth dt = canonicalDate nextY nm.nextM d
-  where y = year dt
-        m = month dt
-        d = day dt
-        nm = maybe {nextM: January, incYear: true} {nextM: _, incYear: false} $ succ m
-        nextY = if nm.incYear then maybe y id $ succ y else y
+import Prelude (bottom, id, ($), (*), (+), (/), (/=), (<<<), (<=), (==), (>))
+import Time (TimeResolution(..))
 
 type RainfallTimeseries = Map Month Number
 
@@ -79,66 +35,100 @@ type Tank = { size :: Number
             , evaporation :: Number
             }
 
-energyNeeded :: Installation -> Number
-energyNeeded param = 33.9
+-- energyNeeded :: Installation -> Number
+-- energyNeeded param = 33.9
 
-type TimeSerie a = Map Month a
+type TimeSerie = Map Month (Array Number)
 
-rainfallData2012 :: TimeSerie Number
-rainfallData2012 = fromFoldable [ Tuple January 1.0
-                                , Tuple February 1.0
-                                , Tuple March 1.0
-                                , Tuple April 1.0
-                                , Tuple May 1.0
-                                , Tuple June 1.0
-                                , Tuple July 1.0
-                                , Tuple August 1.0
-                                , Tuple September 1.0
-                                , Tuple October 1.0
-                                , Tuple November 1.0
-                                , Tuple December 1.0
+rainfallData2012 :: TimeSerie
+rainfallData2012 = fromFoldable [ Tuple January [1.0]
+                                , Tuple February [1.0]
+                                , Tuple March [1.0]
+                                , Tuple April [1.0]
+                                , Tuple May [1.0]
+                                , Tuple June [1.0]
+                                , Tuple July [1.0]
+                                , Tuple August [1.0]
+                                , Tuple September [1.0]
+                                , Tuple October [1.0]
+                                , Tuple November [1.0]
+                                , Tuple December [1.0]
                                 ]
 
-rainfallData2000Drought :: TimeSerie Number
-rainfallData2000Drought = fromFoldable [ Tuple January 1.0
-                                       , Tuple February 1.0
-                                       , Tuple March 1.0
-                                       , Tuple April 1.0
-                                       , Tuple May 1.0
-                                       , Tuple June 1.0
-                                       , Tuple July 1.0
-                                       , Tuple August 1.0
-                                       , Tuple September 1.0
-                                       , Tuple October 1.0
-                                       , Tuple November 1.0
-                                       , Tuple December 1.0
-                                       ]
+rainfallData2013 :: TimeSerie
+rainfallData2013 = fromFoldable [ Tuple January [1.0]
+                                , Tuple February [1.0]
+                                , Tuple March [1.0]
+                                , Tuple April [1.0]
+                                , Tuple May [1.0]
+                                , Tuple June [1.0]
+                                , Tuple July [1.0]
+                                , Tuple August [1.0]
+                                , Tuple September [1.0]
+                                , Tuple October [1.0]
+                                , Tuple November [1.0]
+                                , Tuple December [1.0]
+                                ]
+
+-- probably (Array Number) if rain timeseries have a resolution per day
+type RainfallData = Map String TimeSerie
 
 
-rainfallData :: { year2012 :: TimeSerie Number
-                , year0000Drought :: TimeSerie Number
-                }
-rainfallData = { year2012 : rainfallData2012
-               , year0000Drought : rainfallData2000Drought
-               }
+rainfallData = fromFoldable [ Tuple "2012" rainfallData2012,
+                              Tuple "2013" rainfallData2013 ]
 
-type Installation = { tank :: Tank
-                    , pump :: Pump
-                    , irrigationPoints :: Array { height :: Number
-                                                , flowRate :: Number
-                                                }
-                    , roofSurfaceArea :: Number
-                    , roofRunOff :: Number
-                    }
+-- type Installation = { tank :: Tank
+--                     , pump :: Pump
+--                     , irrigationPoints :: Array { height :: Number
+--                                                 , flowRate :: Number
+--                                                 }
+--                     , roofSurfaceArea :: Number
+--                     , roofRunOff :: Number
+--                     }
 
-rwhParam :: { installations :: Array Installation
-            }
-rwhParam = { installations : []
-           }
+-- rwhParam :: { installations :: Array Installation
+--             }
+-- rwhParam = { installations : []
+--            }
 
 type RwhOutput = { energy :: Number
                  }
 
+
+tankParam :: { size :: Int
+             , waterButtHeight :: Int
+             , evaporation :: Int
+             }
+tankParam = { size: 10 -- liters
+            , waterButtHeight: 0
+            , evaporation: 0
+            }
+
+rainingParam = { title: "Raining"
+               , rainfallDataKey: "2012"
+               , rainfallData: rainfallData}
+
+raining
+  :: forall r.
+     SystemParams
+  -> ProcessParam( rainfallDataKey :: String
+                 , rainfallData :: RainfallData | r)
+  -> SystemScale
+  -> Date
+  -> State
+  -> State
+raining (SystemParams {estateSurfaceArea}) {rainfallDataKey , rainfallData} systemScale@{resolution} date state@(State entries) =
+  State $
+  entries <>
+  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
+  ]
+  where
+    timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
+    monthData = maybe [] id $ lookup (month date) timeSerie
+    waterVolumePerSquareCm = case resolution of
+      OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
+      OneMonth -> sum monthData
+    rainingWater = Volume Water $ waterVolumePerSquareCm * (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
 
 -- 1. Time series rainfall data
 -- 2. Roof area

@@ -10,6 +10,7 @@ module Calculator.Model (Flow(Flow),
                          SystemScale(..),
                          SystemParams(..),
                          ProcessParams(..),
+                         ProcessParam(..),
                          initProcessParams,
                          Options(..),
                          State(..),
@@ -33,6 +34,7 @@ import Data.Int (toNumber)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
+import Time (TimeResolution, TimeWindow)
 
 --
 -- Quantities
@@ -62,6 +64,7 @@ data SystemParams = SystemParams { houseHoldSize :: Int
                                 , estateFlatsOneBedroom :: Int
                                 , estateFlatsTwoBedroom :: Int
                                 , estateFlatsThreeBedroom :: Int
+                                , estateSurfaceArea :: SurfaceArea
                                 }
 
 data Options = EatingOnly
@@ -175,7 +178,7 @@ data SurfaceArea = SurfaceArea Number -- ,,
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale, time :: Time}
+type SystemScale = { scale:: Scale, time:: Time, resolution:: TimeResolution}
 
 data Ratio a = Ratio a { ratio :: Number }
 
