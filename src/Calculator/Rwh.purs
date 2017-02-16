@@ -4,7 +4,9 @@ module Rwh
        , TimeResolution(..)
        , dates
        , tomorrow
+       , nextMonth
        , tw -- example
+       , dateStart
        )
        where
 
@@ -12,7 +14,7 @@ import Data.Date.Component
 import Data.DateTime as DT
 import Data.Time.Duration as Duration
 import Data.Array (catMaybes, range)
-import Data.Date (Date, year, month, day, diff, canonicalDate)
+import Data.Date (Date, canonicalDate, day, diff, month, year)
 import Data.Enum (fromEnum, toEnum, succ)
 import Data.Int (round)
 import Data.Map (Map, fromFoldable)
@@ -22,7 +24,7 @@ import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, ($), (+), (/), (/=), (<<<), (<=), (==), (>))
+import Prelude (bottom, id, ($), (+), (/), (/=), (<<<), (<=), (==), (>))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -43,16 +45,25 @@ tw = TimeWindow { start : dateStart, end: dateEnd }
 --       OneMonth -> 30.0
 --       OneDay -> 1.0
 
-dates :: TimeWindow -> Array Date
-dates (TimeWindow {start, end}) =
+dates :: TimeWindow -> TimeResolution -> Array Date
+dates (TimeWindow {start, end}) resolution =
   unfoldr (\date -> if date <= end then
-                      Just (Tuple date (tomorrow date))
+                      Just (Tuple date (case resolution of
+                                          OneDay -> tomorrow date
+                                          OneMonth -> nextMonth date))
                     else Nothing) start
 
 
 tomorrow :: DT.Date -> DT.Date
 tomorrow dt = maybe dt DT.date $ DT.adjust (Days 1.0) (DT.DateTime dt bottom)
 
+nextMonth :: Date -> Date
+nextMonth dt = canonicalDate nextY nm.nextM d
+  where y = year dt
+        m = month dt
+        d = day dt
+        nm = maybe {nextM: January, incYear: true} {nextM: _, incYear: false} $ succ m
+        nextY = if nm.incYear then maybe y id $ succ y else y
 
 type RainfallTimeseries = Map Month Number
 
