@@ -34,6 +34,7 @@ import Data.Int (toNumber)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
+import Rain (RainfallData, rainfallData)
 import Time (TimeResolution, TimeWindow)
 
 --
@@ -345,6 +346,9 @@ type ProcessParams = { eatingParam ::
                                               --  amount of CO2e produced in kg per kg of waste
                                            , ghgProduction :: Number
                                            }
+                     , rainingParam ::  { title :: String
+                                        , rainfallDataKey :: String
+                                        , rainfallData :: RainfallData }
 
                      }
 
@@ -412,6 +416,11 @@ managedWasteParam = { title: "Managed Waste"
                   , ghgProduction: 3.0 * 1.3 / 1000.0 -- 3km * 1.3 GHG EF / 1000kg
                   }
 
+
+rainingParam = { title: "Raining"
+               , rainfallDataKey: "2012"
+               , rainfallData: rainfallData}
+
 initProcessParams = { eatingParam
                     , binningParam
                     , wormCompostingParam
@@ -419,6 +428,7 @@ initProcessParams = { eatingParam
                     , foodSharingParam
                     , foodGardeningParam
                     , rainwaterCollectingParam
+                    , rainingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
