@@ -82,7 +82,7 @@ raining date = do
         waterVolumePerSquareCm = case resolution of
           OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
           OneMonth -> sum monthData
-        rainingWater = Volume Water $ waterVolumePerSquareCm * (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+        rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
     pure $ State $ entries <>
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
