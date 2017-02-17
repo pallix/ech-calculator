@@ -5,6 +5,8 @@ import Data.Date.Component
 import Data.DateTime as DT
 import Data.Time.Duration as Duration
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..))
+import Control.Monad (bind, pure)
+import Control.Monad.Reader (Reader, ask)
 import Data.Array (catMaybes, index, range)
 import Data.Date (Date, canonicalDate, day, diff, month, year)
 import Data.Enum (fromEnum, succ, toEnum)
@@ -38,45 +40,6 @@ type Tank = { size :: Number
 -- energyNeeded :: Installation -> Number
 -- energyNeeded param = 33.9
 
-type TimeSerie = Map Month (Array Number)
-
-rainfallData2012 :: TimeSerie
-rainfallData2012 = fromFoldable [ Tuple January [1.0]
-                                , Tuple February [1.0]
-                                , Tuple March [1.0]
-                                , Tuple April [1.0]
-                                , Tuple May [1.0]
-                                , Tuple June [1.0]
-                                , Tuple July [1.0]
-                                , Tuple August [1.0]
-                                , Tuple September [1.0]
-                                , Tuple October [1.0]
-                                , Tuple November [1.0]
-                                , Tuple December [1.0]
-                                ]
-
-rainfallData2013 :: TimeSerie
-rainfallData2013 = fromFoldable [ Tuple January [1.0]
-                                , Tuple February [1.0]
-                                , Tuple March [1.0]
-                                , Tuple April [1.0]
-                                , Tuple May [1.0]
-                                , Tuple June [1.0]
-                                , Tuple July [1.0]
-                                , Tuple August [1.0]
-                                , Tuple September [1.0]
-                                , Tuple October [1.0]
-                                , Tuple November [1.0]
-                                , Tuple December [1.0]
-                                ]
-
--- probably (Array Number) if rain timeseries have a resolution per day
-type RainfallData = Map String TimeSerie
-
-
-rainfallData = fromFoldable [ Tuple "2012" rainfallData2012,
-                              Tuple "2013" rainfallData2013 ]
-
 -- type Installation = { tank :: Tank
 --                     , pump :: Pump
 --                     , irrigationPoints :: Array { height :: Number
@@ -104,31 +67,25 @@ tankParam = { size: 10 -- liters
             , evaporation: 0
             }
 
-rainingParam = { title: "Raining"
-               , rainfallDataKey: "2012"
-               , rainfallData: rainfallData}
-
-raining
-  :: forall r.
-     SystemParams
-  -> ProcessParam( rainfallDataKey :: String
-                 , rainfallData :: RainfallData | r)
-  -> SystemScale
-  -> Date
-  -> State
-  -> State
-raining (SystemParams {estateSurfaceArea}) {rainfallDataKey , rainfallData} systemScale@{resolution} date state@(State entries) =
-  State $
-  entries <>
-  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
-  ]
-  where
-    timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
-    monthData = maybe [] id $ lookup (month date) timeSerie
-    waterVolumePerSquareCm = case resolution of
-      OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
-      OneMonth -> sum monthData
-    rainingWater = Volume Water $ waterVolumePerSquareCm * (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+raining ::
+     Date
+  -> Reader SystemState State
+raining date = do
+    (SystemState { state: (State entries)
+                 , processParams: { rainingParam: { rainfallDataKey
+                                                  , rainfallData }}
+                 , systemParams: (SystemParams { estateSurfaceArea })
+                 , scale: { resolution: resolution }
+                 }) <- ask
+    let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
+        monthData = maybe [] id $ lookup (month date) timeSerie
+        waterVolumePerSquareCm = case resolution of
+          OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
+          OneMonth -> sum monthData
+        rainingWater = Volume Water $ waterVolumePerSquareCm * (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+    pure $ State $ entries <>
+      [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
+      ]
 
 -- 1. Time series rainfall data
 -- 2. Roof area
