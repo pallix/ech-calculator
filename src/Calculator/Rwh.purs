@@ -2,25 +2,19 @@
 module Rwh where
 
 import Data.Date.Component
-import Data.DateTime as DT
-import Data.Time.Duration as Duration
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..), cappedQty, foldState, negQty, subQty)
+
+
+import Calculator.Model (Entry(Notification, Entry), Matter(Water), MatterProperty(GreyWater), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), cappedQty, foldState, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
-import Data.Array (catMaybes, index, range)
-import Data.Date (Date, canonicalDate, day, diff, month, year)
-import Data.Enum (fromEnum, succ, toEnum)
-import Data.Int (round)
-import Data.Map (Map, empty, fromFoldable, lookup)
-import Data.Maybe (fromJust, maybe, Maybe(..))
+import Data.Array (index)
+import Data.Date (Date, day, month)
+import Data.Enum (fromEnum)
+import Data.Map (Map, empty, lookup)
+import Data.Maybe (maybe)
 import Data.Monoid ((<>))
-import Data.Newtype (unwrap)
-import Data.Time.Duration (Days(..))
 import Data.Traversable (sum)
-import Data.Tuple (Tuple(..), fst, snd)
-import Data.Unfoldable (unfoldr)
-import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, id, ($), (*), (+), (/), (/=), (<<<), (<=), (==), (>))
+import Prelude (id, ($), (*), (<<<), (>))
 import Time (TimeResolution(..))
 
 type RainfallTimeseries = Map Month Number
