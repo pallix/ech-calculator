@@ -24,20 +24,22 @@ module Calculator.Model (Flow(Flow),
                          subQty,
                          addQty,
                          negQty,
-                         cappedQty
+                         cappedQty,
+                         scanNexus
                         )  where
 
 import Prelude
 import Data.Generic
-import Data.Array (filter, head, tail, uncons, (:))
+import Data.Array (filter, head, scanl, tail, uncons, (:))
 import Data.ArrayBuffer.Types (Int16)
+import Data.Date (Date)
 import Data.Foldable (foldl)
 import Data.Int (toNumber)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
 import Rain (RainfallData, rainfallData)
-import Time (TimeResolution, TimeWindow)
+import Time (TimeResolution, TimeWindow, dates)
 
 --
 -- Quantities
@@ -180,7 +182,7 @@ data SurfaceArea = SurfaceArea Number -- ,,
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale, time:: Time, resolution:: TimeResolution}
+type SystemScale = { scale:: Scale, time:: Time, resolution:: TimeResolution, window:: TimeWindow}
 
 data Ratio a = Ratio a { ratio :: Number }
 
@@ -743,8 +745,9 @@ scaleFirstEntry systemScale systemParams (State entries) =
           tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
                                  e@(Notification _) -> e : xs
 
-nexusSystem :: SystemState -> SystemState
-nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
+nexusSystem :: SystemState -> Date -> SystemState
+nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) date =
+  SystemState $ sys { state = endState }
   where
     state' = scaleFirstEntry scale systemParams state
     endState = case current of
@@ -788,3 +791,8 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
 
       _ -> State []
+
+
+scanNexus :: SystemState -> Array SystemState
+scanNexus systemState@(SystemState { scale: {resolution, window} } ) =
+  scanl nexusSystem systemState (dates window resolution)
