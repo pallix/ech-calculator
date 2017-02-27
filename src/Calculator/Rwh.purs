@@ -4,7 +4,7 @@ module Rwh where
 import Data.Date.Component
 import Data.DateTime as DT
 import Data.Time.Duration as Duration
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..))
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..), cappedQty, foldState, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (catMaybes, index, range)
@@ -67,25 +67,57 @@ tankParam = { size: 10 -- liters
             , evaporation: 0
             }
 
+openedTank :: { surfaceArea :: SurfaceArea}
+openedTank = { surfaceArea : SurfaceArea 10.0
+             }
+
 raining ::
      Date
   -> Reader SystemState State
 raining date = do
-    (SystemState { state: (State entries)
+    SystemState { state: (State entries)
                  , processParams: { rainingParam: { rainfallDataKey
                                                   , rainfallData }}
                  , systemParams: (SystemParams { estateSurfaceArea })
                  , scale: { resolution: resolution }
-                 }) <- ask
+                 } <- ask
     let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
         monthData = maybe [] id $ lookup (month date) timeSerie
         waterVolumePerSquareCm = case resolution of
           OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
           OneMonth -> sum monthData
+          -- TODO: eventually more unit convertion to do here later
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
     pure $ State $ entries <>
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
+
+rainwaterHarvestingWithOpenedTank ::
+     Date
+  -> Reader SystemState State
+rainwaterHarvestingWithOpenedTank date = do
+  SystemState { state: state@(State entries)
+              , processParams: { rainingParam: { rainfallDataKey
+                                               , rainfallData }
+                               , rainwaterHarvestingWithOpenedTankParam: { surfaceArea
+                                                                         , capacity
+                                                                         }
+                               }
+              , scale: { resolution: resolution }
+              } <- ask
+  let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
+      monthData = maybe [] id $ lookup (month date) timeSerie
+      waterVolumePerSquareCm = case resolution of
+        OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
+        OneMonth -> sum monthData
+      -- TODO: eventually more unit convertion to do here later
+      harvestableVolume = Volume Water $ (case surfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+      volumeInTank = foldState RainwaterHarvesting Water GreyWater state
+      freeVolumeInTank = subQty capacity volumeInTank
+      harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
+      overflow = subQty harvestableVolume harvestedVolume
+  pure $ State $ entries
+
 
 -- 1. Time series rainfall data
 -- 2. Roof area
