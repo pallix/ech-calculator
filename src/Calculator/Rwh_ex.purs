@@ -3,9 +3,9 @@ module RwhEx where
 import Data.Date.Component
 import Control.Monad
 import Rwh as R
-import Calculator.Model (Options(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemState(..), Time(..), initProcessParams)
+import Calculator.Model (Options(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemState(..), Time(..), initProcessParams, scanNexus)
 import Control.Monad.Reader (runReader)
-import Data.Date (Date, canonicalDate, day, month, year)
+import Data.Date (Date, Month(..), canonicalDate, day, month, year)
 import Data.Enum (succ, toEnum)
 import Data.Maybe (fromJust, maybe, Maybe(..))
 import Data.Time.Duration (Days(..))
@@ -13,7 +13,7 @@ import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
 import Prelude (bottom, id, ($), (<=))
-import Time (TimeResolution(..))
+import Time (TimeResolution(..), TimeWindow(..))
 
 
 systemParamsEx = SystemParams { houseHoldSize: 199
@@ -25,9 +25,15 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               , estateSurfaceArea: SurfaceArea 12011.50
                               }
 
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) April (fromJust $ toEnum 1)
+
 systemStateEx = SystemState { scale: { resolution: OneDay
                                      , scale: PersonScale
-                                     , time: Month
+                                     , time: Month -- ???
+                                     , window: TimeWindow { start: dStart
+                                                          , end: dStop
+                                     }
                                      }
                             , state: State []
                             , systemParams: systemParamsEx
@@ -35,5 +41,5 @@ systemStateEx = SystemState { scale: { resolution: OneDay
                             , current: NotImplemented
                           }
 
-ds = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-r1 = runReader (R.rainwaterHarvesting_tank ds) systemStateEx
+r1 = runReader (R.rainwaterHarvesting_tank dStart) systemStateEx
+r2 = scanNexus systemStateEx

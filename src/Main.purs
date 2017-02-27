@@ -8,9 +8,12 @@ import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc)
+import Data.Date (canonicalDate)
+import Data.Date.Component (Month(..))
+import Data.Enum (toEnum)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
-import Data.Maybe (maybe)
+import Data.Maybe (fromJust, maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
@@ -24,11 +27,12 @@ import Graphics.Canvas (CANVAS)
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
 import Graphics.Drawing.Font (font, sansSerif, bold)
 import Math (cos, sin, pi)
+import Partial.Unsafe (unsafePartial)
 import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-import Time (TimeResolution(..), tw)
+import Time (TimeResolution(..), TimeWindow(..), tw)
 
 -- data Action = Food
 --             | Bin
@@ -126,8 +130,15 @@ ratio ( Ratio _ { ratio } ) = ratio
 systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
 systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
 
+dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
 -- TODO specify a real time window here
-mkScale s t = { scale : s, time: t, resolution: OneDay}
+mkScale s t = { scale : s
+              , time: t
+              , resolution: OneDay
+              , window: TimeWindow { start: dateStart
+                                   , end: unsafePartial $ canonicalDate (fromJust $ toEnum 2012) April (fromJust $ toEnum 1)
+                                   }
+              }
 
 areaToInt :: SurfaceArea -> Number
 areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
@@ -146,7 +157,9 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "roofSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.rainwaterCollectingParam.surfaceArea ) ) )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
-                                                          <*> ( pure initState ) ) )
+                                             <*> pure initState
+                                               )
+                   <*> dateStart)
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )
