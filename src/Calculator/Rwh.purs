@@ -2,19 +2,17 @@
 module Rwh where
 
 import Data.Date.Component
-
-
-import Calculator.Model (Entry(Notification, Entry), Matter(Water), MatterProperty(GreyWater), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), cappedQty, foldState, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry), Matter(Water), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
 import Data.Date (Date, day, month)
 import Data.Enum (fromEnum)
 import Data.Map (Map, empty, lookup)
-import Data.Maybe (maybe)
+import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Traversable (sum)
-import Prelude (id, ($), (*), (<<<), (>))
+import Prelude (id, show, ($), (*), (-), (<<<), (>))
 import Time (TimeResolution(..))
 
 type RainfallTimeseries = Map Month Number
@@ -78,7 +76,7 @@ raining date = do
     let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
         monthData = maybe [] id $ lookup (month date) timeSerie
         waterVolumePerSquareCm = case resolution of
-          OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
+          OneDay -> maybe 0.0 id $ index monthData ((_ - 1) <<< fromEnum <<< day $ date)
           OneMonth -> sum monthData
           -- TODO: eventually more unit convertion to do here later
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
@@ -99,10 +97,10 @@ rainwaterHarvesting_tank date = do
                                }
               , scale: { resolution: resolution }
               } <- ask
-  let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
-      monthData = maybe [] id $ lookup (month date) timeSerie
+  let timeSerie = fromMaybe empty $ lookup rainfallDataKey rainfallData
+      monthData = fromMaybe [] $ lookup (month date) timeSerie
       waterVolumePerSquareCm = case resolution of
-        OneDay -> maybe 0.0 id $ index monthData (fromEnum <<< day $ date)
+        OneDay -> fromMaybe 0.0 $ index monthData ((_ - 1) <<< fromEnum <<< day $ date)
         OneMonth -> sum monthData
       -- TODO: eventually more unit convertion to do here later
       harvestableVolume = Volume Water $ (case surfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
@@ -113,19 +111,27 @@ rainwaterHarvesting_tank date = do
       entries' = [ Entry { process: Raining
                          , matter: Water
                          , matterProperty: GreyWater
-                         , quantity: negQty harvestedVolume
+                         , quantity: negQty harvestableVolume
                          }
                  , Entry { process: RainwaterHarvesting,
                            matter: Water,
                            matterProperty: GreyWater,
                            quantity: harvestedVolume
-                         }]
+                         }
+                   -- TODO wasted water
+                 ]
       notifications = if (overflow > ZeroQuantity) then
                         [Notification { process: RainwaterHarvesting
                                       , message: "Water overflow" } ]
                       else []
-  pure $ State $ entries <> entries' <> notifications
-
+      debug = [ Notification { process: RainwaterHarvesting
+                             , message: " timeSeries " <> show timeSerie }
+              , Notification { process: RainwaterHarvesting
+                             , message: " monthData " <> show monthData }
+              , Notification { process: RainwaterHarvesting
+                             , message: " wvpcm " <> show waterVolumePerSquareCm }
+              ]
+  pure $ State $ entries <> entries' <> notifications -- <> debug
 
 -- 1. Time series rainfall data
 -- 2. Roof area
