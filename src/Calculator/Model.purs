@@ -22,7 +22,8 @@ module Calculator.Model (Flow(Flow),
                          Entry(..),
                          MatterProperty(..),
                          subQty,
-                         addQty
+                         addQty,
+                         cappedQty
                         )  where
 
 import Prelude
@@ -196,6 +197,7 @@ data Process =  AllProcess |
                 Living |
                 Raining |
                 TapWaterSupplying |
+                RainwaterHarvesting |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -351,6 +353,10 @@ type ProcessParams = { eatingParam ::
                                         , rainfallDataKey :: String
                                         , rainfallData :: RainfallData }
 
+                     , rainwaterHarvestingWithOpenedTankParam :: { title :: String
+                                                                 , surfaceArea :: SurfaceArea
+                                                                 , capacity :: Quantity Matter
+                                                                 }
                      }
 
 type ProcessParam = Record
@@ -422,6 +428,11 @@ rainingParam = { title: "Raining"
                , rainfallDataKey: "2012"
                , rainfallData: rainfallData}
 
+rainwaterHarvestingWithOpenedTankParam = { title: "Rainwater Harvesting, opened tank"
+                                         , surfaceArea: SurfaceArea 4.0 -- cm^2
+                                         , capacity: Volume Water 10.0 -- L
+                                         }
+
 initProcessParams = { eatingParam
                     , binningParam
                     , wormCompostingParam
@@ -430,6 +441,7 @@ initProcessParams = { eatingParam
                     , foodGardeningParam
                     , rainwaterCollectingParam
                     , rainingParam
+                    , rainwaterHarvestingWithOpenedTankParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
