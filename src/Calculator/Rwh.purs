@@ -86,16 +86,16 @@ raining date = do
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
 
-rainwaterHarvestingWithOpenedTank ::
+rainwaterHarvesting_tank ::
      Date
   -> Reader SystemState State
-rainwaterHarvestingWithOpenedTank date = do
+rainwaterHarvesting_tank date = do
   SystemState { state: state@(State entries)
               , processParams: { rainingParam: { rainfallDataKey
                                                , rainfallData }
-                               , rainwaterHarvestingWithOpenedTankParam: { surfaceArea
-                                                                         , capacity
-                                                                         }
+                               , rainwaterHarvestingParam: { surfaceArea
+                                                           , capacity
+                                                           }
                                }
               , scale: { resolution: resolution }
               } <- ask

@@ -362,10 +362,10 @@ type ProcessParams = { eatingParam ::
                                         , rainfallDataKey :: String
                                         , rainfallData :: RainfallData }
 
-                     , rainwaterHarvestingWithOpenedTankParam :: { title :: String
-                                                                 , surfaceArea :: SurfaceArea
-                                                                 , capacity :: Quantity Matter
-                                                                 }
+                     , rainwaterHarvestingParam :: { title :: String
+                                                   , surfaceArea :: SurfaceArea
+                                                   , capacity :: Quantity Matter
+                                                   }
                      }
 
 type ProcessParam = Record
@@ -437,10 +437,10 @@ rainingParam = { title: "Raining"
                , rainfallDataKey: "2012"
                , rainfallData: rainfallData}
 
-rainwaterHarvestingWithOpenedTankParam = { title: "Rainwater Harvesting, opened tank"
-                                         , surfaceArea: SurfaceArea 4.0 -- cm^2
-                                         , capacity: Volume Water 10.0 -- L
-                                         }
+rainwaterHarvestingParam = { title: "Rainwater Harvesting, opened tank"
+                           , surfaceArea: SurfaceArea 4.0 -- cm^2
+                           , capacity: Volume Water 10.0 -- L
+                           }
 
 initProcessParams = { eatingParam
                     , binningParam
@@ -450,7 +450,7 @@ initProcessParams = { eatingParam
                     , foodGardeningParam
                     , rainwaterCollectingParam
                     , rainingParam
-                    , rainwaterHarvestingWithOpenedTankParam
+                    , rainwaterHarvestingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
