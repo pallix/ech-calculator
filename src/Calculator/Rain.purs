@@ -8,7 +8,7 @@ import Data.Tuple (Tuple(Tuple))
 type TimeSerie = Map Month (Array Number)
 
 rainfallData2012 :: TimeSerie
-rainfallData2012 = fromFoldable [ Tuple January [1.0]
+rainfallData2012 = fromFoldable [ Tuple January [3.0]
                                 , Tuple February [1.0]
                                 , Tuple March [1.0]
                                 , Tuple April [1.0]
