@@ -2,7 +2,7 @@
 module Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry), Matter(Water), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -118,8 +118,13 @@ rainwaterHarvesting_tank date = do
                            matterProperty: GreyWater,
                            quantity: harvestedVolume
                          }
-                   -- TODO wasted water
-                 ]
+                 ] <> if overflow > ZeroQuantity then
+                        [ Entry { process: RainwaterHarvesting,
+                                  matter: Waste,
+                                  matterProperty: GreyWater,
+                                  quantity: overflow
+                                } ]
+                        else []
       notifications = if (overflow > ZeroQuantity) then
                         [Notification { process: RainwaterHarvesting
                                       , message: "Water overflow" } ]
