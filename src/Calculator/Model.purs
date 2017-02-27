@@ -23,6 +23,7 @@ module Calculator.Model (Flow(Flow),
                          MatterProperty(..),
                          subQty,
                          addQty,
+                         negQty,
                          cappedQty
                         )  where
 
@@ -235,6 +236,9 @@ data Entry = Entry { process :: Process
                    , matterProperty :: MatterProperty
                    , quantity :: Quantity Matter
                    }
+           | Notification { process :: Process
+                          , message :: String
+                          }
 
 derive instance genericEntry :: Generic Entry
 
@@ -253,14 +257,17 @@ data Plant = Tomato -- TODO other plants!
 hasProcess :: Process -> Entry -> Boolean
 hasProcess process (Entry {process: p}) =
   p == process
+hasProcess _ (Notification _) = false
 
 hasMatter :: Matter -> Entry -> Boolean
 hasMatter matter (Entry {matter: m}) =
   m == matter
+hasMatter _ (Notification _) = false
 
 hasMatterProperty :: MatterProperty -> Entry -> Boolean
 hasMatterProperty matterProperty (Entry {matterProperty: mp}) =
   mp == matterProperty
+hasMatterProperty _ (Notification _) = false
 
 foldState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
 foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQuantity quantities
@@ -268,6 +275,7 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
     getQuantity (Entry {quantity: q}) = q
+    getQuantity (Notification _) = ZeroQuantity
     quantities = map getQuantity states'
     sumQuantity acc qty = acc <> qty
 
@@ -277,6 +285,7 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
     getQuantity (Entry {quantity: q}) = q
+    getQuantity (Notification _) = ZeroQuantity
     quantities = map getQuantity states'
 
 -- /model for the event sourcing
@@ -732,6 +741,7 @@ scaleFirstEntry systemScale systemParams (State entries) =
     Nothing -> []
     Just {head: h,
           tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
+                                 e@(Notification _) -> e : xs
 
 nexusSystem :: SystemState -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) = SystemState $ sys { state = endState }
