@@ -4,7 +4,7 @@ module Rwh where
 import Data.Date.Component
 import Data.DateTime as DT
 import Data.Time.Duration as Duration
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..), cappedQty, foldState, subQty)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Process(..), ProcessParam, Quantity(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale, SystemState(..), cappedQty, foldState, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (catMaybes, index, range)
@@ -116,7 +116,21 @@ rainwaterHarvestingWithOpenedTank date = do
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
       overflow = subQty harvestableVolume harvestedVolume
-  pure $ State $ entries
+      entries' = [ Entry { process: Raining
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: negQty harvestedVolume
+                         }
+                 , Entry { process: RainwaterHarvesting,
+                           matter: Water,
+                           matterProperty: GreyWater,
+                           quantity: harvestedVolume
+                         }]
+      notifications = if (overflow > ZeroQuantity) then
+                        [Notification { process: RainwaterHarvesting
+                                      , message: "Water overflow" } ]
+                      else []
+  pure $ State $ entries <> entries' <> notifications
 
 
 -- 1. Time series rainfall data
