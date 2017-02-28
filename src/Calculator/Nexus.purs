@@ -3,7 +3,7 @@ module Calculator.Nexus where
 import Prelude
 import Control.Monad.Reader
 import Calculator.Model (Entry(..), Options(..), State(..), SystemParams(..), SystemScale, SystemState(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (raining, rainwaterHarvesting_tank)
+import Calculator.Rwh (cleaning, raining, rainwaterHarvesting_tank)
 import Data.Array (foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Maybe (Maybe(..))
@@ -61,7 +61,9 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    -- $ eating ...
                                    $ foodSharing processParams.foodSharingParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
+      --------- below here we use the new design (using a monad reader) to represent processes
       RainwaterHarvestingTank -> foldl (runProcess sys date) state' [raining, rainwaterHarvesting_tank]
+      RainwaterHarvestingDemand -> foldl (runProcess sys date) state' [raining, rainwaterHarvesting_tank, cleaning]
       _ -> State []
 
 runProcess sys date state process = runReader (process date) $ SystemState $ sys { state = state }

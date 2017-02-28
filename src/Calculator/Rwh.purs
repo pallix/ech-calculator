@@ -2,7 +2,7 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining, Cleaning), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -11,6 +11,7 @@ import Data.Enum (fromEnum)
 import Data.Map (Map, empty, lookup)
 import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
+import Data.Newtype (unwrap)
 import Data.Traversable (sum)
 import Prelude (id, show, ($), (*), (-), (<<<), (>))
 import Time (TimeResolution(..))
@@ -137,6 +138,23 @@ rainwaterHarvesting_tank date = do
                              , message: " wvpcm " <> show waterVolumePerSquareCm }
               ]
   pure $ State $ entries <> entries' <> notifications -- <> debug
+
+
+cleaning ::
+     Date
+  -> Reader SystemState State
+cleaning date = do
+    SystemState { state: (State entries)
+                 , processParams: { cleaningParam: { surfaceArea
+                                                   , waterConsumptionPerSqm }}
+                 , scale: { resolution: resolution }
+                 } <- ask
+    let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
+    pure $ State $ entries <>
+      [Entry {process: RainwaterHarvesting, matter: Water, matterProperty: GreyWater, quantity: negQty waterNeeded }
+       -- waste or dark water?
+       , Entry {process: Cleaning, matter: Waste, matterProperty: GreyWater, quantity: waterNeeded }
+      ]
 
 -- 1. Time series rainfall data
 -- 2. Roof area
