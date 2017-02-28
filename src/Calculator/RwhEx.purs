@@ -2,8 +2,8 @@ module RwhEx where
 
 import Data.Date.Component
 import Control.Monad
-import Calculator.Rwh as R
 import Calculator.Nexus
+import Calculator.Rwh as R
 import Calculator.Model (Options(..), Process(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemState(..), Time(..), initProcessParams)
 import Control.Monad.Reader (runReader)
 import Data.Date (Date, Month(..), canonicalDate, day, month, year)
@@ -13,8 +13,8 @@ import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, id, ($), (<=))
-import Time (TimeResolution(..), TimeWindow(..))
+import Prelude (bottom, id, show, ($), (<=))
+import Time (TimeResolution(..), TimeWindow(..), dates)
 
 
 systemParamsEx = SystemParams { houseHoldSize: 199
@@ -39,9 +39,15 @@ systemStateEx = SystemState { scale: { resolution: OneDay
                             , state: State []
                             , systemParams: systemParamsEx
                             , processParams: initProcessParams
-                            , current: RainwaterHarvestingDemand
+                            , current: RainwaterHarvestingTank
                           }
 
 r1 = runReader (R.rainwaterHarvesting_tank dStart) systemStateEx
-r3 = runReader (R.raining dStop) systemStateEx
+
+-- r3 = runReader (R.raining dStop) systemStateEx
+
 r2 = scanNexus systemStateEx
+
+showDates :: SystemState -> String
+showDates (SystemState { scale: { resolution, window }}) =
+  show (dates window resolution)

@@ -2,7 +2,7 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining, Cleaning), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -88,6 +88,8 @@ raining date = do
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
 
+
+-- TODO clean Notification
 rainwaterHarvesting_tank ::
      Date
   -> Reader SystemState State
@@ -135,14 +137,32 @@ rainwaterHarvesting_tank date = do
                                       , message: "Water overflow" } ]
                       else []
       debug = [ Notification { process: RainwaterHarvesting
-                             , message: " timeSeries " <> show timeSerie }
+                             , message: " freevolumeintank " <> show freeVolumeInTank }
               , Notification { process: RainwaterHarvesting
-                             , message: " monthData " <> show monthData }
+                             , message: " capacity " <> show capacity }
               , Notification { process: RainwaterHarvesting
-                             , message: " wvpcm " <> show waterVolumePerSquareCm }
+                             , message: " volumeintank " <> show volumeInTank }
               ]
-  pure $ State $ entries <> entries' <> notifications -- <> debug
+  pure $ State $ entries <> debug <> entries' <> notifications
 
+
+collectingWastewater ::
+  Date
+  -> Reader SystemState State
+collectingWastewater date = do
+  SystemState { state: state@(State entries)
+                 , processParams: { rainingParam: { rainfallDataKey
+                                                  , rainfallData }}
+                 , systemParams: (SystemParams { estateSurfaceArea })
+                 , scale: { resolution: resolution }
+                 } <- ask
+  let wasteWaterRwh = foldState RainwaterHarvesting Waste GreyWater state
+      wasteWaterCleaning = foldState Cleaning Waste BlackWater state
+  pure $ State $ entries <>
+    [ Entry { process: WastewaterCollecting
+            , matter: Waste, matterProperty: BlackWater
+            , quantity: addQty wasteWaterCleaning wasteWaterRwh }
+    ]
 
 -- TODO: cleaning do not occur every day
    -- cleaningDays = [Monday, Wednesday]
@@ -166,7 +186,7 @@ cleaning date = do
                      -- waste or dark water?
                    , Entry { process: Cleaning
                            , matter: Waste
-                           , matterProperty: GreyWater -- blackWater
+                           , matterProperty: BlackWater
                            , quantity: waterConsumed }
                    ]
         notifications = if (waterConsumed < waterNeeded) then
@@ -174,6 +194,9 @@ cleaning date = do
                                         , message: "Not enough water in tank" } ]
                       else []
     pure $ State $ entries <> entries' <> notifications
+
+-- TODO: see how to do more the calculation in a more DSL style
+-- TODO: have a simpler data model to express various timeseries
 
 -- 1. Time series rainfall data
 -- 2. Roof area
