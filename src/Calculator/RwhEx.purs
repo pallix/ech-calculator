@@ -43,4 +43,5 @@ systemStateEx = SystemState { scale: { resolution: OneDay
                           }
 
 r1 = runReader (R.rainwaterHarvesting_tank dStart) systemStateEx
+r3 = runReader (R.raining dStop) systemStateEx
 r2 = scanNexus systemStateEx
