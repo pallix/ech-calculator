@@ -39,7 +39,7 @@ module Calculator.Model (Flow(Flow),
 import Prelude
 import Data.Generic
 import Control.Monad.Reader (runReader)
-import Data.Array (filter, head, scanl, tail, uncons, (:))
+import Data.Array (filter, head, mapMaybe, scanl, tail, uncons, (:))
 import Data.ArrayBuffer.Types (Int16)
 import Data.Date (Date)
 import Data.Foldable (foldl)
@@ -243,6 +243,7 @@ data Process =  AllProcess |
                 TapWaterSupplying |
                 RainwaterHarvesting |
                 Cleaning |
+                WastewaterCollecting |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -267,9 +268,11 @@ instance matterEq :: Eq Matter where
   eq _ AllMatter = true
   eq a b = gEq a b
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | TapWater | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
+instance showMatterProperty :: Show MatterProperty where
+  show = gShow
 
 instance matterProperty :: Eq MatterProperty where
   eq AllMatterProperty _ = true
@@ -288,21 +291,23 @@ data Entry = Entry { process :: Process
 derive instance genericEntry :: Generic Entry
 
 instance showEntry :: Show Entry where
-  show = gShow
+  show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
+  show (Notification { process, message }) = "N[ " <> show process <> " " <> show message <> "]"
 
 data State = State (Array Entry)
 
 derive instance genericState :: Generic State
 
 instance showState :: Show State where
-    show = gShow
+    show (State entries) = foldl (\acc e -> acc <> show e <> "\n") "" entries
 
 data Plant = Tomato -- TODO other plants!
 
 hasProcess :: Process -> Entry -> Boolean
 hasProcess process (Entry {process: p}) =
   p == process
-hasProcess _ (Notification _) = false
+hasProcess process (Notification {process: p}) =
+  p == process
 
 hasMatter :: Matter -> Entry -> Boolean
 hasMatter matter (Entry {matter: m}) =
@@ -319,9 +324,9 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
   where
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
-    getQuantity (Entry {quantity: q}) = q
-    getQuantity (Notification _) = ZeroQuantity
-    quantities = map getQuantity states'
+    getQuantity (Entry {quantity: q}) = Just q
+    getQuantity (Notification _) = Nothing
+    quantities = mapMaybe getQuantity states'
     sumQuantity acc qty = acc <> qty
 
 initialState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
