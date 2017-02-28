@@ -2,9 +2,9 @@ module Calculator.Nexus where
 
 import Prelude
 import Control.Monad.Reader
-import Calculator.Model (Entry(..), Options(..), State(..), SystemParams(..), SystemScale, SystemState(..), binning, composting_EatingBinningWormComposting, eating, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, eating_EatingBinningWormCompostingFoodSharing, foodSharing, scaleQty)
-import Calculator.Rwh (rainwaterHarvesting_tank)
-import Data.Array (scanl, uncons, (:))
+import Calculator.Model (Entry(..), Options(..), State(..), SystemParams(..), SystemScale, SystemState(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
+import Calculator.Rwh (raining, rainwaterHarvesting_tank)
+import Data.Array (foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Maybe (Maybe(..))
 import Time (dates)
@@ -22,7 +22,6 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
   SystemState $ sys { state = endState }
   where
     state' = scaleFirstEntry scale systemParams state
-    sys' = SystemState $ sys { state = state' }
     endState = case current of
       EatingOnly -> managingWaste processParams.managedWasteParam
                   $ eating processParams.eatingParam state'
@@ -62,9 +61,10 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    -- $ eating ...
                                    $ foodSharing processParams.foodSharingParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
-      RainwaterHarvestingTank -> runReader (rainwaterHarvesting_tank date) sys'
+      RainwaterHarvestingTank -> foldl (runProcess sys date) state' [raining, rainwaterHarvesting_tank]
       _ -> State []
 
+runProcess sys date state process = runReader (process date) $ SystemState $ sys { state = state }
 
 scanNexus :: SystemState -> Array SystemState
 scanNexus systemState@(SystemState { scale: {resolution, window} } ) =
