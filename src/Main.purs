@@ -2,7 +2,8 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), ProcessParams(..), Quantity(..), Ratio(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale(..), SystemState(..), Time(..), Transform(..), initProcessParams, nexusSystem)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), ProcessParams(..), Quantity(..), Ratio(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale(..), SystemState(..), Time(..), Transform(..), initProcessParams)
+import Calculator.Nexus (nexusSystem)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)

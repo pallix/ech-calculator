@@ -1,5 +1,4 @@
 module Calculator.Model (Flow(Flow),
-                         nexusSystem,
                          Ratio(..),
                          Transform(..),
                          Quantity(..),
@@ -25,11 +24,21 @@ module Calculator.Model (Flow(Flow),
                          addQty,
                          negQty,
                          cappedQty,
-                         scanNexus
+                         scaleQty,
+                         managingWaste,
+                         eating,
+                         binning,
+                         composting_EatingBinningWormComposting,
+                         foodGardening_EatingBinningWormCompostingFoodGardening,
+                         foodGardening_EatingBinningWormCompostingFoodGardeningRainwater,
+                         rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater,
+                         eating_EatingBinningWormCompostingFoodSharing,
+                         foodSharing
                         )  where
 
 import Prelude
 import Data.Generic
+import Control.Monad.Reader (runReader)
 import Data.Array (filter, head, scanl, tail, uncons, (:))
 import Data.ArrayBuffer.Types (Int16)
 import Data.Date (Date)
@@ -89,6 +98,7 @@ data Options = EatingOnly
              | EatingBinningWormCompostingFoodGardenRainwater
              | EatingBinningFoodSharing
              | EatingBinningWormCompostingFoodSharing
+             | RainwaterHarvestingTank
              | NotImplemented
 
 data Life = Life
@@ -202,7 +212,11 @@ instance showScale :: Show Scale  where
 
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale, time:: Time, resolution:: TimeResolution, window:: TimeWindow}
+type SystemScale = { scale:: Scale,
+                     time:: Time, -- TODO: deprecate
+                     resolution:: TimeResolution,
+                     window:: TimeWindow}
+
 
 data Ratio a = Ratio a { ratio :: Number }
 
@@ -403,10 +417,10 @@ data SystemState = SystemState { current :: Options
                                , processParams :: ProcessParams }
 
 
-derive instance genericSystemState :: Generic SystemState
+-- derive instance genericSystemState :: Generic SystemState
 
 instance showSystemState :: Show SystemState where
-    show = gShow
+    show (SystemState s) = show s.state -- <> show s.systemParams
 
 
 eatingParam =  { title: "Eating"
@@ -773,63 +787,3 @@ scaleGardenSurface {scale} _ =
 
 blockToRoofSurface ::  SurfaceArea -> Number
 blockToRoofSurface (SurfaceArea blocks ) = blocks * 342.25
-
-scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
-scaleFirstEntry systemScale systemParams (State entries) =
-  State $ case uncons entries of
-    Nothing -> []
-    Just {head: h,
-          tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
-                                 e@(Notification _) -> e : xs
-
-nexusSystem :: SystemState -> Date -> SystemState
-nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) date =
-  SystemState $ sys { state = endState }
-  where
-    state' = scaleFirstEntry scale systemParams state
-    endState = case current of
-      EatingOnly -> managingWaste processParams.managedWasteParam
-                  $ eating processParams.eatingParam state'
-      EatingBinning -> managingWaste processParams.managedWasteParam
-                     $ binning processParams.binningParam
-                     $ eating processParams.eatingParam state'
-      EatingBinningWormComposting -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
-                                   $ eating processParams.eatingParam state'
-      EatingBinningWormCompostingFoodGardening -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
-                                   $ eating processParams.eatingParam state'
-      EatingBinningWormCompostingFoodGardenWatering -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardening processParams.foodGardeningParam scale
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
-                                   $ eating processParams.eatingParam state'
-      EatingBinningWormCompostingFoodGardenRainwater -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater processParams.foodGardeningParam scale
-                                   $ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater processParams.rainwaterCollectingParam scale
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
-                                   $ eating processParams.eatingParam state'
-      EatingBinningFoodSharing -> managingWaste processParams.managedWasteParam
-                                 $ binning processParams.binningParam
-                                 -- TODO replug on eating?
-                                 -- $ eating ...
-                                 $ foodSharing processParams.foodSharingParam
-                                 $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
-      EatingBinningWormCompostingFoodSharing -> managingWaste processParams.managedWasteParam
-                                   $ binning processParams.binningParam
-                                   $ composting_EatingBinningWormComposting processParams.wormCompostingParam scale
-                                   -- TODO replug on eating?
-                                   -- $ eating ...
-                                   $ foodSharing processParams.foodSharingParam
-                                   $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
-
-      _ -> State []
-
-
-scanNexus :: SystemState -> Array SystemState
-scanNexus systemState@(SystemState { scale: {resolution, window} } ) =
-  scanl nexusSystem systemState (dates window resolution)
