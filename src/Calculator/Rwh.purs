@@ -1,5 +1,5 @@
 -- Rainwater harvesting
-module Rwh where
+module Calculator.Rwh where
 
 import Data.Date.Component
 import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(GreyWater), Options(..), Process(RainwaterHarvesting, Raining), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), cappedQty, foldState, initProcessParams, negQty, subQty)
