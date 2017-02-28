@@ -60,10 +60,13 @@ tankParam = { size: 10 -- liters
             , evaporation: 0
             }
 
-openedTank :: { surfaceArea :: SurfaceArea}
+openedTank :: { surfaceArea :: SurfaceArea }
 openedTank = { surfaceArea : SurfaceArea 10.0
              }
 
+-- TODO make it clearer that we take a time period
+-- here the time period depends of date + resolution (contained in the systemstate)
+-- => not clear
 raining ::
      Date
   -> Reader SystemState State
@@ -126,8 +129,9 @@ rainwaterHarvesting_tank date = do
                                   quantity: overflow
                                 } ]
                         else []
-      notifications = if (overflow > ZeroQuantity) then
+      notifications = if overflow > ZeroQuantity then
                         [Notification { process: RainwaterHarvesting
+                                        -- type
                                       , message: "Water overflow" } ]
                       else []
       debug = [ Notification { process: RainwaterHarvesting
@@ -162,7 +166,7 @@ cleaning date = do
                      -- waste or dark water?
                    , Entry { process: Cleaning
                            , matter: Waste
-                           , matterProperty: GreyWater
+                           , matterProperty: GreyWater -- blackWater
                            , quantity: waterConsumed }
                    ]
         notifications = if (waterConsumed < waterNeeded) then
