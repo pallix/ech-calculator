@@ -1,24 +1,32 @@
 module Time where
 
 import Data.Date.Component
+import Data.Generic
 import Data.DateTime as DT
-
-
 import Data.Date (Date, canonicalDate, day, month, year)
 import Data.Enum (succ, toEnum)
 import Data.Maybe (fromJust, maybe, Maybe(..))
+import Data.Show (class Show)
 import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
 import Prelude (bottom, id, ($), (<=))
 
-
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
 
+derive instance genericTimeWindow :: Generic TimeWindow
+
+instance showTimeWindow :: Show TimeWindow  where
+    show = gShow
+
 data TimeResolution = OneDay | OneMonth -- OneWeek, OneYear
 
+derive instance genericTimeResolution :: Generic TimeResolution
+
+instance showTimeResolution :: Show TimeResolution  where
+    show = gShow
 
 dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
 dateEnd = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) March (fromJust $ toEnum 30)

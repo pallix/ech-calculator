@@ -159,7 +159,7 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                              <*> pure initState
                                                )
-                   <*> dateStart)
+                     <*> pure dateStart)
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )

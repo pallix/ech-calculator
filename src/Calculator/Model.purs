@@ -72,6 +72,12 @@ data SystemParams = SystemParams { houseHoldSize :: Int
                                 , estateSurfaceArea :: SurfaceArea
                                 }
 
+derive instance genericSystemParams :: Generic SystemParams
+
+instance showSystemParams :: Show SystemParams  where
+    show = gShow
+
+
 data Options = EatingOnly
              | EatingBinning
              | EatingBinningWormComposting
@@ -91,6 +97,7 @@ data Life = Life
 -- Units
 
 data Quantity a = Weight a Number | Volume a Number | IncompatibleQuantity | ZeroQuantity
+
 
 instance quantityEq :: Eq (Quantity a) where
   eq (Weight _ w1) (Weight _ w2) = w1 == w2
@@ -180,12 +187,30 @@ toWeight _ IncompatibleQuantity = IncompatibleQuantity
 -- Surface Area in square meters
 data SurfaceArea = SurfaceArea Number -- ,,
 
+derive instance genericSurfaceArea :: Generic SurfaceArea
+
+instance showSurfaceArea :: Show SurfaceArea  where
+    show = gShow
+
 data Scale = PersonScale | HouseholdScale | EstateScale
+
+
+derive instance genericScale :: Generic Scale
+
+instance showScale :: Show Scale  where
+    show = gShow
+
+
 data Time = Year | Month | Day
 
 type SystemScale = { scale:: Scale, time:: Time, resolution:: TimeResolution, window:: TimeWindow}
 
 data Ratio a = Ratio a { ratio :: Number }
+
+derive instance genericRatio :: (Generic a) => Generic (Ratio a)
+
+instance showRatio :: (Show a, Generic a) => Show (Ratio a)  where
+    show = gShow
 
 -- model for the event sourcing
 data Process =  AllProcess |
@@ -379,6 +404,12 @@ data SystemState = SystemState { current :: Options
                                , processParams :: ProcessParams }
 
 
+derive instance genericSystemState :: Generic SystemState
+
+instance showSystemState :: Show SystemState where
+    show = gShow
+
+
 eatingParam =  { title: "Eating"
                , numberHouseholdEating: 121
                , eatedFoodRatio: Ratio Food { ratio: 0.81 } -- 1 - allFoodWasteRatio
@@ -456,6 +487,12 @@ initProcessParams = { eatingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
+
+derive instance genericTransform :: (Generic a, Generic b) => Generic (Transform a b)
+
+instance showTransform :: (Generic a, Generic b, Show a, Show b) => Show (Transform a b)  where
+    show = gShow
+
 
 applyTransform :: Transform Matter Matter -> (Quantity Matter) -> (Quantity Matter)
 applyTransform (Transform a b { ratio: r }) = createQuantity
