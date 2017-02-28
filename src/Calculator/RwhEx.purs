@@ -27,7 +27,7 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               }
 
 dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) April (fromJust $ toEnum 1)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 10)
 
 systemStateEx = SystemState { scale: { resolution: OneDay
                                      , scale: PersonScale
@@ -39,7 +39,7 @@ systemStateEx = SystemState { scale: { resolution: OneDay
                             , state: State []
                             , systemParams: systemParamsEx
                             , processParams: initProcessParams
-                            , current: RainwaterHarvestingTank
+                            , current: RainwaterHarvestingDemand
                           }
 
 r1 = runReader (R.rainwaterHarvesting_tank dStart) systemStateEx

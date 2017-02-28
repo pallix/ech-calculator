@@ -45,6 +45,7 @@ import Data.Date (Date)
 import Data.Foldable (foldl)
 import Data.Int (toNumber)
 import Data.Maybe (maybe, Maybe(..))
+import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
 import Rain (RainfallData, rainfallData)
@@ -99,6 +100,7 @@ data Options = EatingOnly
              | EatingBinningFoodSharing
              | EatingBinningWormCompostingFoodSharing
              | RainwaterHarvestingTank
+             | RainwaterHarvestingDemand
              | NotImplemented
 
 data Life = Life
@@ -194,9 +196,10 @@ toWeight _ IncompatibleQuantity = IncompatibleQuantity
 -- data Volume a =
 
 -- Surface Area in square meters
-data SurfaceArea = SurfaceArea Number -- ,,
+newtype SurfaceArea = SurfaceArea Number
 
 derive instance genericSurfaceArea :: Generic SurfaceArea
+derive instance newtypeSurfaceArea :: Newtype SurfaceArea _
 
 instance showSurfaceArea :: Show SurfaceArea  where
     show = gShow
@@ -239,6 +242,7 @@ data Process =  AllProcess |
                 Raining |
                 TapWaterSupplying |
                 RainwaterHarvesting |
+                Cleaning |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -406,6 +410,10 @@ type ProcessParams = { eatingParam ::
                                                    , surfaceArea :: SurfaceArea
                                                    , capacity :: Quantity Matter
                                                    }
+                     , cleaningParam :: { title :: String
+                                        , surfaceArea :: SurfaceArea
+                                        , waterConsumptionPerSqm :: Number -- TODO TO-ASK
+                                        }
                      }
 
 type ProcessParam = Record
@@ -488,6 +496,11 @@ rainwaterHarvestingParam = { title: "Rainwater Harvesting, opened tank"
                            , capacity: Volume Water 10.0 -- L
                            }
 
+cleaningParam = { title: "Cleaning"
+                , surfaceArea: SurfaceArea 200.0
+                , waterConsumptionPerSqm: 0.5
+                }
+
 initProcessParams = { eatingParam
                     , binningParam
                     , wormCompostingParam
@@ -497,6 +510,7 @@ initProcessParams = { eatingParam
                     , rainwaterCollectingParam
                     , rainingParam
                     , rainwaterHarvestingParam
+                    , cleaningParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }
