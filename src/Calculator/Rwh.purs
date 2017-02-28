@@ -13,7 +13,7 @@ import Data.Maybe (fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Newtype (unwrap)
 import Data.Traversable (sum)
-import Prelude (id, show, ($), (*), (-), (<<<), (>))
+import Prelude (id, show, ($), (*), (-), (<), (<<<), (>))
 import Time (TimeResolution(..))
 
 type RainfallTimeseries = Map Month Number
@@ -140,21 +140,36 @@ rainwaterHarvesting_tank date = do
   pure $ State $ entries <> entries' <> notifications -- <> debug
 
 
+-- TODO: cleaning do not occur every day
+   -- cleaningDays = [Monday, Wednesday]
+-- TODO: mix with tap water?
 cleaning ::
      Date
   -> Reader SystemState State
 cleaning date = do
-    SystemState { state: (State entries)
+    SystemState { state: state@(State entries)
                  , processParams: { cleaningParam: { surfaceArea
                                                    , waterConsumptionPerSqm }}
                  , scale: { resolution: resolution }
                  } <- ask
     let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
-    pure $ State $ entries <>
-      [Entry {process: RainwaterHarvesting, matter: Water, matterProperty: GreyWater, quantity: negQty waterNeeded }
-       -- waste or dark water?
-       , Entry {process: Cleaning, matter: Waste, matterProperty: GreyWater, quantity: waterNeeded }
-      ]
+        volumeInTank = foldState RainwaterHarvesting Water GreyWater state
+        waterConsumed = cappedQty waterNeeded volumeInTank
+        entries' = [ Entry { process: RainwaterHarvesting
+                           , matter: Water
+                           , matterProperty: GreyWater
+                           , quantity: negQty waterConsumed }
+                     -- waste or dark water?
+                   , Entry { process: Cleaning
+                           , matter: Waste
+                           , matterProperty: GreyWater
+                           , quantity: waterConsumed }
+                   ]
+        notifications = if (waterConsumed < waterNeeded) then
+                          [Notification { process: Cleaning
+                                        , message: "Not enough water in tank" } ]
+                      else []
+    pure $ State $ entries <> entries' <> notifications
 
 -- 1. Time series rainfall data
 -- 2. Roof area
