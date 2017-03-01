@@ -11,7 +11,7 @@ type TimeSerie = Map Month (Array Number)
 -- TimeWindow -> Resolution -> (Date -> Resolution -> a) -> Array a
 
 rainfallData2012 :: TimeSerie
-rainfallData2012 = fromFoldable [ Tuple January [3.0, 2.9]
+rainfallData2012 = fromFoldable [ Tuple January [3.0, 2.0]
                                 , Tuple February [1.0]
                                 , Tuple March [1.0]
                                 , Tuple April [1.0]

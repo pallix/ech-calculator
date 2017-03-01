@@ -16,6 +16,7 @@ module Calculator.Model (Flow(Flow),
                          SystemState(..),
                          initialState,
                          foldState,
+                         foldNotifications,
                          Process(..),
                          Matter(..),
                          Entry(..),
@@ -45,6 +46,7 @@ import Data.ArrayBuffer.Types (Int16)
 import Data.Date (Date)
 import Data.Foldable (foldl)
 import Data.Int (toNumber)
+import Data.Map (Map, delete, empty, insert)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
@@ -287,6 +289,12 @@ derive instance genericNotificationType :: Generic NotificationType
 instance showNotificatioType :: Show NotificationType  where
     show = gShow
 
+instance eqNotificationTyp :: Eq NotificationType where
+  eq = gEq
+
+instance ordNotificationTyp :: Ord NotificationType where
+  compare = gCompare
+
 data Entry = Entry { process :: Process
                    , matter :: Matter
                    , matterProperty :: MatterProperty
@@ -294,6 +302,7 @@ data Entry = Entry { process :: Process
                    }
            | Notification { process :: Process
                           , typ :: NotificationType
+                          , on :: Boolean
                           }
            | Trace { process :: Process
                    , message :: String
@@ -357,9 +366,13 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
     getQuantity (Trace _) = Nothing
     quantities = mapMaybe getQuantity states'
 
--- foldNotifications :: Process -> State -> Set Notification
--- foldNotifications process (States entries) =
---   filter 
+foldNotifications :: Process -> State -> Map NotificationType Entry
+foldNotifications process (State entries) = foldl f empty entries
+  where
+    f :: Map NotificationType Entry -> Entry -> Map NotificationType Entry
+    f m (Entry _) = m
+    f m (Trace _) = m
+    f m n@(Notification { typ, on }) = if on then insert typ n m else delete typ m
 
 -- /model for the event sourcing
 

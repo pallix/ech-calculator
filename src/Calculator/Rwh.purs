@@ -126,11 +126,10 @@ rainwaterHarvesting_tank (TimeInterval ti) = do
                                   quantity: overflow
                                 } ]
                         else []
-      notifications = if overflow > ZeroQuantity then
-                        [Notification { process: RainwaterHarvesting
+      notifications = [Notification { process: RainwaterHarvesting
                                         -- type
-                                      , typ: RainwaterHarvestingWaterOverflow } ]
-                      else []
+                                      , typ: RainwaterHarvestingWaterOverflow
+                                      , on: overflow > ZeroQuantity} ]
       traces = [ Trace { process: RainwaterHarvesting
                        , message: " freevolumeintank " <> show freeVolumeInTank }
                , Trace { process: RainwaterHarvesting
@@ -183,10 +182,9 @@ cleaning date = do
                            , matterProperty: BlackWater
                            , quantity: waterConsumed }
                    ]
-        notifications = if (waterConsumed < waterNeeded) then
-                          [Notification { process: Cleaning
-                                        , typ: CleaningNotEnoughTankWater } ]
-                      else []
+        notifications = [Notification { process: Cleaning
+                                      , typ: CleaningNotEnoughTankWater
+                                      , on: waterConsumed < waterNeeded} ]
     pure $ State $ entries <> entries' <> notifications
 
 -- TODO: see how to do more the calculation in a more DSL style
