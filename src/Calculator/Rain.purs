@@ -7,6 +7,9 @@ import Data.Tuple (Tuple(Tuple))
 
 type TimeSerie = Map Month (Array Number)
 
+-- mkTimeSerie ::
+-- TimeWindow -> Resolution -> (Date -> Resolution -> a) -> Array a
+
 rainfallData2012 :: TimeSerie
 rainfallData2012 = fromFoldable [ Tuple January [3.0, 2.9]
                                 , Tuple February [1.0]

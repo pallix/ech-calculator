@@ -287,19 +287,24 @@ data Entry = Entry { process :: Process
            | Notification { process :: Process
                           , message :: String
                           }
+           | Trace { process :: Process
+                   , message :: String
+                   }
 
 derive instance genericEntry :: Generic Entry
 
 instance showEntry :: Show Entry where
   show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
   show (Notification { process, message }) = "N[ " <> show process <> " " <> show message <> "]"
+  show (Trace { process, message }) = "T[ " <> show process <> " " <> show message <> "]"
 
 data State = State (Array Entry)
 
 derive instance genericState :: Generic State
 
 instance showState :: Show State where
-    show (State entries) = foldl (\acc e -> acc <> show e <> "\n") "" entries
+    show (State entries) = "[\n" <> strEntries <> "]"
+      where strEntries = foldl (\acc e -> acc <> show e <> "\n") "" entries
 
 data Plant = Tomato -- TODO other plants!
 
@@ -308,16 +313,20 @@ hasProcess process (Entry {process: p}) =
   p == process
 hasProcess process (Notification {process: p}) =
   p == process
+hasProcess process (Trace {process: p}) =
+  p == process
 
 hasMatter :: Matter -> Entry -> Boolean
 hasMatter matter (Entry {matter: m}) =
   m == matter
 hasMatter _ (Notification _) = false
+hasMatter _ (Trace _) = false
 
 hasMatterProperty :: MatterProperty -> Entry -> Boolean
 hasMatterProperty matterProperty (Entry {matterProperty: mp}) =
   mp == matterProperty
 hasMatterProperty _ (Notification _) = false
+hasMatterProperty _ (Trace _) = false
 
 foldState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
 foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQuantity quantities
@@ -326,6 +335,7 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
     getQuantity (Entry {quantity: q}) = Just q
     getQuantity (Notification _) = Nothing
+    getQuantity (Trace _) = Nothing
     quantities = mapMaybe getQuantity states'
     sumQuantity acc qty = acc <> qty
 
@@ -334,9 +344,10 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
   where
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
-    getQuantity (Entry {quantity: q}) = q
-    getQuantity (Notification _) = ZeroQuantity
-    quantities = map getQuantity states'
+    getQuantity (Entry {quantity: q}) = Just q
+    getQuantity (Notification _) = Nothing
+    getQuantity (Trace _) = Nothing
+    quantities = mapMaybe getQuantity states'
 
 -- /model for the event sourcing
 

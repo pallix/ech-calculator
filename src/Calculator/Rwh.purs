@@ -2,7 +2,7 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -136,14 +136,14 @@ rainwaterHarvesting_tank date = do
                                         -- type
                                       , message: "Water overflow" } ]
                       else []
-      debug = [ Notification { process: RainwaterHarvesting
-                             , message: " freevolumeintank " <> show freeVolumeInTank }
-              , Notification { process: RainwaterHarvesting
-                             , message: " capacity " <> show capacity }
-              , Notification { process: RainwaterHarvesting
-                             , message: " volumeintank " <> show volumeInTank }
-              ]
-  pure $ State $ entries <> debug <> entries' <> notifications
+      traces = [ Trace { process: RainwaterHarvesting
+                       , message: " freevolumeintank " <> show freeVolumeInTank }
+               , Trace { process: RainwaterHarvesting
+                       , message: " capacity " <> show capacity }
+               , Trace { process: RainwaterHarvesting
+                       , message: " volumeintank " <> show volumeInTank }
+               ]
+  pure $ State $ entries <> traces <> entries' <> notifications
 
 
 collectingWastewater ::
@@ -165,7 +165,6 @@ collectingWastewater date = do
     ]
 
 -- TODO: cleaning do not occur every day
-   -- cleaningDays = [Monday, Wednesday]
 -- TODO: mix with tap water?
 cleaning ::
      Date
