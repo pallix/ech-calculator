@@ -82,8 +82,6 @@ raining ti = do
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
 
-
--- TODO clean Notification
 rainwaterHarvesting_tank ::
      TimeInterval
   -> Reader SystemState State
