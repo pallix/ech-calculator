@@ -215,10 +215,10 @@ instance showScale :: Show Scale  where
 
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale,
-                     time:: Time, -- TODO: deprecate
-                     resolution:: TimePeriod,
-                     window:: TimeWindow}
+type SystemScale = { scale :: Scale,
+                     time :: Time, -- TODO: deprecate
+                     period :: TimePeriod,
+                     window :: TimeWindow}
 
 
 data Ratio a = Ratio a { ratio :: Number }

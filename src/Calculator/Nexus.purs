@@ -7,7 +7,7 @@ import Calculator.Rwh (cleaning, collectingWastewater, raining, rainwaterHarvest
 import Data.Array (drop, foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Maybe (Maybe(..))
-import Time (dates)
+import Time (TimeInterval, dates, intervals)
 
 scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
 scaleFirstEntry systemScale systemParams (State entries) =
@@ -18,8 +18,8 @@ scaleFirstEntry systemScale systemParams (State entries) =
                                  e@(Notification _) -> e : xs
                                  e@(Trace _) -> e : xs
 
-nexusSystem :: SystemState -> Date -> SystemState
-nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) date =
+nexusSystem :: SystemState -> TimeInterval -> SystemState
+nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) interval =
   SystemState $ sys { state = endState }
   where
     state' = scaleFirstEntry scale systemParams state
@@ -63,10 +63,10 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ foodSharing processParams.foodSharingParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
       --------- below here we use the new design (using a monad reader) to represent processes
-      RainwaterHarvestingTank -> foldl (runProcess sys date) state' [raining,
-                                                                     rainwaterHarvesting_tank,
-                                                                     collectingWastewater]
-      RainwaterHarvestingDemand -> foldl (runProcess sys date) state' [raining, rainwaterHarvesting_tank, cleaning, collectingWastewater]
+      RainwaterHarvestingTank -> foldl (runProcess sys interval) state' [raining,
+                                                                         rainwaterHarvesting_tank,
+                                                                         collectingWastewater]
+      RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [raining, rainwaterHarvesting_tank, cleaning, collectingWastewater]
       _ -> State []
 
 
@@ -74,5 +74,5 @@ runProcess sys date st process = runReader (process date) $ SystemState $ sys { 
 
 
 scanNexus :: SystemState -> Array SystemState
-scanNexus systemState@(SystemState { scale: {resolution, window} } ) =
-  scanl nexusSystem systemState (dates window resolution)
+scanNexus systemState@(SystemState { scale: {window, period} } ) =
+  scanl nexusSystem systemState (intervals window period)

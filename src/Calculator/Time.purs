@@ -11,7 +11,7 @@ import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, id, ($), (<=))
+import Prelude (bottom, id, map, ($), (<<<), (<=))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -23,32 +23,23 @@ instance showTimeWindow :: Show TimeWindow  where
 
 data TimePeriod = OneDay | OneMonth -- OneWeek, OneYear
 
-
-
 derive instance genericTimePeriod :: Generic TimePeriod
 
 instance showTimePeriod :: Show TimePeriod  where
     show = gShow
 
-dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
-dateEnd = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) March (fromJust $ toEnum 30)
-tw = TimeWindow { start : dateStart, end: dateEnd }
+data TimeInterval = TimeInterval { date :: Date
+                                 , period :: TimePeriod
+                                 }
 
--- toRange :: TimeWindow -> TimeResolution -> Array Int
--- toRange (TimeWindow tw) tr = range 0 (round <<< (_ / nbIntervals) <<< unwrap $ duration)
---   where
---     duration :: Duration.Days
---     duration = Duration.toDuration $ diff tw.end tw.start
---     nbIntervals = case tr of
---       OneMonth -> 30.0
---       OneDay -> 1.0
+intervals :: TimeWindow -> TimePeriod -> Array TimeInterval
+intervals tw tp = map (TimeInterval <<< { period: tp, date: _ }) (dates tw tp)
 
-
--- TODO 'snap' timewindow to fit resolution
+-- TODO 'snap' timewindow to fit period
 dates :: TimeWindow -> TimePeriod -> Array Date
-dates (TimeWindow {start, end}) resolution =
+dates (TimeWindow {start, end}) period =
   unfoldr (\date -> if date <= end then
-                      Just (Tuple date (case resolution of
+                      Just (Tuple date (case period of
                                           OneDay -> tomorrow date
                                           OneMonth -> nextMonth date))
                     else Nothing) start
