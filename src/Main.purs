@@ -4,6 +4,7 @@ import Prelude
 import Calculator.Layout (interface)
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), ProcessParams(..), Quantity(..), Ratio(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale(..), SystemState(..), Time(..), Transform(..), initProcessParams)
 import Calculator.Nexus (nexusSystem)
+import Calculator.TimeEx (tw)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Timer (TIMER)
@@ -33,7 +34,7 @@ import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-import Time (TimePeriod(..), TimeWindow(..), tw)
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..))
 
 -- data Action = Food
 --             | Bin
@@ -136,7 +137,7 @@ dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (from
 -- TODO specify a real time window here
 mkScale s t = { scale : s
               , time: t
-              , resolution: OneDay
+              , period: OneDay  -- <--- TO FIX
               , window: TimeWindow { start: dateStart
                                    , end: unsafePartial $ canonicalDate (fromJust $ toEnum 2012) April (fromJust $ toEnum 1)
                                    }
@@ -161,7 +162,7 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                              <*> pure initState
                                                )
-                     <*> pure dateStart)
+                     <*> pure (TimeInterval { date: dateStart, period: OneDay})) -- <--- TO FIX
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )

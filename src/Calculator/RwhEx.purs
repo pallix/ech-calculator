@@ -15,7 +15,7 @@ import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
 import Prelude (bottom, id, show, ($), (<=))
-import Time (TimePeriod(..), TimeWindow(..), dates)
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), dates)
 
 
 systemParamsEx = SystemParams { houseHoldSize: 199
@@ -30,7 +30,7 @@ systemParamsEx = SystemParams { houseHoldSize: 199
 dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
 dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 2)
 
-systemStateEx = SystemState { scale: { resolution: OneDay
+systemStateEx = SystemState { scale: { period: OneDay
                                      , scale: PersonScale
                                      , time: Month -- old scale system, TODO deprecate
                                      , window: TimeWindow { start: dStart
@@ -43,12 +43,8 @@ systemStateEx = SystemState { scale: { resolution: OneDay
                             , current: RainwaterHarvestingTank
                           }
 
-r1 = runReader (R.rainwaterHarvesting_tank dStart) systemStateEx
+r1 = runReader (R.rainwaterHarvesting_tank (TimeInterval { date: dStart, period: OneDay})) systemStateEx
 
 -- r3 = runReader (R.raining dStop) systemStateEx
 
 r2 = last $ scanNexus systemStateEx
-
-showDates :: SystemState -> String
-showDates (SystemState { scale: { resolution, window }}) =
-  show (dates window resolution)
