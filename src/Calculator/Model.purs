@@ -20,6 +20,7 @@ module Calculator.Model (Flow(Flow),
                          Matter(..),
                          Entry(..),
                          MatterProperty(..),
+                         NotificationType(..),
                          subQty,
                          addQty,
                          negQty,
@@ -279,13 +280,20 @@ instance matterProperty :: Eq MatterProperty where
   eq _ AllMatterProperty = true
   eq a b = gEq a b
 
+data NotificationType = RainwaterHarvestingWaterOverflow | CleaningNotEnoughTankWater
+
+derive instance genericNotificationType :: Generic NotificationType
+
+instance showNotificatioType :: Show NotificationType  where
+    show = gShow
+
 data Entry = Entry { process :: Process
                    , matter :: Matter
                    , matterProperty :: MatterProperty
                    , quantity :: Quantity Matter
                    }
            | Notification { process :: Process
-                          , message :: String
+                          , typ :: NotificationType
                           }
            | Trace { process :: Process
                    , message :: String
@@ -295,7 +303,7 @@ derive instance genericEntry :: Generic Entry
 
 instance showEntry :: Show Entry where
   show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
-  show (Notification { process, message }) = "N[ " <> show process <> " " <> show message <> "]"
+  show (Notification { process, typ }) = "N[ " <> show process <> " " <> show typ <> "]"
   show (Trace { process, message }) = "T[ " <> show process <> " " <> show message <> "]"
 
 data State = State (Array Entry)
@@ -348,6 +356,10 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
     getQuantity (Notification _) = Nothing
     getQuantity (Trace _) = Nothing
     quantities = mapMaybe getQuantity states'
+
+-- foldNotifications :: Process -> State -> Set Notification
+-- foldNotifications process (States entries) =
+--   filter 
 
 -- /model for the event sourcing
 
