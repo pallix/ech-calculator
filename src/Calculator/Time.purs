@@ -21,11 +21,13 @@ derive instance genericTimeWindow :: Generic TimeWindow
 instance showTimeWindow :: Show TimeWindow  where
     show = gShow
 
-data TimeResolution = OneDay | OneMonth -- OneWeek, OneYear
+data TimePeriod = OneDay | OneMonth -- OneWeek, OneYear
 
-derive instance genericTimeResolution :: Generic TimeResolution
 
-instance showTimeResolution :: Show TimeResolution  where
+
+derive instance genericTimePeriod :: Generic TimePeriod
+
+instance showTimePeriod :: Show TimePeriod  where
     show = gShow
 
 dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2017) January (fromJust $ toEnum 1)
@@ -43,7 +45,7 @@ tw = TimeWindow { start : dateStart, end: dateEnd }
 
 
 -- TODO 'snap' timewindow to fit resolution
-dates :: TimeWindow -> TimeResolution -> Array Date
+dates :: TimeWindow -> TimePeriod -> Array Date
 dates (TimeWindow {start, end}) resolution =
   unfoldr (\date -> if date <= end then
                       Just (Tuple date (case resolution of

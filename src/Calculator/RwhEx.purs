@@ -15,7 +15,7 @@ import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
 import Prelude (bottom, id, show, ($), (<=))
-import Time (TimeResolution(..), TimeWindow(..), dates)
+import Time (TimePeriod(..), TimeWindow(..), dates)
 
 
 systemParamsEx = SystemParams { houseHoldSize: 199
