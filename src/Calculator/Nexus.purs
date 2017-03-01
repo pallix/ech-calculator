@@ -16,6 +16,7 @@ scaleFirstEntry systemScale systemParams (State entries) =
     Just {head: h,
           tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
                                  e@(Notification _) -> e : xs
+                                 e@(Trace _) -> e : xs
 
 nexusSystem :: SystemState -> Date -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) date =
