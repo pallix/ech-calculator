@@ -2,14 +2,14 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
 import Data.Date (Date, day, month)
 import Data.Enum (fromEnum)
 import Data.Map (Map, empty, lookup)
-import Data.Maybe (fromMaybe, maybe)
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Newtype (unwrap)
 import Data.Traversable (sum)
@@ -67,17 +67,15 @@ openedTank = { surfaceArea : SurfaceArea 10.0
 raining ::
      TimeInterval
   -> Reader SystemState State
-raining (TimeInterval ti) = do
+raining ti = do
     SystemState { state: (State entries)
-                 , processParams: { rainingParam: { rainfallDataKey
-                                                  , rainfallData }}
                  , systemParams: (SystemParams { estateSurfaceArea })
+                 , timeseries
                  } <- ask
-    let timeSerie = maybe empty id $ lookup rainfallDataKey rainfallData
-        monthData = maybe [] id $ lookup (month ti.date) timeSerie
-        waterVolumePerSquareCm = case ti.period of
-          OneDay -> maybe 0.0 id $ index monthData ((_ - 1) <<< fromEnum <<< day $ ti.date)
-          OneMonth -> sum monthData
+    let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+          tsw <- lookup Raining timeseries
+          case tsw of RainingTimeserie ts -> ts ti
+                      _ -> Nothing
           -- TODO: eventually more unit convertion to do here later
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
     pure $ State $ entries <>
@@ -89,20 +87,18 @@ raining (TimeInterval ti) = do
 rainwaterHarvesting_tank ::
      TimeInterval
   -> Reader SystemState State
-rainwaterHarvesting_tank (TimeInterval ti) = do
+rainwaterHarvesting_tank ti = do
   SystemState { state: state@(State entries)
-              , processParams: { rainingParam: { rainfallDataKey
-                                               , rainfallData }
-                               , rainwaterHarvestingParam: { surfaceArea
+              , processParams: { rainwaterHarvestingParam: { surfaceArea
                                                            , capacity
                                                            }
                                }
+              , timeseries
               } <- ask
-  let timeSerie = fromMaybe empty $ lookup rainfallDataKey rainfallData
-      monthData = fromMaybe [] $ lookup (month ti.date) timeSerie
-      waterVolumePerSquareCm = case ti.period of
-        OneDay -> fromMaybe 0.0 $ index monthData ((_ - 1) <<< fromEnum <<< day $ ti.date)
-        OneMonth -> sum monthData
+  let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+          tsw <- lookup Raining timeseries
+          case tsw of RainingTimeserie ts -> ts ti
+                      _ -> Nothing
       -- TODO: eventually more unit convertion to do here later
       harvestableVolume = Volume Water $ (case surfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
       volumeInTank = foldState RainwaterHarvesting Water GreyWater state
@@ -146,7 +142,7 @@ collectingWastewater ::
 collectingWastewater _ = do
   SystemState { state: state@(State entries)
                  , processParams: { rainingParam: { rainfallDataKey
-                                                  , rainfallData }}
+                                                   }}
                  , systemParams: (SystemParams { estateSurfaceArea })
                  , scale: { period }
                  } <- ask

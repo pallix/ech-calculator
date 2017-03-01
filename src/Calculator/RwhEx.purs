@@ -9,6 +9,7 @@ import Control.Monad.Reader (runReader)
 import Data.Array (last)
 import Data.Date (Date, Month(..), canonicalDate, day, month, year)
 import Data.Enum (succ, toEnum)
+import Data.Map (empty)
 import Data.Maybe (fromJust, maybe, Maybe(..))
 import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
@@ -41,6 +42,7 @@ systemStateEx = SystemState { scale: { period: OneDay
                             , systemParams: systemParamsEx
                             , processParams: initProcessParams
                             , current: RainwaterHarvestingTank
+                            , timeseries: empty
                           }
 
 r1 = runReader (R.rainwaterHarvesting_tank (TimeInterval { date: dStart, period: OneDay})) systemStateEx

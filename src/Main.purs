@@ -15,6 +15,7 @@ import Data.Date.Component (Month(..))
 import Data.Enum (toEnum)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
+import Data.Map (empty)
 import Data.Maybe (fromJust, maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
@@ -130,7 +131,7 @@ controllableParam numberHouseholdEating
 ratio ( Ratio _ { ratio } ) = ratio
 
 systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
-systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
+systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state, timeseries: empty }
 
 dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
 -- TODO specify a real time window here
