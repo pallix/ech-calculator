@@ -49,7 +49,7 @@ import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
 import Rain (RainfallData, rainfallData)
-import Time (TimeResolution, TimeWindow, dates)
+import Time (TimePeriod, TimeWindow, dates)
 
 --
 -- Quantities
@@ -217,7 +217,7 @@ data Time = Year | Month | Day
 
 type SystemScale = { scale:: Scale,
                      time:: Time, -- TODO: deprecate
-                     resolution:: TimeResolution,
+                     resolution:: TimePeriod,
                      window:: TimeWindow}
 
 

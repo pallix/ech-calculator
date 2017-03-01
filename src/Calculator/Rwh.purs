@@ -14,7 +14,7 @@ import Data.Monoid ((<>))
 import Data.Newtype (unwrap)
 import Data.Traversable (sum)
 import Prelude (id, show, ($), (*), (-), (<), (<<<), (>))
-import Time (TimeResolution(..))
+import Time (TimePeriod(..))
 
 type RainfallTimeseries = Map Month Number
 

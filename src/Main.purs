@@ -33,7 +33,7 @@ import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-import Time (TimeResolution(..), TimeWindow(..), tw)
+import Time (TimePeriod(..), TimeWindow(..), tw)
 
 -- data Action = Food
 --             | Bin
