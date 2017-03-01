@@ -2,7 +2,7 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -129,7 +129,7 @@ rainwaterHarvesting_tank (TimeInterval ti) = do
       notifications = if overflow > ZeroQuantity then
                         [Notification { process: RainwaterHarvesting
                                         -- type
-                                      , message: "Water overflow" } ]
+                                      , typ: RainwaterHarvestingWaterOverflow } ]
                       else []
       traces = [ Trace { process: RainwaterHarvesting
                        , message: " freevolumeintank " <> show freeVolumeInTank }
@@ -185,7 +185,7 @@ cleaning date = do
                    ]
         notifications = if (waterConsumed < waterNeeded) then
                           [Notification { process: Cleaning
-                                        , message: "Not enough water in tank" } ]
+                                        , typ: CleaningNotEnoughTankWater } ]
                       else []
     pure $ State $ entries <> entries' <> notifications
 
