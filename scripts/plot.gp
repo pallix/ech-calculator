@@ -1,4 +1,4 @@
-#!/usr/bin/gnuplot -p
+#!/usr/bin/gnuplot -p -d
 
 set xdata time
 set timefmt "%Y-%m-%d"
@@ -8,5 +8,5 @@ set xtics format "%d %b\n%Y"
 # set autoscale x
 # set autoscale y
 
-set style data points
-plot  "nexus.dat" using 1:2:xtic(1) title 'TS-Rain', "" using 1:3:xtic(1) title 'Rainwater harvesting'
+set style data linespoints
+plot  "/tmp/nexus.dat" using 1:2:xtic(1) title 'TS-Rain', "" using 1:3:xtic(1) title 'Rainwater harvesting'

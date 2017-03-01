@@ -50,7 +50,8 @@ r1 = runReader (R.rainwaterHarvesting_tank (TimeInterval { date: dStart, period:
 
 -- r3 = runReader (R.raining dStop) systemStateEx
 
+nexus = scanNexus systemStateEx
 r2 = unsafePartial $ fromJust $ last $ scanNexus systemStateEx
 r2n (SystemState st) = foldNotifications RainwaterHarvesting st.state
 
-plotted = plotData $ scanNexus systemStateEx
+-- plotted = plotData $ scanNexus systemStateEx
