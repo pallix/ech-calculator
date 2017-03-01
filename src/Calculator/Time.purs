@@ -5,7 +5,9 @@ import Data.Generic
 import Data.DateTime as DT
 import Data.Date (Date, canonicalDate, day, month, year)
 import Data.Enum (succ, toEnum)
+import Data.Eq (class Eq)
 import Data.Maybe (fromJust, maybe, Maybe(..))
+import Data.Ord (class Ord)
 import Data.Show (class Show)
 import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
@@ -31,6 +33,18 @@ instance showTimePeriod :: Show TimePeriod  where
 data TimeInterval = TimeInterval { date :: Date
                                  , period :: TimePeriod
                                  }
+derive instance genericTimeInterval :: Generic TimeInterval
+
+instance showTimeInterval :: Show TimeInterval  where
+    show = gShow
+
+instance eqTimeInterval :: Eq TimeInterval where
+  eq = gEq
+
+instance ordTimeInterval :: Ord TimeInterval where
+  compare = gCompare
+
+
 
 intervals :: TimeWindow -> TimePeriod -> Array TimeInterval
 intervals tw tp = map (TimeInterval <<< { period: tp, date: _ }) (dates tw tp)

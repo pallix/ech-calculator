@@ -20,6 +20,7 @@ module Calculator.Model (Flow(Flow),
                          Process(..),
                          Matter(..),
                          Entry(..),
+                         TimeserieWrapper(..),
                          MatterProperty(..),
                          NotificationType(..),
                          subQty,
@@ -40,6 +41,7 @@ module Calculator.Model (Flow(Flow),
 
 import Prelude
 import Data.Generic
+import Calculator.Timeserie (Timeserie)
 import Control.Monad.Reader (runReader)
 import Data.Array (filter, head, mapMaybe, scanl, tail, uncons, (:))
 import Data.ArrayBuffer.Types (Int16)
@@ -51,8 +53,7 @@ import Data.Maybe (maybe, Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs)
-import Rain (RainfallData, rainfallData)
-import Time (TimePeriod, TimeWindow, dates)
+import Time (TimeInterval(..), TimePeriod, TimeWindow, dates)
 
 --
 -- Quantities
@@ -257,7 +258,11 @@ instance showProcess :: Show Process where
 instance processEq :: Eq Process where
   eq AllProcess _ = true
   eq _ AllProcess = true
-  eq a b= gEq a b
+  eq a b = gEq a b
+
+instance ordProcess :: Ord Process where
+  compare = gCompare
+
 
 data Matter = AllMatter | Food | Waste | Water | Compost | Fertilizer | GreenhouseGas
 
@@ -445,7 +450,7 @@ type ProcessParams = { eatingParam ::
                                            }
                      , rainingParam ::  { title :: String
                                         , rainfallDataKey :: String
-                                        , rainfallData :: RainfallData }
+                                        }
 
                      , rainwaterHarvestingParam :: { title :: String
                                                    , surfaceArea :: SurfaceArea
@@ -459,11 +464,16 @@ type ProcessParams = { eatingParam ::
 
 type ProcessParam = Record
 
+data TimeserieWrapper = RainingTimeserie (Timeserie Number) |
+                        CleaningTimeserie (Timeserie Int)
+
 data SystemState = SystemState { current :: Options
                                , scale :: SystemScale
                                , state :: State
                                , systemParams :: SystemParams
-                               , processParams :: ProcessParams }
+                               , processParams :: ProcessParams
+                               , timeseries :: Map Process TimeserieWrapper
+                               }
 
 
 -- derive instance genericSystemState :: Generic SystemState
@@ -529,8 +539,8 @@ managedWasteParam = { title: "Managed Waste"
 
 
 rainingParam = { title: "Raining"
-               , rainfallDataKey: "2012"
-               , rainfallData: rainfallData}
+               , rainfallDataKey: "2012" -- currently not used
+               }
 
 rainwaterHarvestingParam = { title: "Rainwater Harvesting, opened tank"
                            , surfaceArea: SurfaceArea 4.0 -- cm^2

@@ -2,11 +2,13 @@ module Calculator.Nexus where
 
 import Prelude
 import Control.Monad.Reader
-import Calculator.Model (Entry(..), Options(..), State(..), SystemParams(..), SystemScale, SystemState(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
+import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
 import Calculator.Rwh (cleaning, collectingWastewater, raining, rainwaterHarvesting_tank)
 import Data.Array (drop, foldl, scanl, uncons, (:))
 import Data.Date (Date)
+import Data.Map (insert)
 import Data.Maybe (Maybe(..))
+import Rain (buildTimeserie)
 import Time (TimeInterval, dates, intervals)
 
 scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
@@ -74,5 +76,8 @@ runProcess sys date st process = runReader (process date) $ SystemState $ sys { 
 
 
 scanNexus :: SystemState -> Array SystemState
-scanNexus systemState@(SystemState { scale: {window, period} } ) =
-  scanl nexusSystem systemState (intervals window period)
+scanNexus systemState@(SystemState sys@{ scale: {window, period}, timeseries: ts } ) =
+  scanl nexusSystem systemState' ivals
+  where systemState' = SystemState $ sys { timeseries = timeseries' }
+        ivals = (intervals window period)
+        timeseries' = insert Raining (RainingTimeserie (buildTimeserie ivals)) ts
