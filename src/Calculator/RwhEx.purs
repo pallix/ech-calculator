@@ -5,6 +5,7 @@ import Control.Monad
 import Calculator.Nexus
 import Calculator.Rwh as R
 import Calculator.Model (Options(..), Process(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemState(..), Time(..), foldNotifications, initProcessParams)
+import Calculator.Plot (plotData)
 import Control.Monad.Reader (runReader)
 import Data.Array (last)
 import Data.Date (Date, Month(..), canonicalDate, day, month, year)
@@ -51,3 +52,5 @@ r1 = runReader (R.rainwaterHarvesting_tank (TimeInterval { date: dStart, period:
 
 r2 = unsafePartial $ fromJust $ last $ scanNexus systemStateEx
 r2n (SystemState st) = foldNotifications RainwaterHarvesting st.state
+
+plotted = plotData $ scanNexus systemStateEx
