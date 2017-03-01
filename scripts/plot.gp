@@ -2,8 +2,11 @@
 
 set xdata time
 set timefmt "%Y-%m-%d"
-set format x "%Y-%m-%d"
-set autoscale x
+# set format x "%d-%M\n%Y"
+set xtics format "%d %b\n%Y"
 
-set style data linespoints
-plot  "nexus.dat" using 1:2 title 'Raining'
+# set autoscale x
+# set autoscale y
+
+set style data points
+plot  "nexus.dat" using 1:2:xtic(1) title 'TS-Rain', "" using 1:3:xtic(1) title 'Rainwater harvesting'

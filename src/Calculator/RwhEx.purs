@@ -30,7 +30,7 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               }
 
 dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 2)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 3)
 
 systemStateEx = SystemState { scale: { period: OneDay
                                      , scale: PersonScale

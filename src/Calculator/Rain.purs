@@ -22,7 +22,7 @@ buildTimeserie intervals = flip lookup $ (foldr feed empty intervals)
         OneMonth -> insert ti (sum monthData) m
         where
           monthData = fromMaybe [] $ lookup (month date) sample
-    sample = fromFoldable [ Tuple January [3.0, 2.0]
+    sample = fromFoldable [ Tuple January [1.0, 2.0, 0.0]
                           , Tuple February [1.0]
                           , Tuple March [1.0]
                           , Tuple April [1.0]
