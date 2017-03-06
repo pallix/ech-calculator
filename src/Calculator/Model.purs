@@ -288,7 +288,7 @@ instance matterProperty :: Eq MatterProperty where
   eq _ AllMatterProperty = true
   eq a b = gEq a b
 
-data NotificationType = RainwaterHarvestingWaterOverflow | CleaningNotEnoughTankWater
+data NotificationType = RainwaterHarvestingWaterOverflow | CleaningNotEnoughTankWater | IrrigationNotEnoughTankWater
 
 derive instance genericNotificationType :: Generic NotificationType
 

@@ -72,7 +72,7 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
       _ -> State []
 
 
-runProcess sys date st process = runReader (process date) $ SystemState $ sys { state = st }
+runProcess sys interval st process = runReader (process interval) $ SystemState $ sys { state = st }
 
 
 scanNexus :: SystemState -> Array SystemState
