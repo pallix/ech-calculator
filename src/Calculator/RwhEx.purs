@@ -52,4 +52,4 @@ r1 = runReader (R.harvestingRainwaterWithOpenedTank (TimeInterval { date: dStart
 
 nexus = scanNexus systemStateEx
 r2 = unsafePartial $ fromJust $ head $ scanNexus systemStateEx
-r2n (SystemState st) = foldNotifications HarvestingRainwaterWithOpenedTank st.state
+r2n (SystemState st) = foldNotifications StoringRainwater st.state
