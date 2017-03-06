@@ -454,10 +454,10 @@ type ProcessParams = { eatingParam ::
                      , rainingParam ::  { title :: String
                                         , timeserieKey :: String
                                         }
-                     , rainwaterHarvestingParam :: { title :: String
-                                                   , surfaceArea :: SurfaceArea
-                                                   , capacity :: Quantity Matter
-                                                   }
+                     , storingRainwaterParam :: { title :: String
+                                                , surfaceArea :: SurfaceArea
+                                                , capacity :: Quantity Matter
+                                                }
                      , cleaningParam :: { title :: String
                                         , surfaceArea :: SurfaceArea
                                         , waterConsumptionPerSqm :: Number -- TODO TO-ASK
@@ -545,10 +545,10 @@ rainingParam = { title: "Raining"
                , timeserieKey: "2015" -- TODO currently not used, to implement
                }
 
-rainwaterHarvestingParam = { title: "Rainwater Harvesting, opened tank"
-                           , surfaceArea: SurfaceArea 4.0 -- cm^2
-                           , capacity: Volume Water 10.0 -- L
-                           }
+storingRainwaterParam = { title: "Storing Rainwater"
+                        , surfaceArea: SurfaceArea 4.0 -- cm^2
+                        , capacity: Volume Water 10.0 -- L
+                        }
 
 cleaningParam = { title: "Cleaning"
                 , surfaceArea: SurfaceArea 200.0
@@ -563,7 +563,7 @@ initProcessParams = { eatingParam
                     , foodGardeningParam
                     , rainwaterCollectingParam
                     , rainingParam
-                    , rainwaterHarvestingParam
+                    , storingRainwaterParam
                     , cleaningParam
                     }
 
