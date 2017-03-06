@@ -2,7 +2,7 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, cappedQty, foldState, initProcessParams, negQty, subQty, blockToRoofSurface)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -63,7 +63,7 @@ raining ti = do
           tsw <- lookup Raining timeseries
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
-          -- TODO: eventually more unit convertion to do here later
+          -- TODO: more unit convertion to do here
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
     pure $ State $ entries <>
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
@@ -120,6 +120,87 @@ harvestingRainwaterWithOpenedTank ti = do
   pure $ State $ entries <> traces <> entries' <> notifications
 
 
+collectingRainwater ::
+     TimeInterval
+  -> Reader SystemState State
+collectingRainwater ti = do
+  SystemState { state: state@(State entries)
+              , processParams: { rainwaterCollectingParam: { surfaceArea
+                                                           , collectingCapacity }  }
+              , timeseries
+              } <- ask
+  let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+          tsw <- lookup Raining timeseries
+          case tsw of RainingTimeserie ts -> ts ti
+                      _ -> Nothing
+      surfaceArea' = blockToRoofSurface surfaceArea
+      -- TODO recheck unit convertion here
+      collectedWater = Volume Water $ surfaceArea' * (waterVolumePerSquareCm * 10000.0) * collectingCapacity
+      traces = [ Trace { process: RainwaterCollecting
+                       , message: " waterVolumePerSquareCm " <> show waterVolumePerSquareCm }
+               , Trace { process: RainwaterCollecting
+                       , message: " surfacearea' " <> show surfaceArea' }
+               , Trace { process: RainwaterCollecting
+                       , message: " collectingcapacity " <> show collectingCapacity }
+               ]
+      entries' = [ Entry { process: Raining
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: negQty collectedWater}
+                 , Entry { process: RainwaterCollecting
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: collectedWater}
+                 ]
+  pure $ State $ entries <> traces <> entries'
+
+storingRainwaterInTank ::
+     TimeInterval
+  -> Reader SystemState State
+storingRainwaterInTank ti = do
+  SystemState { state: state@(State entries)
+              , processParams: { rainwaterHarvestingParam: { capacity
+                                                           }
+                               }
+              , timeseries
+              } <- ask
+  let harvestableVolume = foldState  RainwaterCollecting Water GreyWater state
+      volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
+      freeVolumeInTank = subQty capacity volumeInTank
+      harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
+      overflow = subQty harvestableVolume harvestedVolume
+      entries' = [ Entry { process: Raining
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: negQty harvestableVolume
+                         }
+                 , Entry { process: HarvestingRainwaterWithOpenedTank,
+                           matter: Water,
+                           matterProperty: GreyWater,
+                           quantity: harvestedVolume
+                         }
+                 ] <> if overflow > ZeroQuantity then
+                        [ Entry { process: HarvestingRainwaterWithOpenedTank
+                                , matter: Waste
+                                , matterProperty: GreyWater
+                                , quantity: overflow
+                                } ]
+                        else []
+      notifications = [Notification { process: HarvestingRainwaterWithOpenedTank
+                                    , typ: TankOverflow
+                                    , on: overflow > ZeroQuantity} ]
+      traces = [ Trace { process: HarvestingRainwaterWithOpenedTank
+                       , message: " freevolumeintank " <> show freeVolumeInTank }
+               , Trace { process: HarvestingRainwaterWithOpenedTank
+                       , message: " capacity " <> show capacity }
+               , Trace { process: HarvestingRainwaterWithOpenedTank
+                       , message: " volumeintank " <> show volumeInTank }
+               ]
+  pure $ State $ entries <> traces <> entries' <> notifications
+
+
+
+
 collectingWastewater ::
   TimeInterval
   -> Reader SystemState State
@@ -174,8 +255,8 @@ irrigatingGarden ti = do
                 , timeseries
                  } <- ask
     let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
-          tsw <- lookup Irrigating timeseries
-          case tsw of IrrigationTimeserie ts -> ts ti
+          tsw <- lookup IrrigatingGarden timeseries
+          case tsw of IrrigationGardenTimeserie ts -> ts ti
                       _ -> Nothing
         volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
         tankWaterConsumed = cappedQty waterNeeded volumeInTank
@@ -188,19 +269,18 @@ irrigatingGarden ti = do
                            , matter: Water
                            , matterProperty: TapWater
                            , quantity: negQty tapWaterConsumed }
-                   , Entry { process: Irrigating
+                   , Entry { process: IrrigatingGarden
                            , matter: Waste
                            , matterProperty: BlackWater
                            , quantity: addQty tankWaterConsumed tapWaterConsumed }
                    ]
         notifications = [Notification { process: TapWaterSupplying
-                                      , typ: IrrigationNotEnoughTankWater
+                                      , typ: IrrigationGardenNotEnoughTankWater
                                       , on: tapWaterConsumed > ZeroQuantity } ]
-    pure $ State $ entries <> entries' <> notifications
+    pure $ State $ entries <> traces <> entries' <> notifications
 
 
 -- TODO: see how to do more the calculation in a more DSL style
--- TODO: have a simpler data model to express various timeseries
 
 -- 1. Time series rainfall data
 -- 2. Roof area

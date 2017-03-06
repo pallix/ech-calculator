@@ -36,7 +36,8 @@ module Calculator.Model (Flow(Flow),
                          foodGardening_EatingBinningWormCompostingFoodGardeningRainwater,
                          rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater,
                          eating_EatingBinningWormCompostingFoodSharing,
-                         foodSharing
+                         foodSharing,
+                         blockToRoofSurface
                         )  where
 
 import Prelude
@@ -105,6 +106,7 @@ data Options = EatingOnly
              | EatingBinningWormCompostingFoodSharing
              | RainwaterHarvestingTank
              | RainwaterHarvestingDemand
+             | RainwaterHarvestingCollection
              | NotImplemented
 
 data Life = Life
@@ -248,7 +250,7 @@ data Process =  AllProcess |
                 HarvestingRainwaterWithOpenedTank |
                 Cleaning |
                 WastewaterCollecting |
-                Irrigating |
+                IrrigatingGarden |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -288,7 +290,7 @@ instance matterProperty :: Eq MatterProperty where
   eq _ AllMatterProperty = true
   eq a b = gEq a b
 
-data NotificationType = TankOverflow | CleaningNotEnoughTankWater | IrrigationNotEnoughTankWater
+data NotificationType = TankOverflow | CleaningNotEnoughTankWater | IrrigationGardenNotEnoughTankWater
 
 derive instance genericNotificationType :: Generic NotificationType
 
@@ -466,7 +468,7 @@ type ProcessParam = Record
 
 data TimeserieWrapper = RainingTimeserie (Timeserie Number) |
                         CleaningTimeserie (Timeserie Int) |
-                        IrrigationTimeserie (Timeserie Number)
+                        IrrigationGardenTimeserie (Timeserie Number)
 
 data SystemState = SystemState { current :: Options
                                , scale :: SystemScale
@@ -527,7 +529,7 @@ foodGardeningParam = { title: "Food Garden"
                   }
 
 rainwaterCollectingParam = { title: "Water collectin"
-                           , surfaceArea: SurfaceArea 0.0
+                           , surfaceArea: SurfaceArea 1.0
                               -- liter per sqm (assuming 1000mm of rain, 60% efficency, Rainwater!D20)
                            , collectingCapacity: 0.6
                            }
