@@ -78,6 +78,7 @@ harvestingRainwaterWithOpenedTank ti = do
                                                         , capacity
                                                         }
                                }
+              , systemParams: SystemParams { estateSurfaceArea }
               , timeseries
               } <- ask
   let waterVolumePerSquareCm = fromMaybe 0.0 $ do
@@ -85,7 +86,7 @@ harvestingRainwaterWithOpenedTank ti = do
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
       -- TODO: eventually more unit convertion to do here later
-      harvestableVolume = Volume Water $ (case surfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+      harvestableVolume = Volume Water $ (case estateSurfaceArea of SurfaceArea sa -> sa * waterVolumePerSquareCm)
       volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
@@ -125,7 +126,7 @@ collectingRainwater ::
   -> Reader SystemState State
 collectingRainwater ti = do
   SystemState { state: state@(State entries)
-              , processParams: { rainwaterCollectingParam: { surfaceArea
+              , processParams: { rainwaterCollectingParam: { numberOfBlocks
                                                            , collectingCapacity }  }
               , timeseries
               } <- ask
@@ -133,7 +134,7 @@ collectingRainwater ti = do
           tsw <- lookup Raining timeseries
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
-      surfaceArea' = blockToRoofSurface surfaceArea
+      surfaceArea' = blockToRoofSurface numberOfBlocks
       -- TODO recheck unit convertion here
       collectedWater = Volume Water $ surfaceArea' * (waterVolumePerSquareCm * 10000.0) * collectingCapacity
       traces = [ Trace { process: RainwaterCollecting

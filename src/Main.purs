@@ -126,7 +126,7 @@ controllableParam numberHouseholdEating
                                                      , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
                                                      , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  }
                                                      , foodGardeningParam = initProcessParams.foodGardeningParam { surfaceArea = gardenSurface }
-                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { surfaceArea = roofSurface }
+                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { numberOfBlocks = roofSurface }
                                                      , foodSharingParam = initProcessParams.foodSharingParam { numberSharingHouseholds = numberSharingHouseholds }}
 
 ratio ( Ratio _ { ratio } ) = ratio
@@ -159,7 +159,8 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
                                                                                                                  <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
-                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "roofSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.rainwaterCollectingParam.surfaceArea ) ) )
+                                                                                                                 <*> (intSlider "roofSurface" 0 100 initProcessParams.rainwaterCollectingParam.numberOfBlocks
+                                                                                                                     )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                              <*> pure initState
                                                )
