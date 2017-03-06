@@ -36,7 +36,7 @@ toGnuPlotFormat systemStates =
             tsw <- lookup Raining timeseries
             case tsw of RainingTimeserie ts -> ts ti
                         _ -> Nothing
-          rainwaterHarvesting = foldState RainwaterHarvesting Water GreyWater state
+          rainwaterHarvesting = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
       in
        output <> dateStr <>  " " <> show waterVolumePerSquareCm <> " " <> show rainwaterHarvesting <> "\n"
 

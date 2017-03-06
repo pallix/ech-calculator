@@ -245,10 +245,10 @@ data Process =  AllProcess |
                 Living |
                 Raining |
                 TapWaterSupplying |
-                RainwaterHarvesting |
+                HarvestingRainwaterWithOpenedTank |
                 Cleaning |
                 WastewaterCollecting |
-                Irrigation |
+                Irrigating |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -288,7 +288,7 @@ instance matterProperty :: Eq MatterProperty where
   eq _ AllMatterProperty = true
   eq a b = gEq a b
 
-data NotificationType = RainwaterHarvestingWaterOverflow | CleaningNotEnoughTankWater | IrrigationNotEnoughTankWater
+data NotificationType = TankOverflow | CleaningNotEnoughTankWater | IrrigationNotEnoughTankWater
 
 derive instance genericNotificationType :: Generic NotificationType
 
