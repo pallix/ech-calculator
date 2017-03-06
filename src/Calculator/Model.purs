@@ -441,15 +441,15 @@ type ProcessParams = { eatingParam ::
                                              , irrigationEfficiency :: Ratio Matter
                                              }
                      , rainwaterCollectingParam :: { title :: String
-                                                   , surfaceArea :: SurfaceArea
+                                                   , numberOfBlocks :: Int
                                                      -- L of water collected per square meter
                                                    , collectingCapacity :: Number
                                                    }
                      , managedWasteParam :: { title :: String
-                                           , collectedWasteRatio :: Ratio Matter
-                                           , bulkDensity :: Number
+                                            , collectedWasteRatio :: Ratio Matter
+                                            , bulkDensity :: Number
                                               --  amount of CO2e produced in kg per kg of waste
-                                           , ghgProduction :: Number
+                                            , ghgProduction :: Number
                                            }
                      , rainingParam ::  { title :: String
                                         , timeserieKey :: String
@@ -529,7 +529,7 @@ foodGardeningParam = { title: "Food Garden"
                   }
 
 rainwaterCollectingParam = { title: "Water collectin"
-                           , surfaceArea: SurfaceArea 1.0
+                           , numberOfBlocks: 1
                               -- liter per sqm (assuming 1000mm of rain, 60% efficency, Rainwater!D20)
                            , collectingCapacity: 0.6
                            }
@@ -738,9 +738,9 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
 
 
 rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater :: forall r. ProcessParam (
-  surfaceArea :: SurfaceArea,
+  numberOfBlocks :: Int,
   collectingCapacity :: Number | r) -> SystemScale -> State -> State
-rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
+rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {numberOfBlocks,
                                                                     collectingCapacity} systemScale state@(State entries) =
   State $
   entries <>
@@ -749,7 +749,7 @@ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {surfaceArea,
   ]
   where
     rainingWater = foldState Raining Water AllMatterProperty state
-    surfaceArea' = blockToRoofSurface surfaceArea
+    surfaceArea' = blockToRoofSurface numberOfBlocks
     collectedWater = Volume Water $ surfaceArea' * (scaleNumberOnTime systemScale collectingCapacity)
 
 foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter, numberSharingHouseholds :: Int | r ) -> State -> State
@@ -853,5 +853,5 @@ scaleGardenSurface {scale} _ =
     HouseholdScale -> SurfaceArea 10.0
     EstateScale -> SurfaceArea 100.0
 
-blockToRoofSurface ::  SurfaceArea -> Number
-blockToRoofSurface (SurfaceArea blocks ) = blocks * 342.25
+blockToRoofSurface ::  Int -> Number
+blockToRoofSurface blocks = (toNumber blocks) * 342.25
