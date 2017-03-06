@@ -12,8 +12,10 @@ import Data.Tuple (Tuple(Tuple))
 import Prelude (flip, ($), (-), (<<<))
 import Time (TimeInterval(..), TimePeriod(..))
 
-buildTimeserie :: Array TimeInterval -> Timeserie Number
-buildTimeserie intervals = flip lookup $ (foldr feed empty intervals)
+
+-- TODO plug real data and select on `key` parameter
+buildTimeserie :: String -> Array TimeInterval -> Timeserie Number
+buildTimeserie key intervals = flip lookup $ (foldr feed empty intervals)
   where
     feed :: TimeInterval -> Map TimeInterval Number -> Map TimeInterval Number
     feed ti@(TimeInterval { date, period }) m =

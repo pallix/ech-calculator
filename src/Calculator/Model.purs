@@ -248,6 +248,7 @@ data Process =  AllProcess |
                 RainwaterHarvesting |
                 Cleaning |
                 WastewaterCollecting |
+                Irrigation |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -449,9 +450,8 @@ type ProcessParams = { eatingParam ::
                                            , ghgProduction :: Number
                                            }
                      , rainingParam ::  { title :: String
-                                        , rainfallDataKey :: String
+                                        , timeserieKey :: String
                                         }
-
                      , rainwaterHarvestingParam :: { title :: String
                                                    , surfaceArea :: SurfaceArea
                                                    , capacity :: Quantity Matter
@@ -465,7 +465,8 @@ type ProcessParams = { eatingParam ::
 type ProcessParam = Record
 
 data TimeserieWrapper = RainingTimeserie (Timeserie Number) |
-                        CleaningTimeserie (Timeserie Int)
+                        CleaningTimeserie (Timeserie Int) |
+                        IrrigationTimeserie (Timeserie Number)
 
 data SystemState = SystemState { current :: Options
                                , scale :: SystemScale
@@ -539,7 +540,7 @@ managedWasteParam = { title: "Managed Waste"
 
 
 rainingParam = { title: "Raining"
-               , rainfallDataKey: "2012" -- currently not used
+               , timeserieKey: "2015" -- TODO currently not used, to implement
                }
 
 rainwaterHarvestingParam = { title: "Rainwater Harvesting, opened tank"
