@@ -86,7 +86,7 @@ harvestingRainwaterWithOpenedTank ti = do
                       _ -> Nothing
       -- TODO: eventually more unit convertion to do here later
       harvestableVolume = Volume Water $ (case surfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
-      volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
+      volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
       overflow = subQty harvestableVolume harvestedVolume
@@ -95,26 +95,26 @@ harvestingRainwaterWithOpenedTank ti = do
                          , matterProperty: GreyWater
                          , quantity: negQty harvestableVolume
                          }
-                 , Entry { process: HarvestingRainwaterWithOpenedTank,
+                 , Entry { process: StoringRainwater,
                            matter: Water,
                            matterProperty: GreyWater,
                            quantity: harvestedVolume
                          }
                  ] <> if overflow > ZeroQuantity then
-                        [ Entry { process: HarvestingRainwaterWithOpenedTank
+                        [ Entry { process: StoringRainwater
                                 , matter: Waste
                                 , matterProperty: GreyWater
                                 , quantity: overflow
                                 } ]
                         else []
-      notifications = [Notification { process: HarvestingRainwaterWithOpenedTank
+      notifications = [Notification { process: StoringRainwater
                                     , typ: TankOverflow
                                     , on: overflow > ZeroQuantity} ]
-      traces = [ Trace { process: HarvestingRainwaterWithOpenedTank
+      traces = [ Trace { process: StoringRainwater
                        , message: " freevolumeintank " <> show freeVolumeInTank }
-               , Trace { process: HarvestingRainwaterWithOpenedTank
+               , Trace { process: StoringRainwater
                        , message: " capacity " <> show capacity }
-               , Trace { process: HarvestingRainwaterWithOpenedTank
+               , Trace { process: StoringRainwater
                        , message: " volumeintank " <> show volumeInTank }
                ]
   pure $ State $ entries <> traces <> entries' <> notifications
@@ -165,7 +165,7 @@ storingRainwaterInTank ti = do
               , timeseries
               } <- ask
   let harvestableVolume = foldState  RainwaterCollecting Water GreyWater state
-      volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
+      volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
       overflow = subQty harvestableVolume harvestedVolume
@@ -174,26 +174,26 @@ storingRainwaterInTank ti = do
                          , matterProperty: GreyWater
                          , quantity: negQty harvestableVolume
                          }
-                 , Entry { process: HarvestingRainwaterWithOpenedTank,
+                 , Entry { process: StoringRainwater,
                            matter: Water,
                            matterProperty: GreyWater,
                            quantity: harvestedVolume
                          }
                  ] <> if overflow > ZeroQuantity then
-                        [ Entry { process: HarvestingRainwaterWithOpenedTank
+                        [ Entry { process: StoringRainwater
                                 , matter: Waste
                                 , matterProperty: GreyWater
                                 , quantity: overflow
                                 } ]
                         else []
-      notifications = [Notification { process: HarvestingRainwaterWithOpenedTank
+      notifications = [Notification { process: StoringRainwater
                                     , typ: TankOverflow
                                     , on: overflow > ZeroQuantity} ]
-      traces = [ Trace { process: HarvestingRainwaterWithOpenedTank
+      traces = [ Trace { process: StoringRainwater
                        , message: " freevolumeintank " <> show freeVolumeInTank }
-               , Trace { process: HarvestingRainwaterWithOpenedTank
+               , Trace { process: StoringRainwater
                        , message: " capacity " <> show capacity }
-               , Trace { process: HarvestingRainwaterWithOpenedTank
+               , Trace { process: StoringRainwater
                        , message: " volumeintank " <> show volumeInTank }
                ]
   pure $ State $ entries <> traces <> entries' <> notifications
@@ -207,7 +207,7 @@ collectingWastewater ::
 collectingWastewater _ = do
   SystemState { state: state@(State entries)
               } <- ask
-  let wasteWaterRwh = foldState HarvestingRainwaterWithOpenedTank Waste GreyWater state
+  let wasteWaterRwh = foldState StoringRainwater Waste GreyWater state
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
     [ Entry { process: WastewaterCollecting
@@ -215,8 +215,6 @@ collectingWastewater _ = do
             , quantity: addQty wasteWaterCleaning wasteWaterRwh }
     ]
 
--- TODO: cleaning do not occur every day
--- TODO: mix with tap water?
 cleaning ::
      TimeInterval
   -> Reader SystemState State
@@ -226,10 +224,11 @@ cleaning ti = do
                                                    , waterConsumptionPerSqm }}
                  } <- ask
     let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
-        volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
+        -- TODO use a timeserie here
+        volumeInTank = foldState StoringRainwater Water GreyWater state
         tankWaterConsumed = cappedQty waterNeeded volumeInTank
         tapWaterConsumed = subQty waterNeeded tankWaterConsumed
-        entries' = [ Entry { process: HarvestingRainwaterWithOpenedTank
+        entries' = [ Entry { process: StoringRainwater
                            , matter: Water
                            , matterProperty: GreyWater
                            , quantity: negQty tankWaterConsumed }
@@ -258,10 +257,14 @@ irrigatingGarden ti = do
           tsw <- lookup IrrigatingGarden timeseries
           case tsw of IrrigationGardenTimeserie ts -> ts ti
                       _ -> Nothing
-        volumeInTank = foldState HarvestingRainwaterWithOpenedTank Water GreyWater state
+        -- TODO implement timeserie here
+        volumeInTank = foldState StoringRainwater Water GreyWater state
         tankWaterConsumed = cappedQty waterNeeded volumeInTank
         tapWaterConsumed = subQty waterNeeded tankWaterConsumed
-        entries' = [ Entry { process: HarvestingRainwaterWithOpenedTank
+        traces = [ Trace { process: IrrigatingGarden
+                         , message: " tapWaterConsumed " <> show tapWaterConsumed }
+                 ]
+        entries' = [ Entry { process: StoringRainwater
                            , matter: Water
                            , matterProperty: GreyWater
                            , quantity: negQty tankWaterConsumed }

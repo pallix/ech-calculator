@@ -247,7 +247,7 @@ data Process =  AllProcess |
                 Living |
                 Raining |
                 TapWaterSupplying |
-                HarvestingRainwaterWithOpenedTank |
+                StoringRainwater |
                 Cleaning |
                 WastewaterCollecting |
                 IrrigatingGarden |
@@ -320,7 +320,7 @@ derive instance genericEntry :: Generic Entry
 
 instance showEntry :: Show Entry where
   show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
-  show (Notification { process, typ }) = "N[ " <> show process <> " " <> show typ <> "]"
+  show (Notification { process, typ, on }) = "N[ " <> show process <> " " <> show typ <> " " <> show on <> "]"
   show (Trace { process, message }) = "T[ " <> show process <> " " <> show message <> "]"
 
 data State = State (Array Entry)
