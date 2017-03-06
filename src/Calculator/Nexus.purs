@@ -3,12 +3,12 @@ module Calculator.Nexus where
 import Prelude
 import Control.Monad.Reader
 import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, raining, rainwaterHarvesting_tank)
+import Calculator.Rwh (cleaning, collectingWastewater, raining, rainwaterHarvesting_tank, irrigation)
 import Data.Array (drop, foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (insert)
 import Data.Maybe (Maybe(..))
-import Rain (buildTimeserie)
+import Rain as Rain
 import Time (TimeInterval, dates, intervals)
 
 scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
@@ -68,7 +68,7 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
       RainwaterHarvestingTank -> foldl (runProcess sys interval) state' [raining,
                                                                          rainwaterHarvesting_tank,
                                                                          collectingWastewater]
-      RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [raining, rainwaterHarvesting_tank, cleaning, collectingWastewater]
+      RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [raining, rainwaterHarvesting_tank, cleaning, irrigation, collectingWastewater]
       _ -> State []
 
 
@@ -76,8 +76,11 @@ runProcess sys date st process = runReader (process date) $ SystemState $ sys { 
 
 
 scanNexus :: SystemState -> Array SystemState
-scanNexus systemState@(SystemState sys@{ scale: {window, period}, timeseries: ts } ) =
+scanNexus systemState@(SystemState sys@{ scale: {window, period}
+                                       , timeseries: ts
+                                       , processParams: { rainingParam: { timeserieKey } }} ) =
   scanl nexusSystem systemState' ivals
   where systemState' = SystemState $ sys { timeseries = timeseries' }
         ivals = (intervals window period)
-        timeseries' = insert Raining (RainingTimeserie (buildTimeserie ivals)) ts
+        timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
+        -- TODO supply other timeseries (irrigation, cleaning)

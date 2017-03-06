@@ -139,11 +139,7 @@ collectingWastewater ::
   -> Reader SystemState State
 collectingWastewater _ = do
   SystemState { state: state@(State entries)
-                 , processParams: { rainingParam: { rainfallDataKey
-                                                   }}
-                 , systemParams: (SystemParams { estateSurfaceArea })
-                 , scale: { period }
-                 } <- ask
+              } <- ask
   let wasteWaterRwh = foldState RainwaterHarvesting Waste GreyWater state
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
@@ -157,11 +153,10 @@ collectingWastewater _ = do
 cleaning ::
      TimeInterval
   -> Reader SystemState State
-cleaning date = do
+cleaning ti = do
     SystemState { state: state@(State entries)
                  , processParams: { cleaningParam: { surfaceArea
                                                    , waterConsumptionPerSqm }}
-                 , scale: { period }
                  } <- ask
     let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
         volumeInTank = foldState RainwaterHarvesting Water GreyWater state
@@ -180,6 +175,36 @@ cleaning date = do
                                       , typ: CleaningNotEnoughTankWater
                                       , on: waterConsumed < waterNeeded} ]
     pure $ State $ entries <> entries' <> notifications
+
+irrigation ::
+     TimeInterval
+  -> Reader SystemState State
+irrigation ti = do
+    SystemState { state: state@(State entries)
+                , timeseries
+                 } <- ask
+    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+          tsw <- lookup Irrigation timeseries
+          case tsw of IrrigationTimeserie ts -> ts ti
+                      _ -> Nothing
+        volumeInTank = foldState RainwaterHarvesting Water GreyWater state
+        waterConsumed = cappedQty waterNeeded volumeInTank
+        entries' = [ Entry { process: RainwaterHarvesting
+                           , matter: Water
+                           , matterProperty: GreyWater
+                           , quantity: negQty waterConsumed }
+                     -- waste or dark water?
+                   , Entry { process: Cleaning
+                           , matter: Waste
+                           , matterProperty: BlackWater
+                           , quantity: waterConsumed }
+                   ]
+                   -- TODO fix notification + tap water
+        notifications = [Notification { process: Cleaning
+                                      , typ: CleaningNotEnoughTankWater
+                                      , on: waterConsumed < waterNeeded} ]
+    pure $ State $ entries <> entries' <> notifications
+
 
 -- TODO: see how to do more the calculation in a more DSL style
 -- TODO: have a simpler data model to express various timeseries
