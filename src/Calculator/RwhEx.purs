@@ -46,12 +46,12 @@ systemStateEx = SystemState { scale: { period: OneDay
                             , timeseries: empty
                           }
 
-r1 = runReader (R.rainwaterHarvesting_tank (TimeInterval { date: dStart, period: OneDay})) systemStateEx
+r1 = runReader (R.harvestingRainwaterWithOpenedTank (TimeInterval { date: dStart, period: OneDay})) systemStateEx
 
 -- r3 = runReader (R.raining dStop) systemStateEx
 
 nexus = scanNexus systemStateEx
 r2 = unsafePartial $ fromJust $ last $ scanNexus systemStateEx
-r2n (SystemState st) = foldNotifications RainwaterHarvesting st.state
+r2n (SystemState st) = foldNotifications HarvestingRainwaterWithOpenedTank st.state
 
 -- plotted = plotData $ scanNexus systemStateEx

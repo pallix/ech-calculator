@@ -3,7 +3,7 @@ module Calculator.Nexus where
 import Prelude
 import Control.Monad.Reader
 import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, raining, rainwaterHarvesting_tank, irrigation)
+import Calculator.Rwh (cleaning, collectingWastewater, raining, harvestingRainwaterWithOpenedTank, irrigating)
 import Data.Array (drop, foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (insert)
@@ -65,10 +65,14 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ foodSharing processParams.foodSharingParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
       --------- below here we use the new design (using a monad reader) to represent processes
-      RainwaterHarvestingTank -> foldl (runProcess sys interval) state' [raining,
-                                                                         rainwaterHarvesting_tank,
-                                                                         collectingWastewater]
-      RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [raining, rainwaterHarvesting_tank, cleaning, irrigation, collectingWastewater]
+      RainwaterHarvestingTank -> foldl (runProcess sys interval) state' [ raining
+                                                                        , harvestingRainwaterWithOpenedTank
+                                                                        , collectingWastewater]
+      RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [ raining
+                                                                          , harvestingRainwaterWithOpenedTank
+                                                                          , cleaning
+                                                                          , irrigatingGarden
+                                                                          , collectingWastewater]
       _ -> State []
 
 
