@@ -74,9 +74,9 @@ harvestingRainwaterWithOpenedTank ::
   -> Reader SystemState State
 harvestingRainwaterWithOpenedTank ti = do
   SystemState { state: state@(State entries)
-              , processParams: { rainwaterHarvestingParam: { surfaceArea
-                                                           , capacity
-                                                           }
+              , processParams: { storingRainwaterParam: { surfaceArea
+                                                        , capacity
+                                                        }
                                }
               , timeseries
               } <- ask
@@ -159,7 +159,7 @@ storingRainwaterInTank ::
   -> Reader SystemState State
 storingRainwaterInTank ti = do
   SystemState { state: state@(State entries)
-              , processParams: { rainwaterHarvestingParam: { capacity
+              , processParams: { storingRainwaterParam: { capacity
                                                            }
                                }
               , timeseries
