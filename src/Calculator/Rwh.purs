@@ -160,20 +160,24 @@ cleaning ti = do
                  } <- ask
     let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
         volumeInTank = foldState RainwaterHarvesting Water GreyWater state
-        waterConsumed = cappedQty waterNeeded volumeInTank
+        tankWaterConsumed = cappedQty waterNeeded volumeInTank
+        tapWaterConsumed = subQty waterNeeded tankWaterConsumed
         entries' = [ Entry { process: RainwaterHarvesting
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty waterConsumed }
-                     -- waste or dark water?
+                           , quantity: negQty tankWaterConsumed }
+                   , Entry { process: TapWaterSupplying
+                           , matter: Water
+                           , matterProperty: TapWater
+                           , quantity: negQty tapWaterConsumed }
                    , Entry { process: Cleaning
                            , matter: Waste
                            , matterProperty: BlackWater
-                           , quantity: waterConsumed }
+                           , quantity: waterNeeded }
                    ]
-        notifications = [Notification { process: Cleaning
+        notifications = [Notification { process: TapWaterSupplying
                                       , typ: CleaningNotEnoughTankWater
-                                      , on: waterConsumed < waterNeeded} ]
+                                      , on: tapWaterConsumed > ZeroQuantity } ]
     pure $ State $ entries <> entries' <> notifications
 
 irrigation ::
@@ -188,21 +192,24 @@ irrigation ti = do
           case tsw of IrrigationTimeserie ts -> ts ti
                       _ -> Nothing
         volumeInTank = foldState RainwaterHarvesting Water GreyWater state
-        waterConsumed = cappedQty waterNeeded volumeInTank
+        tankWaterConsumed = cappedQty waterNeeded volumeInTank
+        tapWaterConsumed = subQty waterNeeded tankWaterConsumed
         entries' = [ Entry { process: RainwaterHarvesting
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty waterConsumed }
-                     -- waste or dark water?
+                           , quantity: negQty tankWaterConsumed }
+                   , Entry { process: TapWaterSupplying
+                           , matter: Water
+                           , matterProperty: TapWater
+                           , quantity: negQty tapWaterConsumed }
                    , Entry { process: Cleaning
                            , matter: Waste
                            , matterProperty: BlackWater
                            , quantity: waterConsumed }
                    ]
-                   -- TODO fix notification + tap water
-        notifications = [Notification { process: Cleaning
-                                      , typ: CleaningNotEnoughTankWater
-                                      , on: waterConsumed < waterNeeded} ]
+        notifications = [Notification { process: TapWaterSupplying
+                                      , typ: IrrigationNotEnoughTankWater
+                                      , on: tapWaterConsumed > ZeroQuantity } ]
     pure $ State $ entries <> entries' <> notifications
 
 
