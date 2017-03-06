@@ -3,7 +3,7 @@ module Calculator.Nexus where
 import Prelude
 import Control.Monad.Reader
 import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, raining, harvestingRainwaterWithOpenedTank, irrigating)
+import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
 import Data.Array (drop, foldl, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (insert)
@@ -73,6 +73,12 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                           , cleaning
                                                                           , irrigatingGarden
                                                                           , collectingWastewater]
+      RainwaterHarvestingCollection -> foldl (runProcess sys interval) state' [ raining
+                                                                              , collectingRainwater
+                                                                              , storingRainwaterInTank
+                                                                              , cleaning
+                                                                              , irrigatingGarden
+                                                                              , collectingWastewater]
       _ -> State []
 
 

@@ -7,7 +7,7 @@ import Calculator.Rwh as R
 import Calculator.Model (Options(..), Process(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemState(..), Time(..), foldNotifications, initProcessParams)
 import Calculator.Plot (plotData)
 import Control.Monad.Reader (runReader)
-import Data.Array (last)
+import Data.Array (last, head)
 import Data.Date (Date, Month(..), canonicalDate, day, month, year)
 import Data.Enum (succ, toEnum)
 import Data.Map (empty)
@@ -42,7 +42,7 @@ systemStateEx = SystemState { scale: { period: OneDay
                             , state: State []
                             , systemParams: systemParamsEx
                             , processParams: initProcessParams
-                            , current: RainwaterHarvestingTank
+                            , current: RainwaterHarvestingCollection
                             , timeseries: empty
                           }
 
@@ -51,7 +51,5 @@ r1 = runReader (R.harvestingRainwaterWithOpenedTank (TimeInterval { date: dStart
 -- r3 = runReader (R.raining dStop) systemStateEx
 
 nexus = scanNexus systemStateEx
-r2 = unsafePartial $ fromJust $ last $ scanNexus systemStateEx
+r2 = unsafePartial $ fromJust $ head $ scanNexus systemStateEx
 r2n (SystemState st) = foldNotifications HarvestingRainwaterWithOpenedTank st.state
-
--- plotted = plotData $ scanNexus systemStateEx
