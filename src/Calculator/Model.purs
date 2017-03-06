@@ -542,7 +542,7 @@ managedWasteParam = { title: "Managed Waste"
 
 
 rainingParam = { title: "Raining"
-               , timeserieKey: "2015" -- TODO currently not used, to implement
+               , timeserieKey: "2013" -- TODO currently not used, to implement
                }
 
 storingRainwaterParam = { title: "Storing Rainwater"
