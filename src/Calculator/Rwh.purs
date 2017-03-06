@@ -59,12 +59,12 @@ raining ti = do
                  , systemParams: (SystemParams { estateSurfaceArea })
                  , timeseries
                  } <- ask
-    let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+    let rainingmm = fromMaybe 0.0 $ do
           tsw <- lookup Raining timeseries
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
-          -- TODO: more unit convertion to do here
-        rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * waterVolumePerSquareCm)
+          -- TODO: recheck unit convertion here
+        rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * (rainingmm * 0.001)) * 1000.0
     pure $ State $ entries <>
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
       ]
@@ -81,12 +81,12 @@ harvestingRainwaterWithOpenedTank ti = do
               , systemParams: SystemParams { estateSurfaceArea }
               , timeseries
               } <- ask
-  let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+  let rainingmm = fromMaybe 0.0 $ do
           tsw <- lookup Raining timeseries
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
       -- TODO: eventually more unit convertion to do here later
-      harvestableVolume = Volume Water $ (case estateSurfaceArea of SurfaceArea sa -> sa * waterVolumePerSquareCm)
+      harvestableVolume = Volume Water $ (case estateSurfaceArea of SurfaceArea sa -> sa * rainingmm * 0.001) * 1000.0
       volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
@@ -130,15 +130,15 @@ collectingRainwater ti = do
                                                            , collectingCapacity }  }
               , timeseries
               } <- ask
-  let waterVolumePerSquareCm = fromMaybe 0.0 $ do
+  let rainingmm = fromMaybe 0.0 $ do
           tsw <- lookup Raining timeseries
           case tsw of RainingTimeserie ts -> ts ti
                       _ -> Nothing
       surfaceArea' = blockToRoofSurface numberOfBlocks
       -- TODO recheck unit convertion here
-      collectedWater = Volume Water $ surfaceArea' * (waterVolumePerSquareCm * 10000.0) * collectingCapacity
+      collectedWater = Volume Water $ surfaceArea' * (rainingmm * 0.001) * 1000.0 * collectingCapacity
       traces = [ Trace { process: RainwaterCollecting
-                       , message: " waterVolumePerSquareCm " <> show waterVolumePerSquareCm }
+                       , message: " rainingmm " <> show rainingmm }
                , Trace { process: RainwaterCollecting
                        , message: " surfacearea' " <> show surfaceArea' }
                , Trace { process: RainwaterCollecting
