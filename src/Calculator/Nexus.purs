@@ -2,13 +2,15 @@ module Calculator.Nexus where
 
 import Prelude
 import Control.Monad.Reader
+import Rain as Rain
+import Calculator.Cleaning as Cleaning
 import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
 import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
-import Data.Array (drop, foldl, scanl, uncons, (:))
+import Data.Array (drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (insert)
 import Data.Maybe (Maybe(..))
-import Rain as Rain
+import Data.Tuple (Tuple(..))
 import Time (TimeInterval, dates, intervals)
 
 scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
@@ -92,5 +94,8 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
   scanl nexusSystem systemState' ivals
   where systemState' = SystemState $ sys { timeseries = timeseries' }
         ivals = (intervals window period)
-        timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
+        -- timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
+        timeseries' = foldr (\(Tuple k t) m -> insert k t m) ts [ Tuple Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals))
+                                                                , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
+                                                                ]
         -- TODO supply other timeseries (irrigation, cleaning)

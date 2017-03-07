@@ -13,7 +13,6 @@ import Prelude (flip, ($), (-), (<<<))
 import Time (TimeInterval(..), TimePeriod(..))
 
 
--- TODO plug real data and select on `key` parameter
 buildTimeserie :: String -> Array TimeInterval -> Timeserie Number
 buildTimeserie key intervals = flip lookup $ (foldr feed empty intervals)
   where

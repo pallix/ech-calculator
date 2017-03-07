@@ -30,9 +30,9 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               }
 
 dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 3)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) December (fromJust $ toEnum 3)
 
-systemStateEx = SystemState { scale: { period: OneDay
+systemStateEx = SystemState { scale: { period: OneMonth
                                      , scale: PersonScale
                                      , time: Month -- old scale system, TODO deprecate
                                      , window: TimeWindow { start: dStart
@@ -51,5 +51,5 @@ r1 = runReader (R.harvestingRainwaterWithOpenedTank (TimeInterval { date: dStart
 -- r3 = runReader (R.raining dStop) systemStateEx
 
 nexus = scanNexus systemStateEx
-r2 = unsafePartial $ fromJust $ head $ scanNexus systemStateEx
+r2 = unsafePartial $ fromJust $ last $ scanNexus systemStateEx
 r2n (SystemState st) = foldNotifications StoringRainwater st.state

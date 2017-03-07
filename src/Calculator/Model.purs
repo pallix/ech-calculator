@@ -467,7 +467,7 @@ type ProcessParams = { eatingParam ::
 type ProcessParam = Record
 
 data TimeserieWrapper = RainingTimeserie (Timeserie Number) |
-                        CleaningTimeserie (Timeserie Int) |
+                        CleaningTimeserie (Timeserie Number) |
                         IrrigationGardenTimeserie (Timeserie Number)
 
 data SystemState = SystemState { current :: Options
