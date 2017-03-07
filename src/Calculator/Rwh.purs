@@ -165,7 +165,7 @@ storingRainwaterInTank ti = do
                                }
               , timeseries
               } <- ask
-  let harvestableVolume = foldState  RainwaterCollecting Water GreyWater state
+  let harvestableVolume = foldState RainwaterCollecting Water GreyWater state
       volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
@@ -221,14 +221,18 @@ cleaning ::
   -> Reader SystemState State
 cleaning ti = do
     SystemState { state: state@(State entries)
-                 , processParams: { cleaningParam: { surfaceArea
-                                                   , waterConsumptionPerSqm }}
+                 , timeseries
                  } <- ask
-    let waterNeeded = Volume Water $ (unwrap surfaceArea) * waterConsumptionPerSqm
-        -- TODO use a timeserie here
+    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+          tsw <- lookup Cleaning timeseries
+          case tsw of CleaningTimeserie ts -> ts ti
+                      _ -> Nothing
         volumeInTank = foldState StoringRainwater Water GreyWater state
         tankWaterConsumed = cappedQty waterNeeded volumeInTank
         tapWaterConsumed = subQty waterNeeded tankWaterConsumed
+        traces = [ Trace { process: Cleaning
+                         , message: " waterNeeded " <> show waterNeeded }
+                 ]
         entries' = [ Entry { process: StoringRainwater
                            , matter: Water
                            , matterProperty: GreyWater
@@ -245,7 +249,7 @@ cleaning ti = do
         notifications = [Notification { process: TapWaterSupplying
                                       , typ: CleaningNotEnoughTankWater
                                       , on: tapWaterConsumed > ZeroQuantity } ]
-    pure $ State $ entries <> entries' <> notifications
+    pure $ State $ entries <> traces <> entries' <> notifications
 
 irrigatingGarden ::
      TimeInterval

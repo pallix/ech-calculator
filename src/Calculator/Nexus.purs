@@ -2,13 +2,15 @@ module Calculator.Nexus where
 
 import Prelude
 import Control.Monad.Reader
-import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
-import Data.Array (drop, foldl, scanl, uncons, (:))
-import Data.Date (Date)
-import Data.Map (insert)
-import Data.Maybe (Maybe(..))
+import Calculator.Cleaning as Cleaning
 import Rain as Rain
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
+import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
+import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
+import Data.Date (Date)
+import Data.Map (Map, empty, fromFoldable, insert)
+import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..))
 import Time (TimeInterval, dates, intervals)
 
 scaleFirstEntry :: SystemScale -> SystemParams -> State -> State
@@ -82,7 +84,9 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
       _ -> State []
 
 
-runProcess sys interval st process = runReader (process interval) $ SystemState $ sys { state = st }
+runProcess sys interval st process = runReader (process interval) $ SystemState $ sys { state = st
+                                                                                      , interval = interval
+                                                                                      }
 
 
 scanNexus :: SystemState -> Array SystemState
@@ -91,6 +95,29 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
                                        , processParams: { rainingParam: { timeserieKey } }} ) =
   scanl nexusSystem systemState' ivals
   where systemState' = SystemState $ sys { timeseries = timeseries' }
-        ivals = (intervals window period)
-        timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
-        -- TODO supply other timeseries (irrigation, cleaning)
+        ivals = intervals window period
+        -- timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
+        timeseries' = foldr (\(Tuple k t) m -> insert k t m) ts [ Tuple Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals))
+                                                                , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
+                                                                ]
+        -- TODO supply other timeseries (irrigation)
+
+type FinalVolumes = { interval :: TimeInterval
+                    , volumes :: Map Process (Quantity Matter) }
+
+calculateFinalVolumes :: Array SystemState -> Array FinalVolumes
+calculateFinalVolumes systemStates =
+  foldr (\systemState arr ->
+          let calcVolumes :: SystemState -> Map Process (Quantity Matter)
+              calcVolumes (SystemState { state }) = fromFoldable [ Tuple Raining             (foldState Raining             Water GreyWater  state)
+                                                                 , Tuple RainwaterCollecting (foldState RainwaterCollecting Water GreyWater  state)
+                                                                 , Tuple Cleaning            (foldState Cleaning            Water BlackWater state)
+                                                                 , Tuple StoringRainwater    (foldState StoringRainwater    Water GreyWater  state)
+                                                                 , Tuple IrrigatingGarden    (foldState IrrigatingGarden    Water GreyWater  state)
+                                                                 , Tuple TapWaterSupplying   (foldState TapWaterSupplying   Water TapWater   state)
+                                                                 ]
+              calcFinalVolumes ss@(SystemState { interval }) = { interval: interval
+                                                               , volumes: calcVolumes ss
+                                             }
+          in
+           cons (calcFinalVolumes systemState) arr) [] systemStates
