@@ -53,7 +53,7 @@ import Data.Map (Map, delete, empty, insert)
 import Data.Maybe (maybe, Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
-import Math (trunc, abs)
+import Math (trunc, abs, floor)
 import Time (TimeInterval(..), TimePeriod, TimeWindow, dates)
 
 --
@@ -386,7 +386,10 @@ foldNotifications process (State entries) = foldl f empty entries
 
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
+    show ( Weight _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 10.0 ) / 10000000.0 ) <> " MTons"
+    show ( Volume _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 10.0 ) / 10000000.0 ) <> " ML"
     show ( Weight _ a ) | a >= 1000.0 = ( show $ trunc ( a * 1.0 ) / 1000.0 ) <> " Tons"
+    show ( Volume _ a ) | a >= 1000.0 = ( show $ trunc ( a * 1.0 ) / 1000.0 ) <> " KL"
     show ( Weight _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "Kg"
     show ( Volume _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"

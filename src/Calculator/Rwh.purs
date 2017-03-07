@@ -15,6 +15,7 @@ import Data.Newtype (unwrap)
 import Data.Traversable (sum)
 import Prelude (id, show, ($), (*), (-), (<), (<<<), (>))
 import Time (TimeInterval(..), TimePeriod(..))
+import Debug.Trace (spy)
 
 type RainfallTimeseries = Map Month Number
 

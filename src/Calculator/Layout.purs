@@ -284,6 +284,12 @@ gardenWaterNeed = initialState RainwaterCollecting Water GreyWater
 
 managedWaste = initialState ManagingWaste Waste AllMatterProperty
 
+initialRainfall = initialState Raining Water AllMatterProperty
+
+storedRainwater = foldState StoringRainwater Water AllMatterProperty
+
+overflowTank = foldState WastewaterCollecting Waste AllMatterProperty
+
 emptyArrow = { title: "", quantity: "", details: "" }
 
 arrayArrow :: SystemState -> Array Flow2
@@ -383,8 +389,21 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
                   <> ( replicate 2 emptyArrow ) <> singleton { title: "\\", quantity: show $ initialFoodShared state , details: "of Food Shared" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 7 emptyArrow )
 
+arrayArrow (SystemState { current: RainwaterHarvestingTank, state } ) =
+                     ( replicate 7 emptyArrow )
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ storedRainwater state, details: "of Rainfall Collected" }
+                                                <> singleton emptyArrow
+                                                <> singleton { title: "_", quantity: show $ overflowTank state, details: "of Wastewater" }
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 7 emptyArrow )
 
-
+arrayArrow _  = ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
 
 --
 -- arrayArrow [ a, b, c ]  = ( replicate 10 emptyArrow )
@@ -400,23 +419,6 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
 --                         <> ( replicate  3 emptyArrow ) <> singleton a <> ( replicate 1 emptyArrow ) <> singleton b <> ( replicate 3 emptyArrow )
 --                         <> ( replicate 10 emptyArrow )
 --                         <> ( replicate  4 emptyArrow ) <> singleton d <> ( replicate  4 emptyArrow )
-
-
-arrayArrow (SystemState { current: RainwaterHarvestingTank, state } ) =
-                     ( replicate 7 emptyArrow )
-                  <> ( replicate 6 emptyArrow )
-                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Rainfall" }
-                                                <> singleton emptyArrow
-                                                <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Wastewater" }
-                  <> ( replicate 6 emptyArrow )
-                  <> ( replicate 7 emptyArrow )
-
-arrayArrow _  = ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
-             <> ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
-             <> ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
 
 arrows :: forall e. Boolean -> Boolean -> SystemState -> Markup e
 arrows hover grid state = do
