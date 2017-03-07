@@ -77,19 +77,19 @@ $( document ).ready(function() {
   	'max': [ 10000 ]
   };
 
-  var timeSlider = document.getElementById('time-slider');
-
-  noUiSlider.create(timeSlider, {
-  	range: timeRange,
-    start: [ 500, 4000 ],
-	  connect: true,
-    behaviour: 'drag-fixed',
-  	orientation: 'vertical',
-  	pips: {
-  		mode: 'range',
-  		density: 3
-  	}
-  });
+  // var timeSlider = document.getElementById('time-slider');
+  //
+  // noUiSlider.create(timeSlider, {
+  // 	range: timeRange,
+  //   start: [ 500, 4000 ],
+	//   connect: true,
+  //   behaviour: 'drag-fixed',
+  // 	orientation: 'vertical',
+  // 	pips: {
+  // 		mode: 'range',
+  // 		density: 3
+  // 	}
+  // });
 
   swiperTime.on("slideChangeEnd", function(ev) {
     $(".control-layer").remove()
@@ -531,7 +531,6 @@ $( document ).ready(function() {
         $('#eatedFoodRatioLayered').remove()
         break;
       case "Calculator.Model.EatingBinning":
-
         break;
       case "Calculator.Model.EatingBinningWormComposting":
       case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
@@ -539,6 +538,9 @@ $( document ).ready(function() {
       case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
       case "Calculator.Model.EatingBinningFoodSharing":
       case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+      case "Calculator.Model.RainwaterHarvestingTank":
+      case "Calculator.Model.RainwaterHarvestingDemand":
+      case "Calculator.Model.RainwaterHarvestingCollection":
         break;
       default:
         if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")

@@ -2,8 +2,8 @@ module Rainwater where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model ( nexusSystem
-                        , initProcessParams
+import Calculator.Nexus (nexusSystem, scanNexus)
+import Calculator.Model ( initProcessParams
                         , State(..)
                         , Matter(..)
                         , MatterProperty(..)
@@ -20,12 +20,25 @@ import Calculator.Model ( nexusSystem
                         , ProcessParams(..)
                         , Options(..)
                         , SurfaceArea(..))
+
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), dates)
+
+import Partial.Unsafe (unsafePartial)
+
+import Data.DateTime as DT
+import Data.Time.Duration (Days(..))
+import Data.Date (Date, Month(..), canonicalDate, day, month, year)
+import Data.Maybe (fromJust, maybe, Maybe(..))
+import Data.Enum (succ, toEnum)
+
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Debug.Trace (spy)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
-import Data.Array (cons, snoc)
+import Data.Array (cons, snoc, last, head)
+import Data.Map (empty)
+
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
 import Data.Tuple (Tuple(..))
@@ -78,7 +91,9 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 -- list = foldp id ["Food"] actions
 
 
-optionsLabel Tank = "Tank"
+optionsLabel RainwaterHarvestingTank = "Rainwater Tank"
+optionsLabel RainwaterHarvestingDemand = "Rainwater Usage"
+optionsLabel RainwaterHarvestingCollection = "Rainwater Collection"
 optionsLabel EatingBinning = "Food & Waste"
 optionsLabel EatingBinningWormComposting = "Wormery"
 -- optionsLabel EatingBinningWormCompostingGarden = "Wormery & Garden"
@@ -92,7 +107,7 @@ optionsLabel EatingBinningFoodSharing = "Food Sharing"
 optionsLabel EatingBinningWormCompostingFoodSharing = "Food Sharing"
 optionsLabel _ = "Not Implemented Yet"
 
-nexusOptions = select "Options" (Tank :| [ EatingBinning
+nexusOptions = select "Options" (RainwaterHarvestingTank :| [ EatingBinning
                                               --  , EatingBinningWormComposting
                                                , EatingBinningWormCompostingFoodGardening
                                               --  , EatingBinningWormCompostingFoodGardenWatering
@@ -106,7 +121,11 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
                                            , estateFlatsOneBedroom : 70
                                            , estateFlatsTwoBedroom : 23
                                            , estateFlatsThreeBedroom : 15
+                                           , estateSurfaceArea: SurfaceArea 12011.50
                                            }
+
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2013) January (fromJust $ toEnum 1)
 
 systemParams = systemParamsWithConstants ( 0 )
 
@@ -124,40 +143,75 @@ timescaleToString Year = "Year"
 timescaleToString Month  = "Month"
 timescaleToString Day  = "Day"
 
+timePeriodToString OneDay = "Day"
+-- timePeriodToString OneWeek = "Week"
+timePeriodToString OneMonth = "Month"
+
+
+windowChoiceToString Default = "Default"
+
+chooseWindow Default = TimeWindow {start: dStart, end: dStop}
+
+data WindowChoice = Default
+
 controllableParam numberHouseholdEating
                   numberCompactors
                   numberWormeries
                   gardenSurface
-                  roofSurface
+                  numberOfBlocks
                   numberSharingHouseholds = initProcessParams { eatingParam = initProcessParams.eatingParam { numberHouseholdEating = numberHouseholdEating }
                                                      , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
                                                      , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  }
                                                      , foodGardeningParam = initProcessParams.foodGardeningParam { surfaceArea = gardenSurface }
-                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { surfaceArea = roofSurface }
+                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { numberOfBlocks = numberOfBlocks }
                                                      , foodSharingParam = initProcessParams.foodSharingParam { numberSharingHouseholds = numberSharingHouseholds }}
 
 ratio ( Ratio _ { ratio } ) = ratio
 
-systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
-systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
+-- systemStateEx = SystemState { scale: { period: OneDay
+--                                      , scale: PersonScale
+--                                      , time: Month -- old scale system, TODO deprecate
+--                                      , window: TimeWindow { start: dStart
+--                                                           , end: dStop
+--                                                           }
+--                                      }
+--                             , state: State []
+--                             , systemParams: systemParamsEx
+--                             , processParams: initProcessParams
+--                             , current: RainwaterHarvestingCollection
+--                             , timeseries: empty
+--                           }
 
-mkScale s t = { scale : s, time: t}
+systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
+systemState current scale systemParams processParams state = SystemState { scale
+                                                                         , systemParams
+                                                                         , processParams
+                                                                         , current
+                                                                         , state
+                                                                         , timeseries: empty
+                                                                         }
+
+mkScale s t p wc = { scale : s, time: t, period: p, window: chooseWindow wc}
 
 areaToInt :: SurfaceArea -> Number
 areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
 
+unsafeScanNexus = unsafePartial $ fromJust <<< last <<< scanNexus
+
 ui :: forall e e'. UI e (Markup e')
 ui = interface <$> ( boolean "Info" false )
                <*> ( boolean "Grid" false )
-               <*> ( spy <$> nexusSystem <$> ( systemState <$> nexusOptions
+               <*> ( spy <$> unsafeScanNexus <$> ( systemState <$> nexusOptions
                                                           <*> ( mkScale <$> (select "Scale" ( EstateScale :| [ HouseholdScale, PersonScale ]) scaleToString)
-                                                                        <*> (select "Time" (  Day :| [ Month, Year ]) timescaleToString) )
+                                                                        <*> (select "Time" (  Day :| [ ]) timescaleToString)
+                                                                        <*> (select "Period" (  OneDay :| [ OneMonth ]) timePeriodToString)
+                                                                        <*> (select "Window" (  Default :| [ ]) windowChoiceToString) )
                                                           <*> pure systemParams
                                                           <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( intSlider "numberHouseholdEating" 0 121 ( initProcessParams.eatingParam.numberHouseholdEating ) )
                                                                                                                  <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
                                                                                                                  <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
-                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "roofSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.rainwaterCollectingParam.surfaceArea ) ) )
+                                                                                                                 <*> ( intSlider "numberOfBlocks" 0 10 ( initProcessParams.rainwaterCollectingParam.numberOfBlocks ) )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                                           <*> ( pure initState ) ) )
 
