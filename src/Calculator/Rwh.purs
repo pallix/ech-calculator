@@ -165,7 +165,7 @@ storingRainwaterInTank ti = do
                                }
               , timeseries
               } <- ask
-  let harvestableVolume = foldState  RainwaterCollecting Water GreyWater state
+  let harvestableVolume = foldState RainwaterCollecting Water GreyWater state
       volumeInTank = foldState StoringRainwater Water GreyWater state
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank

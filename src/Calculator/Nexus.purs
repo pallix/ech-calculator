@@ -2,13 +2,13 @@ module Calculator.Nexus where
 
 import Prelude
 import Control.Monad.Reader
-import Rain as Rain
 import Calculator.Cleaning as Cleaning
-import Calculator.Model (Entry(..), Options(..), Process(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
+import Rain as Rain
+import Calculator.Model (Entry(..), Matter, Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
 import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
 import Data.Array (drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
-import Data.Map (insert)
+import Data.Map (Map, empty, insert)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Time (TimeInterval, dates, intervals)
@@ -99,3 +99,20 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
                                                                 , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
                                                                 ]
         -- TODO supply other timeseries (irrigation, cleaning)
+
+type FinalVolumes = { interval :: TimeInterval
+                    , volumes :: Map Process (Quantity Matter) }
+
+-- calculateFinalVolumes :: Array SystemState -> Array FinalVolumes
+-- calculateFinalVolumes systemStates =
+--   foldr (\(SystemState { state }) m ->
+          
+--           let calcVolume :: State -> Map Process (Quantity Matter)
+--               calcVolumes state = fromFoldable[ Tuple Raining (foldState Raining GreyWater state)
+--                                               , Tuple RainwaterCollecting (foldState RainwaterCollecting Water GreyWater state)
+--                                               , Tuple StoringRainwater (fold)]
+--                   [Raining, RainwaterCollecting, StoringRainwater, IrrigatingGarden, Cleaning]
+--                 in
+--           insert (calcVolumes state) m
+
+--           ) empty systemStates
