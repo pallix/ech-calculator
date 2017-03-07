@@ -70,6 +70,27 @@ $( document ).ready(function() {
 
   timeSelect = $('#flare-component-5').get(0);
 
+  var timeRange = {
+  	'min': [     0 ],
+  	// '10%': [   500,  500 ],
+  	// '50%': [  4000, 1000 ],
+  	'max': [ 10000 ]
+  };
+
+  var timeSlider = document.getElementById('time-slider');
+
+  noUiSlider.create(timeSlider, {
+  	range: timeRange,
+    start: [ 500, 4000 ],
+	  connect: true,
+    behaviour: 'drag-fixed',
+  	orientation: 'vertical',
+  	pips: {
+  		mode: 'range',
+  		density: 3
+  	}
+  });
+
   swiperTime.on("slideChangeEnd", function(ev) {
     $(".control-layer").remove()
     timeSelect.options[ev.activeIndex].selected = true

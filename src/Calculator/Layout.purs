@@ -66,8 +66,11 @@ hex hover grid item = li ! className "hex" ! id item.title $ do
                         image "Shopped Food" = "/images/shop_food.svg"
                         image "Managed Waste" = "/images/managed_waste.svg"
                         image "Rainwater" = "/images/rainwater.svg"
+                        image "Rainfall" = "/images/rainwater.svg"
                         image "Tap Water" = "/images/tapwater.svg"
                         image "Rainwater Collection" = "/images/rainwater_collection.svg"
+                        image "Tank" = "/images/rainwater_harvesting.svg"
+                        image "Wastewater" = "/images/wastewater.svg"
                         image "_" = "https://dummyimage.com/200x200&text=+"
                         image _ = ""
 
@@ -227,6 +230,17 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodSharing, state 
                      <> ( replicate 6 emptyHex )
                      <> ( replicate 3 emptyHex ) <> singleton {title: "Food Sharing", details: "Assuming 55% of shareable food"}  <> ( replicate 3 emptyHex )
 
+arrayHex ( SystemState { current: Tank, state } ) =
+                   ( replicate 7 emptyHex )
+                <> ( replicate  6 emptyHex )
+                <> ( replicate 1 emptyHex ) <> singleton { title : "Rainfall", details: ( show $ initialShoppedFood state ) <> " for the whole Estate"  }
+                                            <> singleton emptyHex
+                                            <> singleton { title : "Tank", details: ( show $ eatedFood state ) <> " eaten" }
+                                            <> singleton emptyHex
+                                            <> singleton { title : "Wastewater", details: (show $ ghgEmitted state) <> " CO2 emitted" }
+                <> ( replicate 6 emptyHex )
+                <> ( replicate  7 emptyHex )
+
 --
 -- arrayHex [ a, b, c, d ]  = ( replicate 10 { title: "" } )
 --                         <> ( replicate  4 { title: "" } ) <> singleton c <> ( replicate  4 { title: "" } )
@@ -384,6 +398,16 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
 --                         <> ( replicate  3 emptyArrow ) <> singleton a <> ( replicate 1 emptyArrow ) <> singleton b <> ( replicate 3 emptyArrow )
 --                         <> ( replicate 10 emptyArrow )
 --                         <> ( replicate  4 emptyArrow ) <> singleton d <> ( replicate  4 emptyArrow )
+
+
+arrayArrow (SystemState { current: Tank, state } ) =
+                     ( replicate 7 emptyArrow )
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ initialShoppedFood state, details: "of Rainfall" }
+                                                <> singleton emptyArrow
+                                                <> singleton { title: "_", quantity: show $ managedWaste state, details: "of Wastewater" }
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 7 emptyArrow )
 
 arrayArrow _  = ( replicate 10 emptyArrow )
              <> ( replicate  9 emptyArrow )

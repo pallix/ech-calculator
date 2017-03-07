@@ -1,0 +1,214 @@
+html, body
+{
+    height: 100%;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    opacity: 1;
+}
+body {
+    background: rgb(123, 158, 158);
+    font-size: 1em;
+}
+
+h1 {
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  font-size: 1.4em;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  color: #FFF;
+}
+
+h2, h4 {
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  color: #FFF;
+}
+
+p {
+  font-size: 0.6em;
+}
+
+#output .hex h2 {
+  font-family: 'Raleway', sans-serif;
+  text-align: center;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: 1em;
+}
+
+.flare-input > label {
+    display: inline-block;
+    width: 100px;
+}
+
+#controls {
+  text-align: center;
+  bottom: 10px;
+  position: absolute;
+  width: 100%;
+}
+
+.center {
+  margin: 0 auto;
+  width: 30%;
+}
+
+#controls #flare-component-3 { display:none; }
+
+#close {
+  width: 100%;
+  filter: invert(100%);
+}
+#cog {
+  width: 100%;
+  margin: 0 auto;
+  bottom: 20px;
+  position: absolute;
+  filter: invert(100%);
+}
+
+#swiper-time { width:15%}
+#swiper-scale { width:20%}
+#swiper-scenario { width: 35%}
+
+.swiper-container {
+  height: 104px;
+  display: inline-block;
+  margin: 0 50px;
+}
+
+#flare-controls { display: none;}
+
+.swiper-slide {
+  top: 14%;
+  font-family: 'Raleway', sans-serif;
+}
+.flare-input {
+    margin-bottom: 10px;
+}
+
+.flare-input-number {
+    width: 85px;
+}
+
+input:invalid {
+    background-color: red;
+}
+
+fieldset {
+    border: none;
+    padding: 0px;
+}
+
+.swiper-button-next {
+  filter: brightness(0) invert(1);
+}
+
+.swiper-button-prev {
+  filter: brightness(0) invert(1);
+}
+
+.swiper-pagination-bullet {
+  filter: brightness(0) invert(1) brightness(50);
+}
+
+.swiper-pagination-bullet.swiper-pagination-bullet-active {
+  filter: brightness(0) invert(1);
+}
+
+fieldset legend {
+    padding: 0px;
+    width: 100px;
+    float: left;
+}
+
+fieldset label {
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+#output {
+    margin-top: 20px;
+}
+
+/*div.arrow-css {
+ display: flex;
+ margin: 2em auto 0;
+}
+
+.arrow-css {
+  transform: translateZ(0) rotate(90deg) translateX(30px) translateY(-56px);
+	border-style: solid;
+}*/
+
+/* raleway-regular - latin */
+@font-face {
+  font-family: 'Raleway';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/raleway-v11-latin-regular.eot'); /* IE9 Compat Modes */
+  src: local('Raleway'), local('Raleway-Regular'),
+       url('../fonts/raleway-v11-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/raleway-v11-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/raleway-v11-latin-regular.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/raleway-v11-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/raleway-v11-latin-regular.svg#Raleway') format('svg'); /* Legacy iOS */
+}
+
+.top {
+	border-width: 5px 20px 20px 5px;
+	border-color: #fff transparent transparent #fff;
+}
+
+.right {
+	border-width: 5px 5px 20px 20px;
+	border-color: #fff #fff transparent transparent;
+}
+
+.bottom {
+	border-width: 20px 5px 5px 20px;
+	border-color: transparent #fff #fff transparent;
+}
+
+.left {
+	border-width: 20px 20px 5px 5px;
+	border-color: transparent transparent #fff #fff;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.25s, opacity 0.25s linear;
+}
+
+/*
+#output > div {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    background-color: #ccc;
+}
+
+#output > div.on {
+    background-color: #ebdd13;
+}*/
+
+/*
+#layer .layer-control {
+  margin-top: 130%;
+  margin-left: 100%;
+  width: 100%;
+}*/
+
+#time-slider .noUi-vertical .noUi-handle {
+    width: 28px;
+    height: 34px;
+    left: -6px;
+    top: -17px;
+}
+
+.noUi-pips

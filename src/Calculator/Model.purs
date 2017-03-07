@@ -75,6 +75,7 @@ data Options = EatingOnly
              | EatingBinningWormCompostingFoodGardenRainwater
              | EatingBinningFoodSharing
              | EatingBinningWormCompostingFoodSharing
+             | Tank
              | NotImplemented
 
 data Life = Life
@@ -174,7 +175,7 @@ data SurfaceArea = SurfaceArea Number -- ,,
 data Scale = PersonScale | HouseholdScale | EstateScale
 data Time = Year | Month | Day
 
-type SystemScale = { scale:: Scale, window :: TimeWindow, resolution:: TimeResolution}
+type SystemScale = { scale:: Scale, time :: Time}
 
 data Ratio a = Ratio a { ratio :: Number }
 
@@ -751,5 +752,5 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    -- $ eating ...
                                    $ foodSharing processParams.foodSharingParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
-
+      Tank -> State []
       _ -> State []
