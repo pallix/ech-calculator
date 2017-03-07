@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Calculator.Cleaning as Cleaning
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
+import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, pumping, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (Map, empty, fromFoldable, insert)
@@ -81,6 +81,14 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                               , cleaning
                                                                               , irrigatingGarden
                                                                               , collectingWastewater]
+      RainwaterHarvestingDistribution -> foldl (runProcess sys interval) state' [ raining
+                                                                                , collectingRainwater
+                                                                                , storingRainwaterInTank
+                                                                                , pumping
+                                                                                -- , distributing
+                                                                                , cleaning
+                                                                                , irrigatingGarden
+                                                                                , collectingWastewater]
       _ -> State []
 
 

@@ -107,6 +107,7 @@ data Options = EatingOnly
              | RainwaterHarvestingTank
              | RainwaterHarvestingDemand
              | RainwaterHarvestingCollection
+             | RainwaterHarvestingDistribution
              | NotImplemented
 
 data Life = Life
@@ -251,6 +252,7 @@ data Process =  AllProcess |
                 Cleaning |
                 WastewaterCollecting |
                 IrrigatingGarden |
+                Pumping |
                 Debug
 
 derive instance genericProcess :: Generic Process
@@ -461,6 +463,19 @@ type ProcessParams = { eatingParam ::
                                                 , surfaceArea :: SurfaceArea
                                                 , capacity :: Quantity Matter
                                                 }
+                     , pumpingParam :: { title :: String
+                                       , suctionHead :: Number
+                                                        -- ^^ height the water will rise before arriving at the pump (also known as the suction head).
+                                       , efficiency :: Number
+                                                       -- ^^ Pump efficiency = water power output ÷ power input
+
+                                                       -- https://en.wikipedia.org/wiki/Total_dynamic_head
+                                                       -- http://www.pumpfundamentals.com/what%20is%20head.htm
+                                       }
+                     , distributingParam :: { title :: String
+                                            , dischargeHead :: Number
+                                                               -- ^^ Maximum Height reached by the pipe after the pump (also known as the 'discharge head').
+                                            }
                      , cleaningParam :: { title :: String
                                         , surfaceArea :: SurfaceArea
                                         , waterConsumptionPerSqm :: Number -- TODO TO-ASK
@@ -559,6 +574,15 @@ cleaningParam = { title: "Cleaning"
                 , waterConsumptionPerSqm: 0.5
                 }
 
+pumpingParam = { title: "Pumping"
+               , suctionHead: 0.03
+               , efficiency: 0.75
+               }
+
+distributingParam = { title: "Distributing"
+                    , dischargeHead: 0.6
+                    }
+
 initProcessParams = { eatingParam
                     , binningParam
                     , wormCompostingParam
@@ -569,6 +593,8 @@ initProcessParams = { eatingParam
                     , rainingParam
                     , storingRainwaterParam
                     , cleaningParam
+                    , pumpingParam
+                    , distributingParam
                     }
 
 data Transform a b = Transform a b { ratio :: Number }

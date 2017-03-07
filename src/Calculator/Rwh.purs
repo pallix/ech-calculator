@@ -105,7 +105,7 @@ harvestingRainwaterWithOpenedTank ti = do
                  ] <> if overflow > ZeroQuantity then
                         [ Entry { process: StoringRainwater
                                 , matter: Waste
-                                , matterProperty: GreyWater
+                                , matterProperty: GreyWater -- TODO use matterProperty 'Overflow' for better tracking
                                 , quantity: overflow
                                 } ]
                         else []
@@ -153,6 +153,25 @@ collectingRainwater ti = do
                          , matter: Water
                          , matterProperty: GreyWater
                          , quantity: collectedWater}
+                 ]
+  pure $ State $ entries <> traces <> entries'
+
+
+pumping ::
+     TimeInterval
+  -> Reader SystemState State
+pumping ti = do
+  SystemState { state: state@(State entries)
+              , processParams: { pumpingParam: { suctionHead }
+                               , distributingParam: { dischargeHead }}
+              } <- ask
+  let -- power = head * flow * 1000 * 9.81 / (3.6 * 1000000)
+      -- todo: efficiency
+      -- http://www.engineeringtoolbox.com/pumps-power-d_505.html
+      traces = [ Trace { process: Pumping
+                       , message: " hello " }
+               ]
+      entries' = [
                  ]
   pure $ State $ entries <> traces <> entries'
 
