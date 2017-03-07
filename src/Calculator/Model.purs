@@ -476,6 +476,7 @@ data SystemState = SystemState { current :: Options
                                , systemParams :: SystemParams
                                , processParams :: ProcessParams
                                , timeseries :: Map Process TimeserieWrapper
+                               , interval :: TimeInterval
                                }
 
 
