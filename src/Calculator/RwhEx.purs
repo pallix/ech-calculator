@@ -44,6 +44,7 @@ systemStateEx = SystemState { scale: { period: OneMonth
                             , processParams: initProcessParams
                             , current: RainwaterHarvestingCollection
                             , timeseries: empty
+                            , interval: TimeInterval { date: dStart, period: OneMonth }
                           }
 
 r1 = runReader (R.harvestingRainwaterWithOpenedTank (TimeInterval { date: dStart, period: OneDay})) systemStateEx

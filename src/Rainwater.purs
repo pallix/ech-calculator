@@ -182,19 +182,25 @@ ratio ( Ratio _ { ratio } ) = ratio
 --                             , timeseries: empty
 --                           }
 
-systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
-systemState current scale systemParams processParams state = SystemState { scale
+systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> TimeInterval -> SystemState
+systemState current scale systemParams processParams state interval = SystemState { scale
                                                                          , systemParams
                                                                          , processParams
                                                                          , current
                                                                          , state
                                                                          , timeseries: empty
+                                                                         , interval
                                                                          }
 
 mkScale s t p wc = { scale : s, time: t, period: p, window: chooseWindow wc}
 
 areaToInt :: SurfaceArea -> Number
 areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
+
+initInterval :: TimeInterval
+initInterval = TimeInterval { date : dStart
+                            , period : OneMonth
+                            }
 
 unsafeScanNexus = unsafePartial $ fromJust <<< last <<< scanNexus
 
@@ -213,7 +219,8 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
                                                                                                                  <*> ( intSlider "numberOfBlocks" 0 10 ( initProcessParams.rainwaterCollectingParam.numberOfBlocks ) )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
-                                                          <*> ( pure initState ) ) )
+                                                          <*> ( pure initState )
+                                                          <*> ( pure initInterval) ) )
 
 
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit

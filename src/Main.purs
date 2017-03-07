@@ -130,8 +130,10 @@ controllableParam numberHouseholdEating
 
 ratio ( Ratio _ { ratio } ) = ratio
 
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
+
 systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
-systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state, timeseries: empty }
+systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state, timeseries: empty, interval: TimeInterval { date: dStart, period: OneMonth } }
 
 dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
 -- TODO specify a real time window here
