@@ -29,8 +29,8 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               , estateSurfaceArea: SurfaceArea 12011.50
                               }
 
-dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) June (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) July (fromJust $ toEnum 1)
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) December (fromJust $ toEnum 1)
 
 systemStateEx = SystemState { scale: { period: OneMonth
                                      , scale: PersonScale

@@ -1,6 +1,9 @@
 module Calculator.Plot where
 
+import Node.ChildProcess
+import Control.Monad.Eff.Exception
 import Calculator.Model (Matter(..), MatterProperty(..), Process(..), SystemState(..), TimeserieWrapper(..), foldState)
+import Calculator.Nexus (VolumesInfo)
 import Control.Monad (bind, pure)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (log, logShow)
@@ -12,41 +15,37 @@ import Data.Map (lookup)
 import Data.Maybe (Maybe(..), fromJust, fromMaybe)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit)
-import Node.ChildProcess
 import Node.Encoding (Encoding(..))
 import Node.FS (FS)
 import Node.FS.Sync (writeTextFile)
 import Prelude (show, ($), (<<<), (<>))
 import Time (TimeInterval(..), intervals)
-import Control.Monad.Eff.Exception
 
-toGnuPlotFormat :: Array SystemState -> String
+toGnuPlotFormat :: Array VolumesInfo -> String
 toGnuPlotFormat systemStates =
-  foldl plotInterval header (zip (getIntervals $ head systemStates) systemStates)
+  foldl plotInterval header systemStates
   where
-    getIntervals Nothing = []
-    getIntervals (Just (SystemState { scale: {period, window}})) = intervals window period
-    header = "# Date Ts-Rain Rainwaterharvested\n"
-    plotInterval :: String -> Tuple TimeInterval SystemState -> String
-    plotInterval output (Tuple ti@(TimeInterval { date })
-                         (SystemState { state, timeseries })) =
+    header = "# Date Ts-Rain Tank Overflow\n"
+    plotInterval :: String -> VolumesInfo -> String
+    plotInterval output { interval: ti@(TimeInterval {date})
+                        , timeseries
+                        , volumes: { tankStoredRainwater
+                                   , overflowTank }} =
       let dateStr = (show <<< fromEnum <<< year $ date) <> "-" <> (show <<< fromEnum <<< month $ date) <> "-" <> (show <<< fromEnum <<< day $ date)
-          -- raining = foldState Raining Water GreyWater state
-          waterVolumePerSquareCm = fromMaybe 0.0 $ do
+          watermm = fromMaybe 0.0 $ do
             tsw <- lookup Raining timeseries
             case tsw of RainingTimeserie ts -> ts ti
                         _ -> Nothing
-          rainwaterHarvesting = foldState TankRainwaterStoring Water GreyWater state
       in
-       output <> dateStr <>  " " <> show waterVolumePerSquareCm <> " " <> show rainwaterHarvesting <> "\n"
+       output <> dateStr <>  " " <> show watermm <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> "\n"
 
 
-plotData systemStates = do
+plotData volumesInfo = do
   writeTextFile UTF8 "/tmp/nexus.dat" content
 --  fork "./scripts/plot.pg" []
   process <- spawn "./scripts/plot.gp" [""] defaultSpawnOptions
   onError process errorHandler
   log ""
   where
-    content = toGnuPlotFormat systemStates
+    content = toGnuPlotFormat volumesInfo
     errorHandler e = throwException $ toStandardError e

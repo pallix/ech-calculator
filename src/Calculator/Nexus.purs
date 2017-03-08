@@ -7,6 +7,7 @@ import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
 import Calculator.Rwh (cleaning, cleaning_distribution, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
+import Calculator.Timeserie (Timeserie)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (Map, empty, fromFoldable, insert)
@@ -24,7 +25,9 @@ scaleFirstEntry systemScale systemParams (State entries) =
 
 nexusSystem :: SystemState -> TimeInterval -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) interval =
-  SystemState $ sys { state = endState }
+  SystemState $ sys { state = endState
+                    , interval = interval
+                    }
   where
     state' = scaleFirstEntry scale systemParams state
     endState = case current of
@@ -111,7 +114,8 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
                                                                 ]
 
 type VolumesInfo = { interval :: TimeInterval
-                    , volumes :: { initialRainwater :: Quantity Matter
+                   , timeseries :: Map Process TimeserieWrapper
+                   , volumes :: { initialRainwater :: Quantity Matter
                                  , tankStoredRainwater :: Quantity Matter
                                  , overflowTank :: Quantity Matter
                                  , tapWaterUsed :: Quantity Matter } }
@@ -126,8 +130,9 @@ calculateVolumesInfo systemStates =
                                                     , tapWaterUsed:               (initialState TapWaterSupplying       Waste TapWater   state) `subQty` (foldState TapWaterSupplying       Waste TapWater   state)
                                                       -- TODO add others stuff here
                                                     }
-              calcFinalVolumes ss@(SystemState { interval }) = { interval: interval
-                                                               , volumes: calcVolumes ss
+              calcFinalVolumes ss@(SystemState { interval, timeseries }) = { interval
+                                                                           , timeseries
+                                                                           , volumes: calcVolumes ss
                                              }
           in
            cons (calcFinalVolumes systemState) arr) [] systemStates
