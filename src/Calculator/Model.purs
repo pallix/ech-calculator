@@ -1,5 +1,4 @@
-module Calculator.Model (Flow(Flow),
-                         Ratio(..),
+module Calculator.Model (Ratio(..),
                          Transform(..),
                          Quantity(..),
                          SurfaceArea(..),
@@ -23,6 +22,7 @@ module Calculator.Model (Flow(Flow),
                          TimeserieWrapper(..),
                          MatterProperty(..),
                          NotificationType(..),
+                         PumpType(..),
                          subQty,
                          addQty,
                          negQty,
@@ -73,10 +73,10 @@ data Usability = Hard | Medium | Easy
 data Happinness = Unhappy | Happy
 data Stress = Stressful | NotStressful
 
-data Flow a = Flow { input:: a,
-                     output:: a,
-                     stock:: a
-                   }
+-- data Flow a = Flow { input:: a,
+--                      output:: a,
+--                      stock:: a
+--                    }
 
 data SystemParams = SystemParams { houseHoldSize :: Int
                                 , estateAveragePersonPerHousehold:: Number
@@ -317,6 +317,9 @@ data Entry = Entry { process :: Process
            | Trace { process :: Process
                    , message :: String
                    }
+           | Flow { process :: Process
+                  , capacity :: Number -- L/m
+                  }
 
 derive instance genericEntry :: Generic Entry
 
@@ -324,6 +327,7 @@ instance showEntry :: Show Entry where
   show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
   show (Notification { process, typ, on }) = "N[ " <> show process <> " " <> show typ <> " " <> show on <> "]"
   show (Trace { process, message }) = "T[ " <> show process <> " " <> show message <> "]"
+  show (Flow {process, capacity}) = "F[ " <> show process <> " " <> show capacity <> "]"
 
 data State = State (Array Entry)
 
@@ -342,18 +346,22 @@ hasProcess process (Notification {process: p}) =
   p == process
 hasProcess process (Trace {process: p}) =
   p == process
+hasProcess process (Flow {process: p}) =
+  p == process
 
 hasMatter :: Matter -> Entry -> Boolean
 hasMatter matter (Entry {matter: m}) =
   m == matter
 hasMatter _ (Notification _) = false
 hasMatter _ (Trace _) = false
+hasMatter _ (Flow _) = false
 
 hasMatterProperty :: MatterProperty -> Entry -> Boolean
 hasMatterProperty matterProperty (Entry {matterProperty: mp}) =
   mp == matterProperty
 hasMatterProperty _ (Notification _) = false
 hasMatterProperty _ (Trace _) = false
+hasMatterProperty _ (Flow _) = false
 
 foldState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
 foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQuantity quantities
@@ -363,6 +371,7 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
     getQuantity (Entry {quantity: q}) = Just q
     getQuantity (Notification _) = Nothing
     getQuantity (Trace _) = Nothing
+    getQuantity (Flow _) = Nothing
     quantities = mapMaybe getQuantity states'
     sumQuantity acc qty = acc <> qty
 
@@ -374,15 +383,22 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
     getQuantity (Entry {quantity: q}) = Just q
     getQuantity (Notification _) = Nothing
     getQuantity (Trace _) = Nothing
+    getQuantity (Flow _) = Nothing
     quantities = mapMaybe getQuantity states'
 
 foldNotifications :: Process -> State -> Map NotificationType Entry
 foldNotifications process (State entries) = foldl f empty entries
   where
     f :: Map NotificationType Entry -> Entry -> Map NotificationType Entry
-    f m (Entry _) = m
-    f m (Trace _) = m
     f m n@(Notification { typ, on }) = if on then insert typ n m else delete typ m
+    f m _ = m
+
+foldFlows :: Process -> State -> Number
+foldFlows process (State entries) = foldl f 0.0 entries
+  where
+    f :: Number -> Entry -> Number
+    f m n@(Flow { process, capacity }) = capacity
+    f m _ = m
 
 -- /model for the event sourcing
 
@@ -407,6 +423,11 @@ instance mergeQty :: Semigroup ( Quantity a ) where
 
 derive instance genericOptions :: Generic Options
 instance showOptions :: Show Options where
+    show = gShow
+
+data PumpType = KloudKeeper80 | MathModel
+derive instance genericPumpType :: Generic PumpType
+instance showPumpType :: Show PumpType where
     show = gShow
 
 type ProcessParams = { eatingParam ::
@@ -464,13 +485,10 @@ type ProcessParams = { eatingParam ::
                                              , capacity :: Quantity Matter
                                              }
                      , pumpingParam :: { title :: String
+                                       , pumpType :: PumpType
                                        , suctionHead :: Number
                                                         -- ^^ height the water will rise before arriving at the pump (also known as the suction head).
-                                       , efficiency :: Number
-                                                       -- ^^ Pump efficiency = water power output ÷ power input
-
-                                                       -- https://en.wikipedia.org/wiki/Total_dynamic_head
-                                                       -- http://www.pumpfundamentals.com/what%20is%20head.htm
+                                       , hydraulicPowerKw :: Number
                                        }
                      , distributingParam :: { title :: String
                                             , dischargeHead :: Number
@@ -576,11 +594,12 @@ cleaningParam = { title: "Cleaning"
 
 pumpingParam = { title: "Pumping"
                , suctionHead: 0.03
-               , efficiency: 0.75
+               , hydraulicPowerKw: 0.6 -- for the mathematical model only
+               , pumpType: KloudKeeper80
                }
 
 distributingParam = { title: "Distributing"
-                    , dischargeHead: 0.6
+                    , dischargeHead: 30.0
                     }
 
 initProcessParams = { eatingParam

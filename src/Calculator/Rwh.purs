@@ -2,7 +2,8 @@
 module Calculator.Rwh where
 
 import Data.Date.Component
-import Calculator.Model (Entry(Notification, Entry, Trace), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Math as Math
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -12,9 +13,10 @@ import Data.Map (Map, empty, lookup)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Monoid ((<>))
 import Data.Newtype (unwrap)
+import Data.Ring (negate, (-))
 import Data.Traversable (sum)
 import Debug.Trace (spy)
-import Prelude (id, show, ($), (*), (-), (<), (<<<), (>))
+import Prelude (id, show, ($), (*), (+), (/), (<), (<<<), (>))
 import Time (TimeInterval(..), TimePeriod(..))
 
 type RainfallTimeseries = Map Month Number
@@ -162,16 +164,33 @@ pumping ::
   -> Reader SystemState State
 pumping ti = do
   SystemState { state: state@(State entries)
-              , processParams: { pumpingParam: { suctionHead }
+              , processParams: { pumpingParam: { suctionHead
+                                               , hydraulicPowerKw
+                                               , pumpType }
                                , distributingParam: { dischargeHead }}
               } <- ask
-  let -- power = head * flow * 1000 * 9.81 / (3.6 * 1000000)
-      -- todo: efficiency
+  let flowKloudKeeper80 = \totalhead -> Math.max 0.0 $ 1.0 / 8.33 * (40.0 - totalhead)
       -- http://www.engineeringtoolbox.com/pumps-power-d_505.html
+      flowMathModel = \totalhead -> hydraulicPowerKw * 3.6 * 1000000.0 / (totalhead * 1000.0 * 9.81)
+      toLiterPerMinute flo = flo * 16.67
+      flowCapacity = toLiterPerMinute $ case pumpType of
+                 KloudKeeper80 -> flowKloudKeeper80
+                 MathModel -> flowMathModel
+             $ dischargeHead - suctionHead
+      volumeInTank = foldState TankRainwaterStoring Water GreyWater state
       traces = [ Trace { process: Pumping
-                       , message: " hello " }
+                       , message: " flowCapacity " <> show flowCapacity }
                ]
-      entries' = [
+      entries' = [ Entry { process: TankRainwaterStoring
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: negQty volumeInTank}
+                  , Entry { process: Pumping
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: volumeInTank}
+                  , Flow { process: Pumping
+                         , capacity: flowCapacity}
                  ]
   pure $ State $ entries <> traces <> entries'
 
@@ -271,10 +290,10 @@ cleaning ti = do
                                       , on: tapWaterConsumed > ZeroQuantity } ]
     pure $ State $ entries <> traces <> entries' <> notifications
 
-irrigatingGarden ::
+irrigatingGarden_demand ::
      TimeInterval
   -> Reader SystemState State
-irrigatingGarden ti = do
+irrigatingGarden_demand ti = do
     SystemState { state: state@(State entries)
                 , timeseries
                  } <- ask
@@ -308,6 +327,43 @@ irrigatingGarden ti = do
                                       , on: tapWaterConsumed > ZeroQuantity } ]
     pure $ State $ entries <> traces <> entries' <> notifications
 
+irrigatingGarden_distribution ::
+     TimeInterval
+  -> Reader SystemState State
+irrigatingGarden_distribution ti = do
+    SystemState { state: state@(State entries)
+                , timeseries
+                 } <- ask
+    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+          tsw <- lookup IrrigatingGarden timeseries
+          case tsw of IrrigatingGardenTimeserie ts -> ts ti
+                      _ -> Nothing
+        -- TODO: check flow
+        volumeInTank = foldState Pumping Water GreyWater state
+        tankWaterConsumed = cappedQty waterNeeded volumeInTank
+        tapWaterConsumed = subQty waterNeeded tankWaterConsumed
+        traces = [ Trace { process: IrrigatingGarden
+                         , message: " waterNeeded " <> show waterNeeded },
+                   Trace { process: IrrigatingGarden
+                         , message: " tapWaterConsumed " <> show tapWaterConsumed }
+                 ]
+        entries' = [ Entry { process: Pumping
+                           , matter: Water
+                           , matterProperty: GreyWater
+                           , quantity: negQty tankWaterConsumed }
+                   , Entry { process: TapWaterSupplying
+                           , matter: Water
+                           , matterProperty: TapWater
+                           , quantity: negQty tapWaterConsumed }
+                   , Entry { process: IrrigatingGarden
+                           , matter: Waste
+                           , matterProperty: BlackWater
+                           , quantity: addQty tankWaterConsumed tapWaterConsumed }
+                   ]
+        notifications = [Notification { process: TapWaterSupplying
+                                      , typ: IrrigationGardenNotEnoughTankWater
+                                      , on: tapWaterConsumed > ZeroQuantity } ]
+    pure $ State $ entries <> traces <> entries' <> notifications
 
 -- TODO: see how to do more the calculation in a more DSL style
 

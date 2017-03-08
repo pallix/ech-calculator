@@ -6,7 +6,7 @@ import Calculator.Cleaning as Cleaning
 import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, irrigatingGarden, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
+import Calculator.Rwh (cleaning, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (Map, empty, fromFoldable, insert)
@@ -20,8 +20,7 @@ scaleFirstEntry systemScale systemParams (State entries) =
     Nothing -> []
     Just {head: h,
           tail: xs} -> case h of Entry entry@{quantity} -> (Entry $ entry { quantity = scaleQty systemScale systemParams quantity }) : xs
-                                 e@(Notification _) -> e : xs
-                                 e@(Trace _) -> e : xs
+                                 e@(_) -> e : xs
 
 nexusSystem :: SystemState -> TimeInterval -> SystemState
 nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParams: processParams } ) interval =
@@ -74,21 +73,20 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
       RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [ raining
                                                                           , tank_demand
                                                                           , cleaning
-                                                                          , irrigatingGarden
+                                                                          , irrigatingGarden_demand
                                                                           , wastewaterCollecting]
       RainwaterHarvestingCollection -> foldl (runProcess sys interval) state' [ raining
                                                                               , roofCollectingRainwater
                                                                               , tank_collection
                                                                               , cleaning
-                                                                              , irrigatingGarden
+                                                                              , irrigatingGarden_demand
                                                                               , wastewaterCollecting]
       RainwaterHarvestingDistribution -> foldl (runProcess sys interval) state' [ raining
                                                                                 , roofCollectingRainwater
                                                                                 , tank_collection
                                                                                 , pumping
-                                                                                -- , distributing
+                                                                                , irrigatingGarden_distribution
                                                                                 , cleaning
-                                                                                , irrigatingGarden
                                                                                 , wastewaterCollecting]
       _ -> State []
 
@@ -105,12 +103,12 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
   scanl nexusSystem systemState' ivals
   where systemState' = SystemState $ sys { timeseries = timeseries' }
         ivals = intervals window period
-        -- timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
+        -- TODO some intervals are calculated with a slightly wrong number of days to due to
+        -- https://github.com/purescript/purescript-datetime/issues/48
         timeseries' = foldr (\(Tuple k t) m -> insert k t m) ts [ Tuple Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals))
                                                                 , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
                                                                 , Tuple IrrigatingGarden (IrrigatingGardenTimeserie (IrrigatingGarden.buildTimeserie timeserieKey ivals))
                                                                 ]
-        -- TODO supply other timeseries (irrigation)
 
 type FinalVolumes = { interval :: TimeInterval
                     , volumes :: Map Process (Quantity Matter) }
