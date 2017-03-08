@@ -6,7 +6,7 @@ import Calculator.Cleaning as Cleaning
 import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
-import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, pumping, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
+import Calculator.Rwh (cleaning, irrigatingGarden, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
 import Data.Map (Map, empty, fromFoldable, insert)
@@ -69,27 +69,27 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                    $ eating_EatingBinningWormCompostingFoodSharing processParams.eatingParam state'
       --------- below here we use the new design (using a monad reader) to represent processes
       RainwaterHarvestingTank -> foldl (runProcess sys interval) state' [ raining
-                                                                        , harvestingRainwaterWithOpenedTank
-                                                                        , collectingWastewater]
+                                                                        , tank_demand
+                                                                        , wastewaterCollecting]
       RainwaterHarvestingDemand -> foldl (runProcess sys interval) state' [ raining
-                                                                          , harvestingRainwaterWithOpenedTank
+                                                                          , tank_demand
                                                                           , cleaning
                                                                           , irrigatingGarden
-                                                                          , collectingWastewater]
+                                                                          , wastewaterCollecting]
       RainwaterHarvestingCollection -> foldl (runProcess sys interval) state' [ raining
-                                                                              , collectingRainwater
-                                                                              , storingRainwaterInTank
+                                                                              , roofCollectingRainwater
+                                                                              , tank_collection
                                                                               , cleaning
                                                                               , irrigatingGarden
-                                                                              , collectingWastewater]
+                                                                              , wastewaterCollecting]
       RainwaterHarvestingDistribution -> foldl (runProcess sys interval) state' [ raining
-                                                                                , collectingRainwater
-                                                                                , storingRainwaterInTank
+                                                                                , roofCollectingRainwater
+                                                                                , tank_collection
                                                                                 , pumping
                                                                                 -- , distributing
                                                                                 , cleaning
                                                                                 , irrigatingGarden
-                                                                                , collectingWastewater]
+                                                                                , wastewaterCollecting]
       _ -> State []
 
 
@@ -120,12 +120,12 @@ calculateFinalVolumes systemStates =
   foldr (\systemState arr ->
           let calcVolumes :: SystemState -> Map Process (Quantity Matter)
               -- maybe use a string for the key type here if we need to get different information from a same process
-              calcVolumes (SystemState { state }) = fromFoldable [ Tuple Raining             (foldState Raining             Water GreyWater  state)
-                                                                 , Tuple RainwaterCollecting (foldState RainwaterCollecting Water GreyWater  state)
-                                                                 , Tuple Cleaning            (foldState Cleaning            Water BlackWater state)
-                                                                 , Tuple StoringRainwater    (foldState StoringRainwater    Water GreyWater  state)
-                                                                 , Tuple IrrigatingGarden    (foldState IrrigatingGarden    Water GreyWater  state)
-                                                                 , Tuple TapWaterSupplying   (foldState TapWaterSupplying   Water TapWater   state)
+              calcVolumes (SystemState { state }) = fromFoldable [ Tuple Raining                 (foldState Raining                 Water GreyWater  state)
+                                                                 , Tuple RoofRainwaterCollecting (foldState RoofRainwaterCollecting Water GreyWater  state)
+                                                                 , Tuple Cleaning                (foldState Cleaning                Water BlackWater state)
+                                                                 , Tuple TankRainwaterStoring    (foldState TankRainwaterStoring    Water GreyWater  state)
+                                                                 , Tuple IrrigatingGarden        (foldState IrrigatingGarden        Water GreyWater  state)
+                                                                 , Tuple TapWaterSupplying       (foldState TapWaterSupplying       Water TapWater   state)
                                                                  ]
               calcFinalVolumes ss@(SystemState { interval }) = { interval: interval
                                                                , volumes: calcVolumes ss

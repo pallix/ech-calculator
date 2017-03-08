@@ -244,11 +244,11 @@ data Process =  AllProcess |
                 ManagingWaste |
                 FoodSharing |
                 FoodGardening |
-                RainwaterCollecting |
+                RoofRainwaterCollecting |
                 Living |
                 Raining |
                 TapWaterSupplying |
-                StoringRainwater |
+                TankRainwaterStoring |
                 Cleaning |
                 WastewaterCollecting |
                 IrrigatingGarden |
@@ -459,10 +459,10 @@ type ProcessParams = { eatingParam ::
                      , rainingParam ::  { title :: String
                                         , timeserieKey :: String
                                         }
-                     , storingRainwaterParam :: { title :: String
-                                                , surfaceArea :: SurfaceArea
-                                                , capacity :: Quantity Matter
-                                                }
+                     , tankRainwaterStoringParam :: { title :: String
+                                             , surfaceArea :: SurfaceArea
+                                             , capacity :: Quantity Matter
+                                             }
                      , pumpingParam :: { title :: String
                                        , suctionHead :: Number
                                                         -- ^^ height the water will rise before arriving at the pump (also known as the suction head).
@@ -564,7 +564,7 @@ rainingParam = { title: "Raining"
                , timeserieKey: "2013" -- TODO currently not used, to implement
                }
 
-storingRainwaterParam = { title: "Storing Rainwater"
+tankRainwaterStoringParam = { title: "Storing Rainwater"
                         , surfaceArea: SurfaceArea 4.0 -- cm^2
                         , capacity: Volume Water 10.0 -- L
                         }
@@ -591,7 +591,7 @@ initProcessParams = { eatingParam
                     , foodGardeningParam
                     , rainwaterCollectingParam
                     , rainingParam
-                    , storingRainwaterParam
+                    , tankRainwaterStoringParam
                     , cleaningParam
                     , pumpingParam
                     , distributingParam
@@ -748,7 +748,7 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
   State $
   entries <>
   [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost}
-  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater}
+  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater}
   , Entry {process: FoodGardening, matter: Water, matterProperty: GreyWater, quantity: usedGreyWater}
   , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
   ]
@@ -757,7 +757,7 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
     fertilizerNeeded = case surfaceArea of SurfaceArea area -> mulQty area (case plant of Tomato -> fertilizerNeed.tomato)
     usedCompost = if fertilizerNeeded > availableCompost then
                     availableCompost else subQty availableCompost fertilizerNeeded
-    availableGreyWater = foldState RainwaterCollecting Water GreyWater state
+    availableGreyWater = foldState RoofRainwaterCollecting Water GreyWater state
     -- surfaceArea' = case (scaleGardenSurface systemScale surfaceArea) of SurfaceArea area -> area
     surfaceArea' = case (surfaceArea) of SurfaceArea area -> area
     greyWaterUsedByPlants = scaleQtyOnTime systemScale $ mulQty surfaceArea' (case plant of Tomato -> greyWaterNeed.tomato)
@@ -775,7 +775,7 @@ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {numberOfBloc
   State $
   entries <>
   [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater}
-  , Entry {process: RainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
+  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
   ]
   where
     rainingWater = foldState Raining Water AllMatterProperty state

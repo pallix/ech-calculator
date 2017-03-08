@@ -2,7 +2,7 @@ module Calculator.Layout (interface) where
 
 import Data.Generic
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
-import Calculator.Model (Options(..), Process(..), Matter(..), MatterProperty(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty)
+import Calculator.Model (Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty)
 import DOM.Node.Types (documentTypeToNode)
 import Data.Array (replicate, singleton)
 import Data.Foldable (foldMap)
@@ -280,13 +280,13 @@ initialRainwater = initialState Raining Water GreyWater
 
 initialFoodGardeningRainwater = initialState FoodGardening Water GreyWater
 
-gardenWaterNeed = initialState RainwaterCollecting Water GreyWater
+gardenWaterNeed = initialState IrrigatingGarden Water GreyWater
 
 managedWaste = initialState ManagingWaste Waste AllMatterProperty
 
 initialRainfall = initialState Raining Water AllMatterProperty
 
-storedRainwater = foldState StoringRainwater Water AllMatterProperty
+storedRainwater = foldState TankRainwaterStoring Water AllMatterProperty
 
 overflowTank = foldState WastewaterCollecting Waste AllMatterProperty
 
