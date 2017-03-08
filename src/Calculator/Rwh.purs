@@ -404,7 +404,7 @@ irrigatingGarden_distribution ti = do
                            , quantity: negQty tapWaterConsumed }
                    , Entry { process: IrrigatingGarden
                            , matter: Waste
-                           , matterProperty: BlackWater
+                           , matterProperty: BlackWater -- TODO find something more accurate
                            , quantity: addQty tankWaterConsumed tapWaterConsumed }
                    ]
         notifications = [ Notification { process: TapWaterSupplying

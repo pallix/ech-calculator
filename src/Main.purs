@@ -43,6 +43,7 @@ import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..))
 --             | Garden
 --             | FoodGarden
 --             | Reset
+
 --
 -- label :: Action -> String
 -- label Food = "Food"

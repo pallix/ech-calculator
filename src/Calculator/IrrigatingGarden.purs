@@ -23,7 +23,7 @@ buildTimeserie key intervals = \(TimeInterval { date, period }) ->
         -- irrigation needed, Autumn and Spring (Mar-May, &
         -- Sept-Nov) - 24L per 7 days, and Summer (Jun-Aug) -
         -- 24L per 3.5 days.
-        if m `elem` [March, April, May, September, November] then
+        if m `elem` [March, April, May, September, October, November] then
           24.0 / 7.0
         else
           if m `elem` [June, July, August] then

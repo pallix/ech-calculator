@@ -1,4 +1,4 @@
-module RwhEx where
+module Calculator.RwhEx where
 
 import Data.Date.Component
 import Control.Monad

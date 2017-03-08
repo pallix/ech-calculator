@@ -118,16 +118,24 @@ type VolumesInfo = { interval :: TimeInterval
                    , volumes :: { initialRainwater :: Quantity Matter
                                  , tankStoredRainwater :: Quantity Matter
                                  , overflowTank :: Quantity Matter
+                                 , irrigatingGardenWater :: Quantity Matter
                                  , tapWaterUsed :: Quantity Matter } }
 
+showVolumesInfo { interval,
+                  volumes: { initialRainwater
+                           , tankStoredRainwater
+                           , overflowTank
+                           , tapWaterUsed }
+                } = show interval <> " " <> show initialRainwater <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> " " <> show tapWaterUsed
 
 calculateVolumesInfo :: Array SystemState -> Array VolumesInfo
 calculateVolumesInfo systemStates =
   foldr (\systemState arr ->
           let calcVolumes (SystemState { state }) = { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
-                                                    , tankStoredRainwater:        (foldState    Raining                 Water GreyWater  state)
+                                                    , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
                                                     , overflowTank:               (foldState    WastewaterCollecting    Waste Overflow   state)
                                                     , tapWaterUsed:               (initialState TapWaterSupplying       Waste TapWater   state) `subQty` (foldState TapWaterSupplying       Waste TapWater   state)
+                                                    , irrigatingGardenWater:      (foldState    IrrigatingGarden        Waste BlackWater state)
                                                       -- TODO add others stuff here
                                                     }
               calcFinalVolumes ss@(SystemState { interval, timeseries }) = { interval

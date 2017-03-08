@@ -25,19 +25,20 @@ toGnuPlotFormat :: Array VolumesInfo -> String
 toGnuPlotFormat systemStates =
   foldl plotInterval header systemStates
   where
-    header = "# Date Ts-Rain Tank Overflow\n"
+    header = "# Date Ts-Rain Tank Overflow Garden\n"
     plotInterval :: String -> VolumesInfo -> String
     plotInterval output { interval: ti@(TimeInterval {date})
                         , timeseries
                         , volumes: { tankStoredRainwater
-                                   , overflowTank }} =
+                                   , overflowTank
+                                   , irrigatingGardenWater }} =
       let dateStr = (show <<< fromEnum <<< year $ date) <> "-" <> (show <<< fromEnum <<< month $ date) <> "-" <> (show <<< fromEnum <<< day $ date)
           watermm = fromMaybe 0.0 $ do
             tsw <- lookup Raining timeseries
             case tsw of RainingTimeserie ts -> ts ti
                         _ -> Nothing
       in
-       output <> dateStr <>  " " <> show watermm <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> "\n"
+       output <> dateStr <>  " " <> show watermm <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> " " <> show irrigatingGardenWater <> "\n"
 
 
 plotData volumesInfo = do
