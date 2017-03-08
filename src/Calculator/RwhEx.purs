@@ -29,10 +29,10 @@ systemParamsEx = SystemParams { houseHoldSize: 199
                               , estateSurfaceArea: SurfaceArea 12011.50
                               }
 
-dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) December (fromJust $ toEnum 1)
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) August (fromJust $ toEnum 15)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) September (fromJust $ toEnum 2)
 
-systemStateEx = SystemState { scale: { period: OneMonth
+systemStateEx = SystemState { scale: { period: OneDay
                                      , scale: PersonScale
                                      , time: Month -- old scale system, TODO deprecate
                                      , window: TimeWindow { start: dStart

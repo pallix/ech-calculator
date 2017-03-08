@@ -14,6 +14,7 @@ module Calculator.Model (Ratio(..),
                          State(..),
                          SystemState(..),
                          initialState,
+                         lastState,
                          foldState,
                          foldNotifications,
                          foldFlows,
@@ -45,13 +46,13 @@ import Prelude
 import Data.Generic
 import Calculator.Timeserie (Timeserie)
 import Control.Monad.Reader (runReader)
-import Data.Array (filter, head, mapMaybe, scanl, tail, uncons, (:))
+import Data.Array (filter, head, last, mapMaybe, scanl, tail, uncons, (:))
 import Data.ArrayBuffer.Types (Int16)
 import Data.Date (Date)
 import Data.Foldable (foldl)
 import Data.Int (toNumber)
 import Data.Map (Map, delete, empty, insert)
-import Data.Maybe (maybe, Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs, floor)
@@ -387,6 +388,18 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
     getQuantity (Flow _) = Nothing
     quantities = mapMaybe getQuantity states'
 
+lastState :: Process -> Matter -> MatterProperty -> State -> Quantity Matter
+lastState process matter matterProperty (State states) = fromMaybe ZeroQuantity $ last quantities
+  where
+    states' = filter qualifies states
+    qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
+    getQuantity (Entry {quantity: q}) = Just q
+    getQuantity (Notification _) = Nothing
+    getQuantity (Trace _) = Nothing
+    getQuantity (Flow _) = Nothing
+    quantities = mapMaybe getQuantity states'
+
+
 foldNotifications :: Process -> State -> Map NotificationType Entry
 foldNotifications process (State entries) = foldl f empty entries
   where
@@ -493,7 +506,8 @@ type ProcessParams = { eatingParam ::
                                        }
                      , distributingParam :: { title :: String
                                             , dischargeHead :: Number
-                                                               -- ^^ Maximum Height reached by the pipe after the pump (also known as the 'discharge head').
+-- ^^ Maximum Height reached by the pipe after the pump (also known as the 'discharge head').
+                                            , surfaceArea :: Number
                                             }
                      , cleaningParam :: { title :: String
                                         , surfaceArea :: SurfaceArea
@@ -601,6 +615,7 @@ pumpingParam = { title: "Pumping"
 
 distributingParam = { title: "Distributing"
                     , dischargeHead: 30.0
+                    , surfaceArea: 50.0
                     }
 
 initProcessParams = { eatingParam

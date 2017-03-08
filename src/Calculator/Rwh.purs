@@ -340,9 +340,10 @@ irrigatingGarden_demand ::
   -> Reader SystemState State
 irrigatingGarden_demand ti = do
     SystemState { state: state@(State entries)
+                , processParams: { distributingParam: { surfaceArea }}
                 , timeseries
-                 } <- ask
-    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+                } <- ask
+    let waterNeeded = Volume Water $ (*) surfaceArea $ fromMaybe 0.0 $ do
           tsw <- lookup IrrigatingGarden timeseries
           case tsw of IrrigatingGardenTimeserie ts -> ts ti
                       _ -> Nothing
@@ -377,9 +378,10 @@ irrigatingGarden_distribution ::
   -> Reader SystemState State
 irrigatingGarden_distribution ti = do
     SystemState { state: state@(State entries)
+                , processParams: { distributingParam: { surfaceArea }}
                 , timeseries
                  } <- ask
-    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+    let waterNeeded = Volume Water $ (*) surfaceArea $ fromMaybe 0.0 $ do
           tsw <- lookup IrrigatingGarden timeseries
           case tsw of IrrigatingGardenTimeserie ts -> ts ti
                       _ -> Nothing
