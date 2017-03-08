@@ -108,7 +108,7 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
         -- timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
         timeseries' = foldr (\(Tuple k t) m -> insert k t m) ts [ Tuple Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals))
                                                                 , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
-                                                                , Tuple Cleaning (IrrigatingGardenTimeserie (IrrigatingGarden.buildTimeserie timeserieKey ivals))
+                                                                , Tuple IrrigatingGarden (IrrigatingGardenTimeserie (IrrigatingGarden.buildTimeserie timeserieKey ivals))
                                                                 ]
         -- TODO supply other timeseries (irrigation)
 
