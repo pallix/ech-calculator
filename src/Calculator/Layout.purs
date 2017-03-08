@@ -274,7 +274,7 @@ initialCompost = initialState WormComposting Compost AllMatterProperty
 
 initialFoodShared = initialState FoodSharing Food AllMatterProperty
 
-initialFoodGardeningTapWater = initialState FoodGardening Water AllMatterProperty
+initialFoodGardeningTapWater = initialState FoodGardening Water TapWater
 
 initialRainwater = initialState Raining Water GreyWater
 
@@ -288,7 +288,7 @@ initialRainfall = initialState Raining Water AllMatterProperty
 
 storedRainwater = foldState TankRainwaterStoring Water AllMatterProperty
 
-overflowTank = foldState WastewaterCollecting Waste AllMatterProperty
+overflowTank = foldState WastewaterCollecting Waste Overflow
 
 emptyArrow = { title: "", quantity: "", details: "" }
 

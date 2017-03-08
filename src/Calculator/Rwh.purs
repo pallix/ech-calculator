@@ -105,7 +105,7 @@ tank_demand ti = do
                  ] <> if overflow > ZeroQuantity then
                         [ Entry { process: TankRainwaterStoring
                                 , matter: Waste
-                                , matterProperty: GreyWater -- TODO use matterProperty 'Overflow' for better tracking
+                                , matterProperty: Overflow
                                 , quantity: overflow
                                 } ]
                         else []
@@ -203,7 +203,7 @@ tank_collection ti = do
                  ] <> if overflow > ZeroQuantity then
                         [ Entry { process: TankRainwaterStoring
                                 , matter: Waste
-                                , matterProperty: GreyWater
+                                , matterProperty: Overflow
                                 , quantity: overflow
                                 } ]
                         else []
@@ -228,7 +228,7 @@ wastewaterCollecting ::
 wastewaterCollecting _ = do
   SystemState { state: state@(State entries)
               } <- ask
-  let wasteWaterRwh = foldState TankRainwaterStoring Waste GreyWater state
+  let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
     [ Entry { process: WastewaterCollecting

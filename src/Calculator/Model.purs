@@ -281,7 +281,7 @@ instance matterEq :: Eq Matter where
   eq _ AllMatter = true
   eq a b = gEq a b
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | Overflow | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 instance showMatterProperty :: Show MatterProperty where
