@@ -3,7 +3,7 @@ module Calculator.Rwh where
 
 import Data.Date.Component
 import Math as Math
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldFlows, foldState, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -290,6 +290,51 @@ cleaning ti = do
                                       , on: tapWaterConsumed > ZeroQuantity } ]
     pure $ State $ entries <> traces <> entries' <> notifications
 
+cleaning_distribution ::
+     TimeInterval
+  -> Reader SystemState State
+cleaning_distribution ti = do
+    SystemState { state: state@(State entries)
+                 , timeseries
+                 } <- ask
+    let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
+          tsw <- lookup Cleaning timeseries
+          case tsw of CleaningTimeserie ts -> ts ti
+                      _ -> Nothing
+        flowCapacity = foldFlows Pumping state
+        volumeInTank = foldState Pumping Water GreyWater state
+        tankWaterConsumed = if flowCapacity > 0.0 then cappedQty waterNeeded volumeInTank else ZeroQuantity
+        tapWaterConsumed = subQty waterNeeded tankWaterConsumed
+        traces = [ Trace { process: Cleaning
+                         , message: " waterNeeded " <> show waterNeeded }
+                 ]
+        entries' = [ Entry { process: Pumping
+                           , matter: Water
+                           , matterProperty: GreyWater
+                           , quantity: negQty tankWaterConsumed }
+                   , Entry { process: TapWaterSupplying
+                           , matter: Water
+                           , matterProperty: TapWater
+                           , quantity: negQty tapWaterConsumed }
+                   , Entry { process: Cleaning
+                           , matter: Waste
+                           , matterProperty: BlackWater
+                           , quantity: waterNeeded }
+                   ]
+        notifications = [ Notification { process: TapWaterSupplying
+                                       , typ: CleaningNotEnoughTankWater
+                                       , on: tapWaterConsumed > ZeroQuantity }
+                        , Notification { process: Pumping
+                                       , typ: CleaningFlowCapacityIsZero
+                                       , on: flowCapacity < 0.01 -- L/m
+                                       }
+                        , Notification { process: Pumping
+                                       , typ: CleaningFlowCapacityTooLow
+                                       , on: flowCapacity <  5.0 -- L/m
+                                       }
+]
+    pure $ State $ entries <> traces <> entries' <> notifications
+
 irrigatingGarden_demand ::
      TimeInterval
   -> Reader SystemState State
@@ -338,14 +383,16 @@ irrigatingGarden_distribution ti = do
           tsw <- lookup IrrigatingGarden timeseries
           case tsw of IrrigatingGardenTimeserie ts -> ts ti
                       _ -> Nothing
-        -- TODO: check flow
+        flowCapacity = foldFlows Pumping state
         volumeInTank = foldState Pumping Water GreyWater state
-        tankWaterConsumed = cappedQty waterNeeded volumeInTank
+        tankWaterConsumed = if flowCapacity > 0.0 then cappedQty waterNeeded volumeInTank else ZeroQuantity
         tapWaterConsumed = subQty waterNeeded tankWaterConsumed
         traces = [ Trace { process: IrrigatingGarden
-                         , message: " waterNeeded " <> show waterNeeded },
-                   Trace { process: IrrigatingGarden
+                         , message: " waterNeeded " <> show waterNeeded }
+                 , Trace { process: IrrigatingGarden
                          , message: " tapWaterConsumed " <> show tapWaterConsumed }
+                 , Trace { process: IrrigatingGarden
+                         , message: " flowCapacity " <> show flowCapacity }
                  ]
         entries' = [ Entry { process: Pumping
                            , matter: Water
@@ -360,9 +407,18 @@ irrigatingGarden_distribution ti = do
                            , matterProperty: BlackWater
                            , quantity: addQty tankWaterConsumed tapWaterConsumed }
                    ]
-        notifications = [Notification { process: TapWaterSupplying
+        notifications = [ Notification { process: TapWaterSupplying
                                       , typ: IrrigationGardenNotEnoughTankWater
-                                      , on: tapWaterConsumed > ZeroQuantity } ]
+                                      , on: tapWaterConsumed > ZeroQuantity }
+                         , Notification { process: Pumping
+                                       , typ: IrrigationGardenFlowCapacityIsZero
+                                       , on: flowCapacity <  0.01 -- L/m
+                                       }
+                        , Notification { process: Pumping
+                                       , typ: IrrigationGardenFlowCapacityTooLow
+                                       , on: flowCapacity <  2.0 -- L/m
+                                       }
+                        ]
     pure $ State $ entries <> traces <> entries' <> notifications
 
 -- TODO: see how to do more the calculation in a more DSL style

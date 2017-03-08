@@ -16,6 +16,7 @@ module Calculator.Model (Ratio(..),
                          initialState,
                          foldState,
                          foldNotifications,
+                         foldFlows,
                          Process(..),
                          Matter(..),
                          Entry(..),
@@ -292,7 +293,7 @@ instance matterProperty :: Eq MatterProperty where
   eq _ AllMatterProperty = true
   eq a b = gEq a b
 
-data NotificationType = TankOverflow | CleaningNotEnoughTankWater | IrrigationGardenNotEnoughTankWater
+data NotificationType = TankOverflow | CleaningNotEnoughTankWater | IrrigationGardenNotEnoughTankWater | IrrigationGardenFlowCapacityTooLow | IrrigationGardenFlowCapacityIsZero | CleaningFlowCapacityIsZero | CleaningFlowCapacityTooLow
 
 derive instance genericNotificationType :: Generic NotificationType
 
