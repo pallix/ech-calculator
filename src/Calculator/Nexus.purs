@@ -3,6 +3,7 @@ module Calculator.Nexus where
 import Prelude
 import Control.Monad.Reader
 import Calculator.Cleaning as Cleaning
+import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty)
 import Calculator.Rwh (cleaning, collectingWastewater, collectingRainwater, storingRainwaterInTank, pumping, raining, harvestingRainwaterWithOpenedTank, irrigatingGarden)
@@ -107,6 +108,7 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
         -- timeseries' = insert Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals)) ts
         timeseries' = foldr (\(Tuple k t) m -> insert k t m) ts [ Tuple Raining (RainingTimeserie (Rain.buildTimeserie timeserieKey ivals))
                                                                 , Tuple Cleaning (CleaningTimeserie (Cleaning.buildTimeserie timeserieKey ivals))
+                                                                , Tuple Cleaning (IrrigatingGardenTimeserie (IrrigatingGarden.buildTimeserie timeserieKey ivals))
                                                                 ]
         -- TODO supply other timeseries (irrigation)
 
@@ -117,6 +119,7 @@ calculateFinalVolumes :: Array SystemState -> Array FinalVolumes
 calculateFinalVolumes systemStates =
   foldr (\systemState arr ->
           let calcVolumes :: SystemState -> Map Process (Quantity Matter)
+              -- maybe use a string for the key type here if we need to get different information from a same process
               calcVolumes (SystemState { state }) = fromFoldable [ Tuple Raining             (foldState Raining             Water GreyWater  state)
                                                                  , Tuple RainwaterCollecting (foldState RainwaterCollecting Water GreyWater  state)
                                                                  , Tuple Cleaning            (foldState Cleaning            Water BlackWater state)

@@ -280,13 +280,14 @@ irrigatingGarden ti = do
                  } <- ask
     let waterNeeded = Volume Water $ fromMaybe 0.0 $ do
           tsw <- lookup IrrigatingGarden timeseries
-          case tsw of IrrigationGardenTimeserie ts -> ts ti
+          case tsw of IrrigatingGardenTimeserie ts -> ts ti
                       _ -> Nothing
-        -- TODO implement timeserie here
         volumeInTank = foldState StoringRainwater Water GreyWater state
         tankWaterConsumed = cappedQty waterNeeded volumeInTank
         tapWaterConsumed = subQty waterNeeded tankWaterConsumed
         traces = [ Trace { process: IrrigatingGarden
+                         , message: " waterNeeded " <> show waterNeeded },
+                   Trace { process: IrrigatingGarden
                          , message: " tapWaterConsumed " <> show tapWaterConsumed }
                  ]
         entries' = [ Entry { process: StoringRainwater

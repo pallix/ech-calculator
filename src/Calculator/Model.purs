@@ -486,7 +486,7 @@ type ProcessParam = Record
 
 data TimeserieWrapper = RainingTimeserie (Timeserie Number) |
                         CleaningTimeserie (Timeserie Number) |
-                        IrrigationGardenTimeserie (Timeserie Number)
+                        IrrigatingGardenTimeserie (Timeserie Number)
 
 data SystemState = SystemState { current :: Options
                                , scale :: SystemScale
