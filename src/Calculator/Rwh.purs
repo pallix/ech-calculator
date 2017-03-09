@@ -69,7 +69,7 @@ raining ti = do
           -- TODO: recheck unit convertion here
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * (rainingmm * 0.001)) * 1000.0
     pure $ State $ entries <>
-      [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater}
+      [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater, interval: ti}
       ]
 
 tank_demand ::
@@ -98,17 +98,20 @@ tank_demand ti = do
                          , matter: Water
                          , matterProperty: GreyWater
                          , quantity: negQty harvestableVolume
+                         , interval: ti
                          }
-                 , Entry { process: TankRainwaterStoring,
-                           matter: Water,
-                           matterProperty: GreyWater,
-                           quantity: harvestedVolume
+                 , Entry { process: TankRainwaterStoring
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: harvestedVolume
+                         , interval: ti
                          }
                  ] <> if overflow > ZeroQuantity then
                         [ Entry { process: TankRainwaterStoring
                                 , matter: Waste
                                 , matterProperty: Overflow
                                 , quantity: overflow
+                                , interval: ti
                                 } ]
                         else []
       notifications = [Notification { process: TankRainwaterStoring
@@ -150,11 +153,13 @@ roofCollectingRainwater ti = do
       entries' = [ Entry { process: Raining
                          , matter: Water
                          , matterProperty: GreyWater
-                         , quantity: negQty collectedWater}
+                         , quantity: negQty collectedWater
+                         , interval: ti}
                  , Entry { process: RoofRainwaterCollecting
                          , matter: Water
                          , matterProperty: GreyWater
-                         , quantity: collectedWater}
+                         , quantity: collectedWater
+                         , interval: ti}
                  ]
   pure $ State $ entries <> traces <> entries'
 
@@ -186,11 +191,15 @@ pumping ti = do
       entries' = [ Entry { process: TankRainwaterStoring
                          , matter: Water
                          , matterProperty: GreyWater
-                         , quantity: negQty volumeInTank}
+                         , quantity: negQty volumeInTank
+                         , interval: ti
+                         }
                   , Entry { process: Pumping
                          , matter: Water
                          , matterProperty: GreyWater
-                         , quantity: volumeInTank}
+                         , quantity: volumeInTank
+                         , interval: ti
+                         }
                   , Flow { process: Pumping
                          , capacity: flowCapacity}
                  ]
@@ -215,17 +224,20 @@ tank_collection ti = do
                          , matter: Water
                          , matterProperty: GreyWater
                          , quantity: negQty harvestableVolume
+                         , interval: ti
                          }
-                 , Entry { process: TankRainwaterStoring,
-                           matter: Water,
-                           matterProperty: GreyWater,
-                           quantity: harvestedVolume
+                 , Entry { process: TankRainwaterStoring
+                         , matter: Water
+                         , matterProperty: GreyWater
+                         , quantity: harvestedVolume
+                         , interval: ti
                          }
                  ] <> if overflow > ZeroQuantity then
                         [ Entry { process: TankRainwaterStoring
                                 , matter: Waste
                                 , matterProperty: Overflow
                                 , quantity: overflow
+                                , interval: ti
                                 } ]
                         else []
       notifications = [Notification { process: TankRainwaterStoring
@@ -246,7 +258,7 @@ tank_collection ti = do
 wastewaterCollecting ::
   TimeInterval
   -> Reader SystemState State
-wastewaterCollecting _ = do
+wastewaterCollecting ti = do
   SystemState { state: state@(State entries)
               } <- ask
   let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
@@ -254,10 +266,14 @@ wastewaterCollecting _ = do
   pure $ State $ entries <>
     [ Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: Overflow
-            , quantity: wasteWaterCleaning }
+            , quantity: wasteWaterCleaning
+            , interval: ti
+            }
     , Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: BlackWater
-            , quantity: wasteWaterCleaning }
+            , quantity: wasteWaterCleaning
+            , interval: ti
+            }
     ]
 
 cleaning ::
@@ -280,15 +296,21 @@ cleaning ti = do
         entries' = [ Entry { process: TankRainwaterStoring
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty tankWaterConsumed }
+                           , quantity: negQty tankWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: TapWaterSupplying
                            , matter: Water
                            , matterProperty: TapWater
-                           , quantity: negQty tapWaterConsumed }
+                           , quantity: negQty tapWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: Cleaning
                            , matter: Waste
                            , matterProperty: BlackWater
-                           , quantity: waterNeeded }
+                           , quantity: waterNeeded
+                           , interval: ti
+                           }
                    ]
         notifications = [Notification { process: TapWaterSupplying
                                       , typ: CleaningNotEnoughTankWater
@@ -316,15 +338,21 @@ cleaning_distribution ti = do
         entries' = [ Entry { process: Pumping
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty tankWaterConsumed }
+                           , quantity: negQty tankWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: TapWaterSupplying
                            , matter: Water
                            , matterProperty: TapWater
-                           , quantity: negQty tapWaterConsumed }
+                           , quantity: negQty tapWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: Cleaning
                            , matter: Waste
                            , matterProperty: BlackWater
-                           , quantity: waterNeeded }
+                           , quantity: waterNeeded
+                           , interval: ti
+                           }
                    ]
         notifications = [ Notification { process: TapWaterSupplying
                                        , typ: CleaningNotEnoughTankWater
@@ -363,15 +391,21 @@ irrigatingGarden_demand ti = do
         entries' = [ Entry { process: TankRainwaterStoring
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty tankWaterConsumed }
+                           , quantity: negQty tankWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: TapWaterSupplying
                            , matter: Water
                            , matterProperty: TapWater
-                           , quantity: negQty tapWaterConsumed }
+                           , quantity: negQty tapWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: IrrigatingGarden
                            , matter: Waste
                            , matterProperty: BlackWater
-                           , quantity: addQty tankWaterConsumed tapWaterConsumed }
+                           , quantity: addQty tankWaterConsumed tapWaterConsumed
+                           , interval: ti
+                           }
                    ]
         notifications = [Notification { process: TapWaterSupplying
                                       , typ: IrrigationGardenNotEnoughTankWater
@@ -404,15 +438,21 @@ irrigatingGarden_distribution ti = do
         entries' = [ Entry { process: Pumping
                            , matter: Water
                            , matterProperty: GreyWater
-                           , quantity: negQty tankWaterConsumed }
+                           , quantity: negQty tankWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: TapWaterSupplying
                            , matter: Water
                            , matterProperty: TapWater
-                           , quantity: negQty tapWaterConsumed }
+                           , quantity: negQty tapWaterConsumed
+                           , interval: ti
+                           }
                    , Entry { process: IrrigatingGarden
                            , matter: Waste
                            , matterProperty: BlackWater -- TODO find something more accurate
-                           , quantity: addQty tankWaterConsumed tapWaterConsumed }
+                           , quantity: addQty tankWaterConsumed tapWaterConsumed
+                           , interval: ti
+                           }
                    ]
         notifications = [ Notification { process: TapWaterSupplying
                                       , typ: IrrigationGardenNotEnoughTankWater

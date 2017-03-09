@@ -45,6 +45,10 @@ instance ordTimeInterval :: Ord TimeInterval where
   compare = gCompare
 
 
+defaultTi = TimeInterval { date: bottom
+                         , period: OneDay
+                         }
+
 
 intervals :: TimeWindow -> TimePeriod -> Array TimeInterval
 intervals tw tp = map (TimeInterval <<< { period: tp, date: _ }) (dates tw tp)

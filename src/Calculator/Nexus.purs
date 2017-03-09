@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Calculator.Cleaning as Cleaning
 import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
-import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, lastState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
+import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foldStateTi, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, lastState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
 import Calculator.Rwh (cleaning, cleaning_distribution, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
 import Calculator.Timeserie (Timeserie)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
@@ -89,7 +89,7 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                                 , tank_collection
                                                                                 , pumping
 --                                                                                , irrigatingGarden_distribution
-                                                                                , cleaning_distribution
+--                                                                                , cleaning_distribution
                                                                                 , wastewaterCollecting]
       _ -> State []
 
@@ -136,18 +136,18 @@ showVolumesInfo { interval,
 mapFoldStates :: Array SystemState -> Array VolumesInfo
 mapFoldStates systemStates =
   map (\systemState ->
-          let calcVolumes (SystemState { state }) = { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
-                                                    , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
-                                                    , pumpStoredRainwater:        (lastState    Pumping                 Water GreyWater  state)
-                                                      -- TODO probably necessary to fold entries for a specific interval to calculate "foldState" without entries of the previous interval
-                                                      -- TODO incorrect
-                                                    , overflowTank:               (lastState    WastewaterCollecting    Waste Overflow   state)
-                                                      -- TODO incorrect
-                                                    , tapWaterUsed:               (foldState    TapWaterSupplying       Water TapWater   state) `subQty` (initialState TapWaterSupplying       Waste TapWater   state)
-                                                    , irrigatingGardenWater:      (lastState    IrrigatingGarden        Waste BlackWater state)
-                                                    , roofRainwaterCollected:     (lastState    RoofRainwaterCollecting Water GreyWater  state)
-                                                      -- TODO add others stuff here
-                                                    }
+          let calcVolumes (SystemState { state, interval }) =
+                { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
+                , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
+                , pumpStoredRainwater:        (foldStateTi  Pumping                 Water GreyWater  interval state)
+                  -- TODO incorrect
+                , overflowTank:               (foldStateTi  WastewaterCollecting    Waste Overflow   interval state)
+                  -- TODO incorrect
+                , tapWaterUsed:               (foldState    TapWaterSupplying       Water TapWater   state) `subQty` (initialState TapWaterSupplying       Waste TapWater   state)
+                , irrigatingGardenWater:      (lastState    IrrigatingGarden        Waste BlackWater state)
+                , roofRainwaterCollected:     (lastState    RoofRainwaterCollecting Water GreyWater  state)
+                  -- TODO add others stuff here
+                }
               calcFinalVolumes ss@(SystemState { interval, timeseries }) = { interval
                                                                            , timeseries
                                                                            , volumes: calcVolumes ss

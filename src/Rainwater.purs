@@ -1,63 +1,42 @@
 module Rainwater where
 
 import Prelude
-import Calculator.Layout (interface)
-import Calculator.Nexus (nexusSystem, scanNexus)
-import Calculator.Model ( initProcessParams
-                        , State(..)
-                        , Matter(..)
-                        , MatterProperty(..)
-                        , Entry(..)
-                        , SystemState(..)
-                        , Scale(..)
-                        , Time(..)
-                        , SystemScale(..)
-                        , Quantity(..)
-                        , Ratio(..)
-                        , Process(..)
-                        , Transform(..)
-                        , SystemParams(..)
-                        , ProcessParams(..)
-                        , Options(..)
-                        , SurfaceArea(..))
-
-import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), dates)
-
-import Partial.Unsafe (unsafePartial)
-
 import Data.DateTime as DT
-import Data.Time.Duration (Days(..))
-import Data.Date (Date, Month(..), canonicalDate, day, month, year)
-import Data.Maybe (fromJust, maybe, Maybe(..))
-import Data.Enum (succ, toEnum)
-
+import Calculator.Layout (interface)
+import Calculator.Model (initProcessParams, State(..), Matter(..), MatterProperty(..), Entry(..), SystemState(..), Scale(..), Time(..), SystemScale(..), Quantity(..), Ratio(..), Process(..), Transform(..), SystemParams(..), ProcessParams(..), Options(..), SurfaceArea(..))
+import Calculator.Nexus (nexusSystem, scanNexus)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Debug.Trace (spy)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc, last, head)
-import Data.Map (empty)
-
+import Data.Date (Date, Month(..), canonicalDate, day, month, year)
+import Data.Enum (succ, toEnum)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
-import Data.Tuple (Tuple(..))
+import Data.Map (empty)
+import Data.Maybe (fromJust, maybe, Maybe(..))
 import Data.Maybe (maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
 import Data.NonEmpty ((:|))
+import Data.Time.Duration (Days(..))
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
+import Debug.Trace (spy)
 import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
 import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
 import Graphics.Drawing.Font (font, sansSerif, bold)
 import Math (cos, sin, pi)
+import Partial.Unsafe (unsafePartial)
 import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), dates, defaultTi)
 
 -- data Action = Food
 --             | Bin
@@ -129,10 +108,10 @@ dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2013) January (fromJust
 
 systemParams = systemParamsWithConstants ( 0 )
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}
+initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0, interval: defaultTi}
                     -- surface are of the estate = 12 000m² * 1000mm (1Meter) of water in Liters
-                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0}
-                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0}
+                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0, interval: defaultTi}
+                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0, interval: defaultTi}
                   ]
 
 scaleToString PersonScale = "Person"

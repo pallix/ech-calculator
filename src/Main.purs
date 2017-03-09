@@ -35,7 +35,7 @@ import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
-import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..))
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), defaultTi)
 
 -- data Action = Food
 --             | Bin
@@ -103,10 +103,10 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
 
 systemParams = systemParamsWithConstants ( 0 )
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}
+initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0, interval: defaultTi}
                     -- surface are of the estate = 12 000m² * 1000mm (1Meter) of water in Liters
-                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0}
-                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0}
+                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0, interval: defaultTi}
+                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0, interval: defaultTi}
                   ]
 
 scaleToString PersonScale = "Person"

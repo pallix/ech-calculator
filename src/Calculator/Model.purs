@@ -16,6 +16,7 @@ module Calculator.Model (Ratio(..),
                          initialState,
                          lastState,
                          foldState,
+                         foldStateTi,
                          foldNotifications,
                          foldFlows,
                          Process(..),
@@ -56,7 +57,7 @@ import Data.Maybe (Maybe(..), fromMaybe, maybe)
 import Data.Newtype (class Newtype)
 import Data.Tuple (Tuple(..))
 import Math (trunc, abs, floor)
-import Time (TimeInterval(..), TimePeriod, TimeWindow, dates)
+import Time (TimeInterval(..), TimePeriod, TimeWindow, dates, defaultTi)
 
 --
 -- Quantities
@@ -311,6 +312,7 @@ data Entry = Entry { process :: Process
                    , matter :: Matter
                    , matterProperty :: MatterProperty
                    , quantity :: Quantity Matter
+                   , interval :: TimeInterval
                    }
            | Notification { process :: Process
                           , typ :: NotificationType
@@ -358,6 +360,13 @@ hasMatter _ (Notification _) = false
 hasMatter _ (Trace _) = false
 hasMatter _ (Flow _) = false
 
+hasInterval :: TimeInterval -> Entry -> Boolean
+hasInterval ti (Entry {interval}) =
+  ti == interval
+hasInterval _ (Notification _) = false
+hasInterval _ (Trace _) = false
+hasInterval _ (Flow _) = false
+
 hasMatterProperty :: MatterProperty -> Entry -> Boolean
 hasMatterProperty matterProperty (Entry {matterProperty: mp}) =
   mp == matterProperty
@@ -370,6 +379,18 @@ foldState process matter matterProperty (State states) = foldl sumQuantity ZeroQ
   where
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
+    getQuantity (Entry {quantity: q}) = Just q
+    getQuantity (Notification _) = Nothing
+    getQuantity (Trace _) = Nothing
+    getQuantity (Flow _) = Nothing
+    quantities = mapMaybe getQuantity states'
+    sumQuantity acc qty = acc <> qty
+
+foldStateTi :: Process -> Matter -> MatterProperty -> TimeInterval -> State  -> Quantity Matter
+foldStateTi process matter matterProperty ti (State states) = foldl sumQuantity ZeroQuantity quantities
+  where
+    states' = filter qualifies states
+    qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty) && (hasInterval ti)
     getQuantity (Entry {quantity: q}) = Just q
     getQuantity (Notification _) = Nothing
     getQuantity (Trace _) = Nothing
@@ -679,9 +700,9 @@ eating :: forall r. ProcessParam ( numberHouseholdEating :: Int, eatedFoodRatio 
 eating {eatedFoodRatio, numberHouseholdEating} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: (negQty shoppedFood)}
-  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
-  , Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: wasted}
+  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: (negQty shoppedFood), interval: defaultTi}
+  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood), interval: defaultTi}
+  , Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: wasted, interval: defaultTi}
   ]
   where
     shoppedFood = foldState Shopping Food AllMatterProperty state
@@ -693,10 +714,10 @@ eating_EatingBinningWormCompostingFoodSharing :: forall r. ProcessParam ( eatedF
 eating_EatingBinningWormCompostingFoodSharing {eatedFoodRatio, edibleWasteProcess } state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: negQty eatedFood}
-  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood)}
-  , Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: edibleWasted}
-  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: nonedibleWasted}
+  [ Entry {process: Shopping, matter: Food, matterProperty: AllMatterProperty, quantity: negQty eatedFood, interval: defaultTi}
+  , Entry {process: Living, matter: Food, matterProperty: AllMatterProperty, quantity: (eatedFood), interval: defaultTi}
+  , Entry {process: Eating, matter: Food, matterProperty: Edible, quantity: edibleWasted, interval: defaultTi}
+  , Entry {process: Eating, matter: Waste, matterProperty: NonEdible, quantity: nonedibleWasted, interval: defaultTi}
   ]
   where
     shoppedFood = foldState Shopping Food AllMatterProperty state
@@ -722,9 +743,9 @@ binning {compactingRatio, bulkDensity, numberCompactors} state@(State entries) =
   State $
   entries <>
   [
-    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWaste  }
-  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWormComposting }
-  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume }
+    Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWaste, interval: defaultTi }
+  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty foodWormComposting, interval: defaultTi }
+  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume, interval: defaultTi }
   ]
   where
     foodWaste = foldState Eating Waste AllMatterProperty state
@@ -749,11 +770,11 @@ foodGardening_EatingBinningWormCompostingFoodGardening {surfaceArea,
                                                         greyWaterNeed} systemScale@{scale, time} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost )}
-  , Entry {process: FoodGardening, matter: Fertilizer, matterProperty: AllMatterProperty, quantity: ( subQty fertilizerNeeded usedCompost )}
-  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: negQty tapWaterNeeded}
-  , Entry {process: FoodGardening, matter: Water, matterProperty: TapWater, quantity: tapWaterNeeded}
-  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
+  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: ( negQty usedCompost ), interval: defaultTi }
+  , Entry {process: FoodGardening, matter: Fertilizer, matterProperty: AllMatterProperty, quantity: ( subQty fertilizerNeeded usedCompost ), interval: defaultTi}
+  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: negQty tapWaterNeeded, interval: defaultTi}
+  , Entry {process: FoodGardening, matter: Water, matterProperty: TapWater, quantity: tapWaterNeeded, interval: defaultTi}
+  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood, interval: defaultTi}
   ]
   where
     availableCompost = foldState WormComposting Compost AllMatterProperty state
@@ -783,10 +804,10 @@ foodGardening_EatingBinningWormCompostingFoodGardeningRainwater {surfaceArea,
                                                               irrigationEfficiency} systemScale state@(State entries) =
   State $
   entries <>
-  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost}
-  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater}
-  , Entry {process: FoodGardening, matter: Water, matterProperty: GreyWater, quantity: usedGreyWater}
-  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood}
+  [ Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: negQty usedCompost, interval: defaultTi}
+  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: negQty usedGreyWater, interval: defaultTi}
+  , Entry {process: FoodGardening, matter: Water, matterProperty: GreyWater, quantity: usedGreyWater, interval: defaultTi}
+  , Entry {process: FoodGardening, matter: Food, matterProperty: Edible, quantity: producedFood, interval: defaultTi}
   ]
   where
     availableCompost = foldState WormComposting Compost AllMatterProperty state
@@ -810,8 +831,8 @@ rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater {numberOfBloc
                                                                     collectingCapacity} systemScale state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater}
-  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater}
+  [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: negQty collectedWater, interval: defaultTi}
+  , Entry {process: RoofRainwaterCollecting, matter: Water, matterProperty: GreyWater, quantity: collectedWater, interval: defaultTi}
   ]
   where
     rainingWater = foldState Raining Water AllMatterProperty state
@@ -822,8 +843,8 @@ foodSharing :: forall r. ProcessParam (sharedFoodRatio :: Ratio Matter, numberSh
 foodSharing {sharedFoodRatio, numberSharingHouseholds} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty edibleShared )}
-  , Entry {process: FoodSharing, matter: Food, matterProperty: Edible, quantity: edibleShared}
+  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty edibleShared ), interval: defaultTi}
+  , Entry {process: FoodSharing, matter: Food, matterProperty: Edible, quantity: edibleShared, interval: defaultTi}
   ]
   where
     edibleWasted = foldState Eating Food Edible state
@@ -837,10 +858,10 @@ composting_EatingBinningWormComposting {compostingYield
                                        ,compostableRatio} systemScale state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty compostableWaste )}
-  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostableWaste }
-  , Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: compostProduct }
-  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty compostableWaste }
+  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty compostableWaste ), interval: defaultTi}
+  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostableWaste, interval: defaultTi }
+  , Entry {process: WormComposting, matter: Compost, matterProperty: AllMatterProperty, quantity: compostProduct, interval: defaultTi }
+  , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: negQty compostableWaste, interval: defaultTi }
   -- , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostWaste }
   ]
   where
@@ -859,10 +880,10 @@ managingWaste {collectedWasteRatio,
                ghgProduction} state@(State entries) =
   State $
   entries <>
-  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty foodWaste )}
-  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste )}
-  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume }
-  , Entry {process: ManagingWaste, matter: GreenhouseGas, matterProperty: AllMatterProperty, quantity: ghgEmitted }
+  [ Entry {process: Eating, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty foodWaste ), interval: defaultTi}
+  , Entry {process: Binning, matter: Waste, matterProperty: AllMatterProperty, quantity: ( negQty binnedWaste ), interval: defaultTi}
+  , Entry {process: ManagingWaste, matter: Waste, matterProperty: AllMatterProperty, quantity: allWasteVolume, interval: defaultTi }
+  , Entry {process: ManagingWaste, matter: GreenhouseGas, matterProperty: AllMatterProperty, quantity: ghgEmitted, interval: defaultTi }
   -- , Entry {process: WormComposting, matter: Waste, matterProperty: AllMatterProperty, quantity: compostWaste }
   ]
   where
