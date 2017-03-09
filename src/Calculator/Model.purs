@@ -442,11 +442,11 @@ foldNotifications process (State entries) = foldl f empty $ filter (hasProcess p
     f m _ = m
 
 foldFlows :: Process -> State -> Number
-foldFlows process (State entries) = foldl f 0.0 entries
+foldFlows process (State entries) = foldl f 0.0 $ filter (hasProcess process) entries
   where
     f :: Number -> Entry -> Number
-    f m n@(Flow { process, capacity }) = capacity
-    f m _ = m
+    f _ (Flow { process, capacity }) = capacity
+    f n _ = n
 
 -- /model for the event sourcing
 

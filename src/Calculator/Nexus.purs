@@ -5,7 +5,7 @@ import Control.Monad.Reader
 import Calculator.Cleaning as Cleaning
 import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
-import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), NotificationType, Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldNotifications, foldState, foldStateTi, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, initialStateTi, lastState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
+import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), NotificationType, Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldFlows, foldNotifications, foldState, foldStateTi, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, initialStateTi, lastState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
 import Calculator.Rwh (cleaning, cleaning_distribution, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, tapWaterSupplying, wastewaterCollecting, wastewaterCollecting_distribution)
 import Calculator.Timeserie (Timeserie)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:), fromFoldable)
@@ -128,7 +128,8 @@ type FoldedState = { interval :: TimeInterval
                                       , pumping :: Array NotificationType
                                       , tankRainwaterStoring :: Array NotificationType
                                       }
-                     }
+                   , flows :: { pumping :: Number }
+                   }
 
 showFoldedStates { interval,
                    volumes: { initialRainwater
@@ -161,10 +162,12 @@ mapFoldStates systemStates =
                                                  , pumping: fromFoldable <<< keys $ foldNotifications Pumping state
                                                  , tankRainwaterStoring: fromFoldable <<< keys $ foldNotifications TankRainwaterStoring state
                                                  }
+            foldFlos (SystemState { state }) = { pumping: foldFlows Pumping state }
             foldStates ss@(SystemState { interval, timeseries }) = { interval
                                                                    , timeseries
                                                                    , volumes: foldVolumes ss
                                                                    , notifications: foldNotifs ss
+                                                                   , flows: foldFlos ss
                                                                    }
         in
          foldStates systemState) systemStates
