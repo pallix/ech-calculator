@@ -435,7 +435,7 @@ lastState process matter matterProperty (State states) = fromMaybe ZeroQuantity 
 
 
 foldNotifications :: Process -> State -> Map NotificationType Entry
-foldNotifications process (State entries) = foldl f empty entries
+foldNotifications process (State entries) = foldl f empty $ filter (hasProcess process) entries
   where
     f :: Map NotificationType Entry -> Entry -> Map NotificationType Entry
     f m n@(Notification { typ, on }) = if on then insert typ n m else delete typ m
