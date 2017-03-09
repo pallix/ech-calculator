@@ -88,7 +88,7 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                                 , roofCollectingRainwater
                                                                                 , tank_collection
                                                                                 , pumping
-                                                                                , irrigatingGarden_distribution
+--                                                                                , irrigatingGarden_distribution
                                                                                 , cleaning_distribution
                                                                                 , wastewaterCollecting]
       _ -> State []
@@ -120,13 +120,17 @@ type VolumesInfo = { interval :: TimeInterval
                                  , overflowTank :: Quantity Matter
                                  , irrigatingGardenWater :: Quantity Matter
                                  , roofRainwaterCollected :: Quantity Matter
-                                 , tapWaterUsed :: Quantity Matter } }
+                                 , tapWaterUsed :: Quantity Matter
+                                 , pumpStoredRainwater :: Quantity Matter
+                                 } }
 
 showVolumesInfo { interval,
                   volumes: { initialRainwater
                            , tankStoredRainwater
                            , overflowTank
-                           , tapWaterUsed }
+                           , tapWaterUsed
+                           , pumpStoredRainwater
+                           }
                 } = show interval <> " " <> show initialRainwater <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> " " <> show tapWaterUsed
 
 mapFoldStates :: Array SystemState -> Array VolumesInfo
@@ -134,9 +138,10 @@ mapFoldStates systemStates =
   map (\systemState ->
           let calcVolumes (SystemState { state }) = { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
                                                     , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
+                                                    , pumpStoredRainwater:        (lastState    Pumping                 Water GreyWater  state)
                                                       -- TODO probably necessary to fold entries for a specific interval to calculate "foldState" without entries of the previous interval
                                                       -- TODO incorrect
-                                                    , overflowTank:               (foldState    WastewaterCollecting    Waste Overflow   state)
+                                                    , overflowTank:               (lastState    WastewaterCollecting    Waste Overflow   state)
                                                       -- TODO incorrect
                                                     , tapWaterUsed:               (foldState    TapWaterSupplying       Water TapWater   state) `subQty` (initialState TapWaterSupplying       Waste TapWater   state)
                                                     , irrigatingGardenWater:      (lastState    IrrigatingGarden        Waste BlackWater state)

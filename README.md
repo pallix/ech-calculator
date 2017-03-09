@@ -28,5 +28,5 @@ Then go to http://127.0.0.1:8080
 
 ```
 > import Repl
-> plotData $ calculateVolumesInfo $ scanNexus systemStateEx
+> plotData $ mapFoldStates $ scanNexus systemStateEx
 ```

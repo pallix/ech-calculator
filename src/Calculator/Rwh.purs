@@ -180,6 +180,8 @@ pumping ti = do
       volumeInTank = foldState TankRainwaterStoring Water GreyWater state
       traces = [ Trace { process: Pumping
                        , message: " flowCapacity " <> show flowCapacity }
+               , Trace { process: Pumping
+                       , message: " volumeInTank " <> show volumeInTank }
                ]
       entries' = [ Entry { process: TankRainwaterStoring
                          , matter: Water
@@ -251,8 +253,11 @@ wastewaterCollecting _ = do
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
     [ Entry { process: WastewaterCollecting
+            , matter: Waste, matterProperty: Overflow
+            , quantity: wasteWaterCleaning }
+    , Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: BlackWater
-            , quantity: addQty wasteWaterCleaning wasteWaterRwh }
+            , quantity: wasteWaterCleaning }
     ]
 
 cleaning ::
