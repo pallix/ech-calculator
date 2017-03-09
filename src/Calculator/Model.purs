@@ -14,6 +14,7 @@ module Calculator.Model (Ratio(..),
                          State(..),
                          SystemState(..),
                          initialState,
+                         initialStateTi,
                          lastState,
                          foldState,
                          foldStateTi,
@@ -404,6 +405,17 @@ initialState process matter matterProperty (State states) = maybe ZeroQuantity i
   where
     states' = filter qualifies states
     qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty)
+    getQuantity (Entry {quantity: q}) = Just q
+    getQuantity (Notification _) = Nothing
+    getQuantity (Trace _) = Nothing
+    getQuantity (Flow _) = Nothing
+    quantities = mapMaybe getQuantity states'
+
+initialStateTi :: Process -> Matter -> MatterProperty -> TimeInterval -> State -> Quantity Matter
+initialStateTi process matter matterProperty ti (State states) = maybe ZeroQuantity id $ head quantities
+  where
+    states' = filter qualifies states
+    qualifies = (hasProcess process) && (hasMatter matter) && (hasMatterProperty matterProperty) && (hasInterval ti)
     getQuantity (Entry {quantity: q}) = Just q
     getQuantity (Notification _) = Nothing
     getQuantity (Trace _) = Nothing

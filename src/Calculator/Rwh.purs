@@ -3,7 +3,7 @@ module Calculator.Rwh where
 
 import Data.Date.Component
 import Math as Math
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldFlows, foldState, foldStateTi, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(..), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldFlows, foldState, foldStateTi, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -70,6 +70,16 @@ raining ti = do
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * (rainingmm * 0.001)) * 1000.0
     pure $ State $ entries <>
       [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater, interval: ti}
+      ]
+
+tapWaterSupplying ::
+  TimeInterval
+  -> Reader SystemState State
+tapWaterSupplying ti = do
+    SystemState { state: (State entries)
+                 } <- ask
+    pure $ State $ entries <>
+      [ Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 1000.0, interval: ti}
       ]
 
 tank_demand ::

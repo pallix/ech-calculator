@@ -108,10 +108,7 @@ dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2013) January (fromJust
 
 systemParams = systemParamsWithConstants ( 0 )
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0, interval: defaultTi}
-                    -- surface are of the estate = 12 000m² * 1000mm (1Meter) of water in Liters
-                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0, interval: defaultTi}
-                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0, interval: defaultTi}
+initState = State [ Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 10000000000000.0, interval: defaultTi}
                   ]
 
 scaleToString PersonScale = "Person"
