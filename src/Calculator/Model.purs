@@ -640,7 +640,7 @@ rainingParam = { title: "Raining"
 
 tankRainwaterStoringParam = { title: "Storing Rainwater"
                         , surfaceArea: SurfaceArea 4.0 -- cm^2
-                        , capacity: Volume Water 20.0 -- L
+                        , capacity: Volume Water 1000.0 -- L
                         }
 
 cleaningParam = { title: "Cleaning"

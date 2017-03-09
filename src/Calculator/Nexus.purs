@@ -141,8 +141,8 @@ mapFoldStates systemStates =
   map (\systemState ->
           let calcVolumes (SystemState { state, interval }) =
                 { initialRainwater:           (foldState       Raining                 Water GreyWater  state)
-                , tankStoredRainwater:        (foldStateTi     TankRainwaterStoring    Water GreyWater  interval state)
-                , pumpStoredRainwater:        (foldStateTi     Pumping                 Water GreyWater  interval state)
+                , tankStoredRainwater:        (foldState       TankRainwaterStoring    Water GreyWater           state)
+                , pumpStoredRainwater:        (foldState       Pumping                 Water GreyWater           state)
                 , overflowTank:               (foldStateTi     WastewaterCollecting    Waste Overflow   interval state)
                 , tapWaterUsed:               (initialStateTi  TapWaterSupplying       Waste TapWater   interval state) `subQty`
                                               (foldStateTi     TapWaterSupplying       Water TapWater   interval state)
