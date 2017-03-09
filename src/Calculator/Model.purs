@@ -286,7 +286,7 @@ instance matterEq :: Eq Matter where
   eq _ AllMatter = true
   eq a b = gEq a b
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | Overflow | Absorbed | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | RainWater | GreyWater | BlackWater | TapWater | Overflow | Absorbed | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 instance showMatterProperty :: Show MatterProperty where
@@ -453,10 +453,10 @@ foldFlows process (State entries) = foldl f 0.0 entries
 derive instance genericQuantity :: ( Generic a ) => Generic ( Quantity a )
 instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
   -- WARNING: introducing a space between the value and the unit breaks the plotting
-    show ( Weight _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 10.0 ) / 10000000.0 ) <> "MTons"
-    show ( Volume _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 10.0 ) / 10000000.0 ) <> "ML"
-    show ( Weight _ a ) | a >= 1000.0 = ( show $ trunc ( a * 1.0 ) / 1000.0 ) <> "Tons"
-    show ( Volume _ a ) | a >= 1000.0 = ( show $ trunc ( a * 1.0 ) / 1000.0 ) <> "KL"
+    show ( Weight _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 1.0 ) / 1000000.0 ) <> "MTons"
+    show ( Volume _ a ) | a >= 1000000.0 = ( show $ floor $ ( a * 1.0 ) / 1000000.0 ) <> "ML"
+    show ( Weight _ a ) | a >= 1000.0 = ( show $ floor $ ( a * 1.0 ) / 1000.0 ) <> "Tons"
+    show ( Volume _ a ) | a >= 1000.0 = ( show $ floor $ ( a * 1.0 ) / 1000.0 ) <> "KL"
     show ( Weight _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "Kg"
     show ( Volume _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"

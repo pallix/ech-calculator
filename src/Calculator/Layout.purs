@@ -2,7 +2,7 @@ module Calculator.Layout (interface) where
 
 import Data.Generic
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
-import Calculator.Model (Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty)
+import Calculator.Model (Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty, negQty)
 import DOM.Node.Types (documentTypeToNode)
 import Data.Array (replicate, singleton)
 import Data.Foldable (foldMap)
@@ -235,11 +235,11 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodSharing, state 
 arrayHex ( SystemState { current: RainwaterHarvestingTank, state } ) =
                    ( replicate 7 emptyHex )
                 <> ( replicate  6 emptyHex )
-                <> ( replicate 1 emptyHex ) <> singleton { title : "Rainfall", details: ( show $ initialShoppedFood state ) <> " for the whole Estate"  }
+                <> ( replicate 1 emptyHex ) <> singleton { title : "Rainfall", details: ( show $ initialRainfall state ) <> " for the whole Estate"  }
                                             <> singleton emptyHex
-                                            <> singleton { title : "Tank", details: ( show $ eatedFood state ) <> " eaten" }
+                                            <> singleton { title : "Tank", details: ( show $ storedRainwater state ) <> " collected" }
                                             <> singleton emptyHex
-                                            <> singleton { title : "Wastewater", details: (show $ ghgEmitted state) <> " CO2 emitted" }
+                                            <> singleton { title : "Wastewater", details: (show $ overflowTank state) <> " overflowed" }
                 <> ( replicate 6 emptyHex )
                 <> ( replicate  7 emptyHex )
 
@@ -284,11 +284,13 @@ gardenWaterNeed = initialState IrrigatingGarden Water GreyWater
 
 managedWaste = initialState ManagingWaste Waste AllMatterProperty
 
-initialRainfall = initialState Raining Water AllMatterProperty
+initialRainfall = foldState Raining Water RainWater
+
+harvestableRainwater = foldState Raining Water GreyWater
 
 storedRainwater = foldState TankRainwaterStoring Water AllMatterProperty
 
-overflowTank = foldState WastewaterCollecting Waste Overflow
+overflowTank = foldState TankRainwaterStoring Waste Overflow
 
 -- hey Jun, check the function mapFoldStates in Nexus.purs
 -- before working further here
@@ -395,7 +397,7 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
 arrayArrow (SystemState { current: RainwaterHarvestingTank, state } ) =
                      ( replicate 7 emptyArrow )
                   <> ( replicate 6 emptyArrow )
-                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ storedRainwater state, details: "of Rainfall Collected" }
+                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ negQty $ harvestableRainwater state, details: "of Rainfall" }
                                                 <> singleton emptyArrow
                                                 <> singleton { title: "_", quantity: show $ overflowTank state, details: "of Wastewater" }
                   <> ( replicate 6 emptyArrow )

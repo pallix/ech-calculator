@@ -69,7 +69,7 @@ raining ti = do
           -- TODO: recheck unit convertion here
         rainingWater = Volume Water $ (case estateSurfaceArea of (SurfaceArea sa) -> sa * (rainingmm * 0.001)) * 1000.0
     pure $ State $ entries <>
-      [ Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: rainingWater, interval: ti}
+      [ Entry {process: Raining, matter: Water, matterProperty: RainWater, quantity: rainingWater, interval: ti}
       ]
 
 tapWaterSupplying ::
