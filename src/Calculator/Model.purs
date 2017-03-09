@@ -329,7 +329,7 @@ data Entry = Entry { process :: Process
 derive instance genericEntry :: Generic Entry
 
 instance showEntry :: Show Entry where
-  show (Entry { process, matter, matterProperty, quantity }) = "E[ " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
+  show (Entry { process, matter, matterProperty, quantity, interval }) = "E[ " <> show interval <> " " <> show process <> " " <> show matter <> " " <> show matterProperty <> " " <> show quantity <> "]"
   show (Notification { process, typ, on }) = "N[ " <> show process <> " " <> show typ <> " " <> show on <> "]"
   show (Trace { process, message }) = "T[ " <> show process <> " " <> show message <> "]"
   show (Flow {process, capacity}) = "F[ " <> show process <> " " <> show capacity <> "]"
@@ -628,7 +628,7 @@ rainingParam = { title: "Raining"
 
 tankRainwaterStoringParam = { title: "Storing Rainwater"
                         , surfaceArea: SurfaceArea 4.0 -- cm^2
-                        , capacity: Volume Water 1000.0 -- L
+                        , capacity: Volume Water 20.0 -- L
                         }
 
 cleaningParam = { title: "Cleaning"

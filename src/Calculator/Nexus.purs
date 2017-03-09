@@ -122,7 +122,9 @@ type VolumesInfo = { interval :: TimeInterval
                                  , roofRainwaterCollected :: Quantity Matter
                                  , tapWaterUsed :: Quantity Matter
                                  , pumpStoredRainwater :: Quantity Matter
-                                 } }
+                                 }
+                   -- TODO add notifications here
+                   }
 
 showVolumesInfo { interval,
                   volumes: { initialRainwater
@@ -138,14 +140,13 @@ mapFoldStates systemStates =
   map (\systemState ->
           let calcVolumes (SystemState { state, interval }) =
                 { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
-                , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
+                , tankStoredRainwater:        (foldStateTi  TankRainwaterStoring    Water GreyWater  interval state)
                 , pumpStoredRainwater:        (foldStateTi  Pumping                 Water GreyWater  interval state)
-                  -- TODO incorrect
                 , overflowTank:               (foldStateTi  WastewaterCollecting    Waste Overflow   interval state)
                   -- TODO incorrect
                 , tapWaterUsed:               (foldState    TapWaterSupplying       Water TapWater   state) `subQty` (initialState TapWaterSupplying       Waste TapWater   state)
                 , irrigatingGardenWater:      (foldStateTi  IrrigatingGarden        Waste Absorbed   interval state)
-                , roofRainwaterCollected:     (lastState    RoofRainwaterCollecting Water GreyWater  state)
+                , roofRainwaterCollected:     (foldStateTi  RoofRainwaterCollecting Water GreyWater  interval state)
                   -- TODO add others stuff here
                 }
               calcFinalVolumes ss@(SystemState { interval, timeseries }) = { interval

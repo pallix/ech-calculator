@@ -4,7 +4,7 @@ import Data.Date.Component
 import Data.Generic
 import Data.DateTime as DT
 import Data.Date (Date, canonicalDate, day, month, year)
-import Data.Enum (succ, toEnum)
+import Data.Enum (fromEnum, succ, toEnum)
 import Data.Eq (class Eq)
 import Data.Maybe (fromJust, maybe, Maybe(..))
 import Data.Ord (class Ord)
@@ -13,7 +13,7 @@ import Data.Time.Duration (Days(..))
 import Data.Tuple (Tuple(Tuple))
 import Data.Unfoldable (unfoldr)
 import Partial.Unsafe (unsafePartial)
-import Prelude (bottom, id, map, ($), (<<<), (<=))
+import Prelude (bottom, id, map, show, ($), (<<<), (<=), (<>))
 
 data TimeWindow = TimeWindow { start :: Date
                              , end :: Date }
@@ -36,7 +36,7 @@ data TimeInterval = TimeInterval { date :: Date
 derive instance genericTimeInterval :: Generic TimeInterval
 
 instance showTimeInterval :: Show TimeInterval  where
-    show = gShow
+    show (TimeInterval { date, period }) = "Ti " <> (show <<< fromEnum <<< year $ date) <> "-" <> (show <<< fromEnum <<< month $ date) <> "-" <> (show <<< fromEnum <<< day $ date)
 
 instance eqTimeInterval :: Eq TimeInterval where
   eq = gEq

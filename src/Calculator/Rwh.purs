@@ -3,7 +3,7 @@ module Calculator.Rwh where
 
 import Data.Date.Component
 import Math as Math
-import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldFlows, foldState, initProcessParams, negQty, subQty)
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), PumpType(..), Quantity(ZeroQuantity, Volume), Scale(..), State(State), SurfaceArea(SurfaceArea), SystemParams(SystemParams), SystemState(SystemState), Time(..), TimeserieWrapper(..), addQty, blockToRoofSurface, cappedQty, foldFlows, foldState, foldStateTi, initProcessParams, negQty, subQty)
 import Control.Monad (bind, pure)
 import Control.Monad.Reader (Reader, ask)
 import Data.Array (index)
@@ -220,7 +220,7 @@ tank_collection ti = do
       freeVolumeInTank = subQty capacity volumeInTank
       harvestedVolume = cappedQty harvestableVolume freeVolumeInTank
       overflow = subQty harvestableVolume harvestedVolume
-      entries' = [ Entry { process: Raining
+      entries' = [ Entry { process: RoofRainwaterCollecting
                          , matter: Water
                          , matterProperty: GreyWater
                          , quantity: negQty harvestableVolume
@@ -264,7 +264,17 @@ wastewaterCollecting ti = do
   let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
-    [ Entry { process: WastewaterCollecting
+    [ Entry { process: TankRainwaterStoring
+            , matter: Waste, matterProperty: Overflow
+            , quantity: negQty wasteWaterRwh
+            , interval: ti
+            }
+    , Entry { process: Cleaning
+            , matter: Waste, matterProperty: GreyWater
+            , quantity: negQty wasteWaterCleaning
+            , interval: ti
+            }
+    , Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: Overflow
             , quantity: wasteWaterRwh
             , interval: ti
@@ -282,10 +292,20 @@ wastewaterCollecting_distribution ::
 wastewaterCollecting_distribution ti = do
   SystemState { state: state@(State entries)
               } <- ask
-  let wasteWaterRwh = foldState Pumping Waste Overflow state
+  let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
       wasteWaterCleaning = foldState Cleaning Waste BlackWater state
   pure $ State $ entries <>
-    [ Entry { process: WastewaterCollecting
+    [ Entry { process: TankRainwaterStoring
+            , matter: Waste, matterProperty: Overflow
+            , quantity: negQty wasteWaterRwh
+            , interval: ti
+            }
+    , Entry { process: Cleaning
+            , matter: Waste, matterProperty: GreyWater
+            , quantity: negQty wasteWaterCleaning
+            , interval: ti
+            }
+    , Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: Overflow
             , quantity: wasteWaterRwh
             , interval: ti
