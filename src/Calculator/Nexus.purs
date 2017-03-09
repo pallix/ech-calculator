@@ -129,9 +129,9 @@ showVolumesInfo { interval,
                            , tapWaterUsed }
                 } = show interval <> " " <> show initialRainwater <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> " " <> show tapWaterUsed
 
-calculateVolumesInfo :: Array SystemState -> Array VolumesInfo
-calculateVolumesInfo systemStates =
-  foldr (\systemState arr ->
+mapFoldStates :: Array SystemState -> Array VolumesInfo
+mapFoldStates systemStates =
+  map (\systemState ->
           let calcVolumes (SystemState { state }) = { initialRainwater:           (foldState    Raining                 Water GreyWater  state)
                                                     , tankStoredRainwater:        (foldState    TankRainwaterStoring    Water GreyWater  state)
                                                       -- TODO probably necessary to fold entries for a specific interval to calculate "foldState" without entries of the previous interval
@@ -148,4 +148,4 @@ calculateVolumesInfo systemStates =
                                                                            , volumes: calcVolumes ss
                                              }
           in
-           cons (calcFinalVolumes systemState) arr) [] systemStates
+           (calcFinalVolumes systemState)) systemStates

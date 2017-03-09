@@ -290,7 +290,7 @@ storedRainwater = foldState TankRainwaterStoring Water AllMatterProperty
 
 overflowTank = foldState WastewaterCollecting Waste Overflow
 
--- hey Jun, check the function calculateVolumesInfo in Nexus.purs
+-- hey Jun, check the function mapFoldStates in Nexus.purs
 -- before working further here
 
 emptyArrow = { title: "", quantity: "", details: "" }
