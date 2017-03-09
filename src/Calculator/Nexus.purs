@@ -122,6 +122,7 @@ type VolumesInfo = { interval :: TimeInterval
                                  , roofRainwaterCollected :: Quantity Matter
                                  , tapWaterUsed :: Quantity Matter
                                  , pumpStoredRainwater :: Quantity Matter
+                                 , cleaningWaterUsed :: Quantity Matter
                                  }
                    -- TODO add notifications here
                    }
@@ -147,6 +148,7 @@ mapFoldStates systemStates =
                                               (foldStateTi     TapWaterSupplying       Water TapWater   interval state)
                 , irrigatingGardenWater:      (foldStateTi     IrrigatingGarden        Waste Absorbed   interval state)
                 , roofRainwaterCollected:     (initialStateTi  RoofRainwaterCollecting Water GreyWater  interval state)
+                , cleaningWaterUsed:          (foldStateTi     WastewaterCollecting    Waste BlackWater interval state)
                   -- TODO add others stuff here
                 }
               calcFinalVolumes ss@(SystemState { interval, timeseries }) = { interval

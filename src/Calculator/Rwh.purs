@@ -272,7 +272,7 @@ wastewaterCollecting ti = do
   SystemState { state: state@(State entries)
               } <- ask
   let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
-      wasteWaterCleaning = foldState Cleaning Waste BlackWater state
+      wasteWaterCleaning = foldStateTi Cleaning Waste BlackWater ti state
   pure $ State $ entries <>
     [ Entry { process: TankRainwaterStoring
             , matter: Waste, matterProperty: Overflow
@@ -303,7 +303,7 @@ wastewaterCollecting_distribution ti = do
   SystemState { state: state@(State entries)
               } <- ask
   let wasteWaterRwh = foldState TankRainwaterStoring Waste Overflow state
-      wasteWaterCleaning = foldState Cleaning Waste BlackWater state
+      wasteWaterCleaning = foldStateTi Cleaning Waste BlackWater ti state
   pure $ State $ entries <>
     [ Entry { process: TankRainwaterStoring
             , matter: Waste, matterProperty: Overflow
