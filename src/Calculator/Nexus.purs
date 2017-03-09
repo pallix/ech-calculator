@@ -88,8 +88,8 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                                 , roofCollectingRainwater
                                                                                 , tank_collection
                                                                                 , pumping
---                                                                                , irrigatingGarden_distribution
---                                                                                , cleaning_distribution
+                                                                                , irrigatingGarden_distribution
+                                                                                , cleaning_distribution
                                                                                 , wastewaterCollecting]
       _ -> State []
 
@@ -144,7 +144,7 @@ mapFoldStates systemStates =
                 , overflowTank:               (foldStateTi  WastewaterCollecting    Waste Overflow   interval state)
                   -- TODO incorrect
                 , tapWaterUsed:               (foldState    TapWaterSupplying       Water TapWater   state) `subQty` (initialState TapWaterSupplying       Waste TapWater   state)
-                , irrigatingGardenWater:      (lastState    IrrigatingGarden        Waste BlackWater state)
+                , irrigatingGardenWater:      (foldStateTi  IrrigatingGarden        Waste Absorbed   interval state)
                 , roofRainwaterCollected:     (lastState    RoofRainwaterCollecting Water GreyWater  state)
                   -- TODO add others stuff here
                 }

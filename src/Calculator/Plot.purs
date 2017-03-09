@@ -2,7 +2,7 @@ module Calculator.Plot where
 
 import Node.ChildProcess
 import Control.Monad.Eff.Exception
-import Calculator.Model (Matter(..), MatterProperty(..), Process(..), SystemState(..), TimeserieWrapper(..), foldState)
+import Calculator.Model (Matter(..), MatterProperty(..), Process(..), SystemState(..), TimeserieWrapper(..), foldState, showQ)
 import Calculator.Nexus (VolumesInfo)
 import Control.Monad (bind, pure)
 import Control.Monad.Eff (Eff)
@@ -18,7 +18,7 @@ import Data.Unit (Unit)
 import Node.Encoding (Encoding(..))
 import Node.FS (FS)
 import Node.FS.Sync (writeTextFile)
-import Prelude (show, ($), (<<<), (<>))
+import Prelude (show, ($), (*), (<<<), (<>))
 import Time (TimeInterval(..), intervals)
 
 toGnuPlotFormat :: Array VolumesInfo -> String
@@ -42,12 +42,12 @@ toGnuPlotFormat systemStates =
                         _ -> Nothing
       in
        output <> dateStr <>  " " <>
-       show watermm <> " " <>
-       show tankStoredRainwater <> " " <>
-       show overflowTank <> " " <>
-       show irrigatingGardenWater <> " " <>
-       show roofRainwaterCollected <> " " <>
-       show pumpStoredRainwater <>
+       show (watermm * 100.0) <> " " <> -- 100.0 is arbitrary, just for plotting nicely
+       showQ tankStoredRainwater <> " " <>
+       showQ overflowTank <> " " <>
+       showQ irrigatingGardenWater <> " " <>
+       showQ roofRainwaterCollected <> " " <>
+       showQ pumpStoredRainwater <>
        "\n"
 
 

@@ -402,7 +402,7 @@ irrigatingGarden_demand ti = do
                            }
                    , Entry { process: IrrigatingGarden
                            , matter: Waste
-                           , matterProperty: BlackWater
+                           , matterProperty: Absorbed
                            , quantity: addQty tankWaterConsumed tapWaterConsumed
                            , interval: ti
                            }
@@ -449,7 +449,7 @@ irrigatingGarden_distribution ti = do
                            }
                    , Entry { process: IrrigatingGarden
                            , matter: Waste
-                           , matterProperty: BlackWater -- TODO find something more accurate
+                           , matterProperty: Absorbed
                            , quantity: addQty tankWaterConsumed tapWaterConsumed
                            , interval: ti
                            }

@@ -19,6 +19,7 @@ module Calculator.Model (Ratio(..),
                          foldStateTi,
                          foldNotifications,
                          foldFlows,
+                         showQ,
                          Process(..),
                          Matter(..),
                          Entry(..),
@@ -284,7 +285,7 @@ instance matterEq :: Eq Matter where
   eq _ AllMatter = true
   eq a b = gEq a b
 
-data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | Overflow | AllMatterProperty
+data MatterProperty = Edible | NonEdible | Shopped | Cooked | GreyWater | BlackWater | TapWater | Overflow | Absorbed | AllMatterProperty
 
 derive instance genericMatterProperty :: Generic MatterProperty
 instance showMatterProperty :: Show MatterProperty where
@@ -448,6 +449,12 @@ instance showQuantity :: ( Show a ) => Show ( Quantity a ) where
     show ( Volume _ a ) = ( show $ trunc ( a * 10.0 ) / 10.0 ) <> "L"
     show ( IncompatibleQuantity ) = "IncompatibleQuantity"
     show ( ZeroQuantity ) = "0"
+
+showQ :: forall a. (Show a) => Quantity a -> String
+showQ ( Weight _ a ) = show a
+showQ ( Volume _ a ) = show a
+showQ ( IncompatibleQuantity ) = "IncompatibleQuantity"
+showQ ( ZeroQuantity ) = "0"
 
 instance mergeQty :: Semigroup ( Quantity a ) where
   append ( Volume t a ) ( Volume t' b ) = Volume t ( a + b )
@@ -621,7 +628,7 @@ rainingParam = { title: "Raining"
 
 tankRainwaterStoringParam = { title: "Storing Rainwater"
                         , surfaceArea: SurfaceArea 4.0 -- cm^2
-                        , capacity: Volume Water 10.0 -- L
+                        , capacity: Volume Water 1000.0 -- L
                         }
 
 cleaningParam = { title: "Cleaning"
