@@ -25,7 +25,7 @@ import Data.Time.Duration (Days(..))
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..))
 import Debug.Trace (spy)
-import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
+import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, date, radioGroup, foldp, (<**>), runFlareWith)
 import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
@@ -104,7 +104,7 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
                                            }
 
 dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
-dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2013) January (fromJust $ toEnum 1)
+dStop = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) February (fromJust $ toEnum 1)
 
 systemParams = systemParamsWithConstants ( 0 )
 
@@ -130,12 +130,12 @@ chooseWindow Default = TimeWindow {start: dStart, end: dStop}
 
 data WindowChoice = Default
 
-controllableParam numberHouseholdEating
+controllableParam volumeTank
                   numberCompactors
                   numberWormeries
                   gardenSurface
                   numberOfBlocks
-                  numberSharingHouseholds = initProcessParams { eatingParam = initProcessParams.eatingParam { numberHouseholdEating = numberHouseholdEating }
+                  numberSharingHouseholds = initProcessParams { tankRainwaterStoringParam = initProcessParams.tankRainwaterStoringParam { capacity = volumeTank }
                                                      , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
                                                      , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  }
                                                      , foodGardeningParam = initProcessParams.foodGardeningParam { surfaceArea = gardenSurface }
@@ -170,11 +170,18 @@ systemState current scale systemParams processParams state interval = SystemStat
 
 mkScale s t p wc = { scale : s, time: t, period: p, window: chooseWindow wc}
 
-areaToInt :: SurfaceArea -> Number
-areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
+areaToNum :: SurfaceArea -> Number
+areaToNum ( SurfaceArea surfaceArea ) = surfaceArea
 
-initInterval :: TimeInterval
-initInterval = TimeInterval { date : dStart
+volumeToNum :: forall a. Quantity a -> Number
+volumeToNum (Volume _ vol) = vol
+volumeToNum _ = 0.0
+
+mkVolumeWater :: Number -> Quantity Matter
+mkVolumeWater = Volume Water
+
+mkInterval :: Date -> TimeInterval
+mkInterval date = TimeInterval { date : date
                             , period : OneMonth
                             }
 
@@ -189,14 +196,14 @@ ui = interface <$> ( boolean "Info" false )
                                                                         <*> (select "Period" (  OneDay :| [ OneMonth ]) timePeriodToString)
                                                                         <*> (select "Window" (  Default :| [ ]) windowChoiceToString) )
                                                           <*> pure systemParams
-                                                          <*> ( fieldset "Eating Parameters" ( controllableParam <$> ( intSlider "numberHouseholdEating" 0 121 ( initProcessParams.eatingParam.numberHouseholdEating ) )
-                                                                                                                 <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
-                                                                                                                 <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
-                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
-                                                                                                                 <*> ( intSlider "numberOfBlocks" 0 10 ( initProcessParams.rainwaterCollectingParam.numberOfBlocks ) )
-                                                                                                                 <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
+                                                          <*> ( fieldset "Parameters" ( controllableParam <$> ( mkVolumeWater <$> numberSlider "volumeTank" 0.0 1000.0 10.0 ( volumeToNum initProcessParams.tankRainwaterStoringParam.capacity ) )
+                                                                                                          <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
+                                                                                                          <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
+                                                                                                          <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToNum initProcessParams.foodGardeningParam.surfaceArea ) ) )
+                                                                                                          <*> ( intSlider "numberOfBlocks" 0 10 ( initProcessParams.rainwaterCollectingParam.numberOfBlocks ) )
+                                                                                                          <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
                                                           <*> ( pure initState )
-                                                          <*> ( pure initInterval) ) )
+                                                          <*> ( mkInterval <$> date "date" dStart) ) )
 
 
 main :: Eff (dom :: DOM, channel :: CHANNEL, canvas :: CANVAS, timer :: TIMER, console :: CONSOLE) Unit

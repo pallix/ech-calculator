@@ -55,7 +55,7 @@ $( document ).ready(function() {
 
   $("#controls").append('<div id="swiper-time" class="swiper-container"><h4>Period</h2><div class="swiper-wrapper"></div><div class="swiper-pagination"></div><div class="swiper-button-next"></div><div class="swiper-button-prev"></div></div>')
 
-  $('#flare-component-5 > option').each(function(i, e) {
+  $('#flare-component-6 > option').each(function(i, e) {
     $("#swiper-time .swiper-wrapper").append('<div class="swiper-slide"><h2>' + e.text + '</h2></div>')
   })
 
@@ -68,7 +68,7 @@ $( document ).ready(function() {
   });
 
 
-  timeSelect = $('#flare-component-5').get(0);
+  timeSelect = $('#flare-component-6').get(0);
 
   var timeRange = {
   	'min': [     0 ],
@@ -92,6 +92,7 @@ $( document ).ready(function() {
   // });
 
   swiperTime.on("slideChangeEnd", function(ev) {
+    console.log("swiperTime.slideChangeEnd", ev)
     $(".control-layer").remove()
     timeSelect.options[ev.activeIndex].selected = true
     var ev = new Event('change');
@@ -118,6 +119,7 @@ $( document ).ready(function() {
   scenarioSelect = $('#flare-component-3').get(0);
 
   swiperScenario.on("slideChangeEnd", function(ev) {
+    console.log("swiperScenario.slideChangeEnd", ev)
     $(".control-layer").remove()
     $("#output .hexGrid").fadeOut();
     scenarioSelect.options[ev.activeIndex].selected = true
@@ -157,7 +159,35 @@ $( document ).ready(function() {
 
   var evFlareInput = new Event('input');
 
-  var numberEatingHouseholdsFlare = $('#flare-component-6')
+  var numberEatingHouseholdsFlare = $('#flare-component-7')
+
+  function HandleRainwaterTank(control, process, ev) {
+    if (isClosed(control, process, ev)) {
+      Open(control, process)
+      $("#" + control + "-Control").append('<div id="eatingControl" class="control-layer range"><p id="eatingNumberControl"># of Flats</p><div id="eatingNumberControl" class="slider"></div></div>')
+      var numberEatingHouseholdsSlider = $("#" + control + "-Control div#eatingControl div.slider").get(0)
+      noUiSlider.create(numberEatingHouseholdsSlider, {
+      	start: [numberEatingHouseholdsFlare.val()],
+        step: 1,
+      	tooltips: [true],
+        range: {
+      		'min': 0,
+      		'max': 121
+      	},
+        format: wNumb({decimals: 0})
+      });
+      numberEatingHouseholdsSlider.noUiSlider.on("change", function(value) {
+        numberEatingHouseholdsFlare.val(value)
+        console.log(value)
+        numberEatingHouseholdsFlare.get(0).dispatchEvent(evFlareInput);
+        Open(control, process)
+        $("#output .hexGrid").addClass("fadeIn");
+      })
+    } else if (isOpened(control, process, ev) && ev.target.id!="eatingControl") {
+      $("#" + control + "-Control #eatingControl").remove()
+      Close(control, process)
+    }
+  }
 
   function HandleEating(control, process, ev) {
     if (isClosed(control, process, ev)) {
@@ -187,7 +217,7 @@ $( document ).ready(function() {
     }
   }
 
-  var numberCompactorFlare = $('#flare-component-7')
+  var numberCompactorFlare = $('#flare-component-8')
 
   function HandleCompactor(control, process, control2, process2, ev) {
     if (isClosed(control, process, ev)) {
@@ -219,7 +249,7 @@ $( document ).ready(function() {
     }
   }
 
-  var numberWormeriesFlare = $('#flare-component-8')
+  var numberWormeriesFlare = $('#flare-component-9')
 
   function HandleWormery(control, process, control2, process2, ev) {
     if (isClosed(control, process, ev)) {
@@ -250,7 +280,7 @@ $( document ).ready(function() {
     }
   }
 
-  var gardenSurfaceFlare = $('#flare-component-9')
+  var gardenSurfaceFlare = $('#flare-component-10')
 
   function HandleGarden(control, process, ev) {
     if (isClosed(control, process, ev)) {
@@ -281,7 +311,7 @@ $( document ).ready(function() {
     }
   }
 
-  var roofSurfaceFlare = $('#flare-component-10')
+  var roofSurfaceFlare = $('#flare-component-11')
 
   function HandleCollecting(control, process, ev) {
     console.log(control)
@@ -315,7 +345,7 @@ $( document ).ready(function() {
     }
   }
 
-  var sharingHouseholdsFlare = $('#flare-component-11')
+  var sharingHouseholdsFlare = $('#flare-component-12')
 
   function HandleSharing(control, process, ev) {
     console.log(control)
@@ -374,18 +404,24 @@ $( document ).ready(function() {
   hexes.on('tap', '.hex', function(ev) {
     var scenario = $("#output .processes").attr('id');
     if (ev.target.id) {
+      console.log(scenario)
       switch(scenario) {
-        case "Calculator.Model.EatingOnly":
-          HandleEating("Eating-0", "Eating", ev)
-          Handle("Shopping-0", "Shopped Food", ev)
-          Handle("ManagedWaste-0", "Managed Waste", ev)
+        case "Calculator.Model.RainwaterHarvestingTank":
+          HandleRainwaterTank("Eating-0", "Tank", ev)
+          Handle("Shopping-0", "Rainfall", ev)
+          Handle("ManagedWaste-0", "Wastewater", ev)
           break;
-        case "Calculator.Model.EatingBinning":
-          HandleEating("Eating", "Eating", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("Garden", "Managed Waste", ev)
-          HandleCompactor("Composting", "Binning", "Garden", "Managed Waste", ev)
-          break;
+        // case "Calculator.Model.EatingOnly":
+        //   HandleEating("Eating-0", "Eating", ev)
+        //   Handle("Shopping-0", "Shopped Food", ev)
+        //   Handle("ManagedWaste-0", "Managed Waste", ev)
+        //   break;
+        // case "Calculator.Model.EatingBinning":
+        //   HandleEating("Eating", "Eating", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("Garden", "Managed Waste", ev)
+        //   HandleCompactor("Composting", "Binning", "Garden", "Managed Waste", ev)
+        //   break;
         // case "Calculator.Model.EatingBinningWormComposting":
         //   $("#Binning-Control").addClass("side");
         //   HandleEating("Eating", "Eating", ev)
@@ -394,16 +430,16 @@ $( document ).ready(function() {
         //   Handle("ManagedWaste", "Managed Waste", ev)
         //   HandleWormery("Composting", "Wormery", ev)
         //   break;
-        case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
-          $("#Binning-Control").addClass("side");
-          $("#Garden-Control").addClass("top");
-          HandleEating("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
-          HandleGarden("Garden", "Food Garden", ev)
-          break;
+        // case "Calculator.Model.EatingBinningWormCompostingFoodGardening":
+        //   $("#Binning-Control").addClass("side");
+        //   $("#Garden-Control").addClass("top");
+        //   HandleEating("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
+        //   HandleGarden("Garden", "Food Garden", ev)
+        //   break;
         // case "Calculator.Model.EatingBinningWormCompostingFoodGardenWatering":
         //   HandleEating("Eating", "Eating", ev)
         //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
@@ -413,17 +449,17 @@ $( document ).ready(function() {
         //   HandleCollecting("RainwaterCollecting", "Rainwater Collection", ev)
         //   HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
         //   break;
-        case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
-          $("#Binning-Control").addClass("side");
-          $("#Garden-Control").addClass("top");
-          HandleEating("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleGarden("Garden", "Food Garden", ev)
-          HandleCollecting("RainwaterCollecting", "Rainwater Collection", ev)
-          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
-          break;
+        // case "Calculator.Model.EatingBinningWormCompostingFoodGardenRainwater":
+        //   $("#Binning-Control").addClass("side");
+        //   $("#Garden-Control").addClass("top");
+        //   HandleEating("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleGarden("Garden", "Food Garden", ev)
+        //   HandleCollecting("RainwaterCollecting", "Rainwater Collection", ev)
+        //   HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
+        //   break;
         // case "Calculator.Model.EatingBinningFoodSharing":
         //   $("#Binning-Control").addClass("side");
         //   $("#Garden-Control").addClass("top");
@@ -434,17 +470,17 @@ $( document ).ready(function() {
         //   HandleGarden("Garden", "Food Garden", ev)
         //   HandleWormery("Composting", "Wormery", ev)
         //   break;
-        case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
-          $("#Binning-Control").addClass("side");
-          $("#Garden-Control").addClass("top");
-          Handle("Eating", "Eating", ev)
-          HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
-          Handle("Shopping", "Shopped Food", ev)
-          Handle("ManagedWaste", "Managed Waste", ev)
-          HandleSharing("Rainwater", "Food Sharing", ev)
-          HandleGarden("Garden", "Food Garden", ev)
-          HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
-          break;
+        // case "Calculator.Model.EatingBinningWormCompostingFoodSharing":
+        //   $("#Binning-Control").addClass("side");
+        //   $("#Garden-Control").addClass("top");
+        //   Handle("Eating", "Eating", ev)
+        //   HandleCompactor("Binning", "Binning", "ManagedWaste", "Managed Waste", ev)
+        //   Handle("Shopping", "Shopped Food", ev)
+        //   Handle("ManagedWaste", "Managed Waste", ev)
+        //   HandleSharing("Rainwater", "Food Sharing", ev)
+        //   HandleGarden("Garden", "Food Garden", ev)
+        //   HandleWormery("Composting", "Wormery", "Garden", "Food Garden", ev)
+        //   break;
         default:
           if (ev.target.id) $("#output .hexGrid #"+ ev.target.id.split("-") + " a").toggleClass("hover")
       }
