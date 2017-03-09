@@ -48,6 +48,8 @@ toGnuPlotFormat systemStates =
        showQ irrigatingGardenWater <> " " <>
        showQ roofRainwaterCollected <> " " <>
        showQ pumpStoredRainwater <>
+       -- if you add something here, add its name to the header variable above
+       -- and edit ~/scripts/plot.gp
        "\n"
 
 

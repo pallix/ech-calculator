@@ -644,7 +644,7 @@ pumpingParam = { title: "Pumping"
 
 distributingParam = { title: "Distributing"
                     , dischargeHead: 30.0
-                    , surfaceArea: 50.0
+                    , surfaceArea: 10.0
                     }
 
 initProcessParams = { eatingParam

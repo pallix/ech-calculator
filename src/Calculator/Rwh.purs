@@ -266,7 +266,7 @@ wastewaterCollecting ti = do
   pure $ State $ entries <>
     [ Entry { process: WastewaterCollecting
             , matter: Waste, matterProperty: Overflow
-            , quantity: wasteWaterCleaning
+            , quantity: wasteWaterRwh
             , interval: ti
             }
     , Entry { process: WastewaterCollecting
@@ -275,6 +275,28 @@ wastewaterCollecting ti = do
             , interval: ti
             }
     ]
+
+wastewaterCollecting_distribution ::
+  TimeInterval
+  -> Reader SystemState State
+wastewaterCollecting_distribution ti = do
+  SystemState { state: state@(State entries)
+              } <- ask
+  let wasteWaterRwh = foldState Pumping Waste Overflow state
+      wasteWaterCleaning = foldState Cleaning Waste BlackWater state
+  pure $ State $ entries <>
+    [ Entry { process: WastewaterCollecting
+            , matter: Waste, matterProperty: Overflow
+            , quantity: wasteWaterRwh
+            , interval: ti
+            }
+    , Entry { process: WastewaterCollecting
+            , matter: Waste, matterProperty: BlackWater
+            , quantity: wasteWaterCleaning
+            , interval: ti
+            }
+    ]
+
 
 cleaning ::
      TimeInterval

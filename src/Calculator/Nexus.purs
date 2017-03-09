@@ -6,7 +6,7 @@ import Calculator.Cleaning as Cleaning
 import Calculator.IrrigatingGarden as IrrigatingGarden
 import Rain as Rain
 import Calculator.Model (Entry(..), Matter, Matter(..), MatterProperty(..), Options(..), Process(..), Quantity, Quantity(..), State(..), SystemParams(..), SystemScale, SystemState(..), TimeserieWrapper(..), binning, composting_EatingBinningWormComposting, eating, eating_EatingBinningWormCompostingFoodSharing, foldState, foldStateTi, foodGardening_EatingBinningWormCompostingFoodGardening, foodGardening_EatingBinningWormCompostingFoodGardeningRainwater, foodSharing, initialState, lastState, managingWaste, rainwaterCollecting_EatingBinningWormCompostingFoodGardenRainwater, scaleQty, subQty)
-import Calculator.Rwh (cleaning, cleaning_distribution, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting)
+import Calculator.Rwh (cleaning, cleaning_distribution, irrigatingGarden_demand, irrigatingGarden_distribution, pumping, raining, roofCollectingRainwater, tank_collection, tank_demand, wastewaterCollecting, wastewaterCollecting_distribution)
 import Calculator.Timeserie (Timeserie)
 import Data.Array (cons, drop, foldl, foldr, scanl, uncons, (:))
 import Data.Date (Date)
@@ -90,7 +90,7 @@ nexusSystem (SystemState sys@{ current, scale, state, systemParams, processParam
                                                                                 , pumping
                                                                                 , irrigatingGarden_distribution
                                                                                 , cleaning_distribution
-                                                                                , wastewaterCollecting]
+                                                                                , wastewaterCollecting_distribution]
       _ -> State []
 
 
