@@ -113,7 +113,7 @@ scanNexus systemState@(SystemState sys@{ scale: {window, period}
                                                                 , Tuple IrrigatingGarden (IrrigatingGardenTimeserie (IrrigatingGarden.buildTimeserie timeserieKey ivals))
                                                                 ]
 
-type VolumesInfo = { interval :: TimeInterval
+type FoldedState = { interval :: TimeInterval
                    , timeseries :: Map Process TimeserieWrapper
                    , volumes :: { initialRainwater :: Quantity Matter
                                  , tankStoredRainwater :: Quantity Matter
@@ -127,8 +127,8 @@ type VolumesInfo = { interval :: TimeInterval
                    -- TODO add notifications here
                    }
 
-showVolumesInfo { interval,
-                  volumes: { initialRainwater
+showFoldedStates { interval,
+                   volumes: { initialRainwater
                            , tankStoredRainwater
                            , overflowTank
                            , tapWaterUsed
@@ -136,7 +136,7 @@ showVolumesInfo { interval,
                            }
                 } = show interval <> " " <> show initialRainwater <> " " <> show tankStoredRainwater <> " " <> show overflowTank <> " " <> show tapWaterUsed
 
-mapFoldStates :: Array SystemState -> Array VolumesInfo
+mapFoldStates :: Array SystemState -> Array FoldedState
 mapFoldStates systemStates =
   map (\systemState ->
           let calcVolumes (SystemState { state, interval }) =

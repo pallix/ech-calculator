@@ -3,7 +3,7 @@ module Calculator.Plot where
 import Node.ChildProcess
 import Control.Monad.Eff.Exception
 import Calculator.Model (Matter(..), MatterProperty(..), Process(..), SystemState(..), TimeserieWrapper(..), foldState, showQ)
-import Calculator.Nexus (VolumesInfo)
+import Calculator.Nexus (FoldedState)
 import Control.Monad (bind, pure)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (log, logShow)
@@ -21,12 +21,12 @@ import Node.FS.Sync (writeTextFile)
 import Prelude (show, ($), (*), (<<<), (<>))
 import Time (TimeInterval(..), intervals)
 
-toGnuPlotFormat :: Array VolumesInfo -> String
-toGnuPlotFormat systemStates =
-  foldl plotInterval header systemStates
+toGnuPlotFormat :: Array FoldedState -> String
+toGnuPlotFormat foldedStates =
+  foldl plotInterval header foldedStates
   where
     header = "# Date Ts-Rain Tank Overflow Garden Collected Pump Tap Cleaning\n"
-    plotInterval :: String -> VolumesInfo -> String
+    plotInterval :: String -> FoldedState -> String
     plotInterval output { interval: ti@(TimeInterval {date})
                         , timeseries
                         , volumes: { tankStoredRainwater
@@ -57,12 +57,12 @@ toGnuPlotFormat systemStates =
        "\n"
 
 
-plotData volumesInfo = do
+plotData foldedStates = do
   writeTextFile UTF8 "/tmp/nexus.dat" content
 --  fork "./scripts/plot.pg" []
   process <- spawn "./scripts/plot.gp" [""] defaultSpawnOptions
   onError process errorHandler
   log ""
   where
-    content = toGnuPlotFormat volumesInfo
+    content = toGnuPlotFormat foldedStates
     errorHandler e = throwException $ toStandardError e
