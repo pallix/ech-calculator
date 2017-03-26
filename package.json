@@ -1,0 +1,26 @@
+{
+  "name": "calculator",
+  "version": "1.0.0",
+  "description": "Engineering Comes Home Calculator using [purescript-flare](https://github.com/sharkdp/purescript-flare).",
+  "main": "main.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {
+    "rollup-plugin-purs": "^1.0.31"
+  },
+  "devDependencies": {
+    "rollup": "^0.41.4",
+    "rollup-plugin-purs": "^1.0.31",
+    "rollup-plugin-sourcemaps": "^0.4.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.iilab.org:engineeringcomeshome/calculator.git"
+  },
+  "author": "",
+  "license": "MPL-2.0"
+}

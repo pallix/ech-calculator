@@ -4,3 +4,6 @@
 output
 bower_components
 main.js
+rainwater.js
+dist
+node_modules

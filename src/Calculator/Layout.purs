@@ -2,7 +2,7 @@ module Calculator.Layout (interface) where
 
 import Data.Generic
 import CSS (darkgrey, Rendered, color, display, renderedSheet, block, render, body, blue, (?), fromString, mediaQuery)
-import Calculator.Model (Options(..), Process(..), Matter(..), MatterProperty(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty)
+import Calculator.Model (Matter(..), MatterProperty(..), NotificationType(..), Options(..), Process(..), Quantity(..), State(State), SystemState(..), foldState, initialState, subQty, negQty)
 import DOM.Node.Types (documentTypeToNode)
 import Data.Array (replicate, singleton)
 import Data.Foldable (foldMap)
@@ -66,8 +66,13 @@ hex hover grid item = li ! className "hex" ! id item.title $ do
                         image "Shopped Food" = "/images/shop_food.svg"
                         image "Managed Waste" = "/images/managed_waste.svg"
                         image "Rainwater" = "/images/rainwater.svg"
+                        image "Rainfall" = "/images/rainwater.svg"
                         image "Tap Water" = "/images/tapwater.svg"
                         image "Rainwater Collection" = "/images/rainwater_collection.svg"
+                        image "Tank" = "/images/rainwater_harvesting.svg"
+                        image "RainwaterHarvestingDemand" = "/images/rainwater_harvesting.svg"
+                        image "RainwaterHarvestingCollection" = "/images/rainwater_harvesting.svg"
+                        image "Wastewater" = "/images/wastewater.svg"
                         image "_" = "https://dummyimage.com/200x200&text=+"
                         image _ = ""
 
@@ -212,7 +217,7 @@ arrayHex ( SystemState { current: EatingBinningFoodSharing, state } ) =
                      <> singleton { title : "Eating", details: (show $ eatedFood state) <> " eaten" }
                      <> ( replicate 4 emptyHex )
                      <> ( replicate 6 emptyHex )
-                     <> ( replicate 3 emptyHex ) <> singleton {title: "Food Sharing", details: ""}  <> ( replicate 3 emptyHex )
+                     <> ( replicate 3 emptyHex ) <> singleton {title: "Food Sharing", details: "Assuming 55% of shareable food"}  <> ( replicate 3 emptyHex )
 
 arrayHex ( SystemState { current: EatingBinningWormCompostingFoodSharing, state } ) =
                      ( replicate 3 emptyHex ) <> singleton { title: "Binning", details: "Manual compactors shrink waste by 30%" }  <> ( replicate 1 emptyHex ) <> singleton { title : "Managed Waste", details: (show $ ghgEmitted state) <> " of CO2 emitted" }  <> ( replicate 1 emptyHex )
@@ -226,6 +231,17 @@ arrayHex ( SystemState { current: EatingBinningWormCompostingFoodSharing, state 
                      <> singleton {title: "Food Garden", details:  show $ gardenFood state}
                      <> ( replicate 6 emptyHex )
                      <> ( replicate 3 emptyHex ) <> singleton {title: "Food Sharing", details: "Assuming 55% of shareable food"}  <> ( replicate 3 emptyHex )
+
+arrayHex ( SystemState { current: RainwaterHarvestingTank, state } ) =
+                   ( replicate 7 emptyHex )
+                <> ( replicate  6 emptyHex )
+                <> ( replicate 1 emptyHex ) <> singleton { title : "Rainfall", details: ( show $ initialRainfall state ) <> " for the whole Estate"  }
+                                            <> singleton emptyHex
+                                            <> singleton { title : "Tank", details: ( show $ storedRainwater state ) <> " collected" }
+                                            <> singleton emptyHex
+                                            <> singleton { title : "Wastewater", details: (show $ overflowTank state) <> " overflowed" }
+                <> ( replicate 6 emptyHex )
+                <> ( replicate  7 emptyHex )
 
 --
 -- arrayHex [ a, b, c, d ]  = ( replicate 10 { title: "" } )
@@ -258,15 +274,26 @@ initialCompost = initialState WormComposting Compost AllMatterProperty
 
 initialFoodShared = initialState FoodSharing Food AllMatterProperty
 
-initialFoodGardeningTapWater = initialState FoodGardening Water AllMatterProperty
+initialFoodGardeningTapWater = initialState FoodGardening Water TapWater
 
 initialRainwater = initialState Raining Water GreyWater
 
 initialFoodGardeningRainwater = initialState FoodGardening Water GreyWater
 
-gardenWaterNeed = initialState RainwaterCollecting Water GreyWater
+gardenWaterNeed = initialState IrrigatingGarden Water GreyWater
 
 managedWaste = initialState ManagingWaste Waste AllMatterProperty
+
+initialRainfall = foldState Raining Water RainWater
+
+harvestableRainwater = foldState Raining Water GreyWater
+
+storedRainwater = foldState TankRainwaterStoring Water AllMatterProperty
+
+overflowTank = foldState TankRainwaterStoring Waste Overflow
+
+-- hey Jun, check the function mapFoldStates in Nexus.purs
+-- before working further here
 
 emptyArrow = { title: "", quantity: "", details: "" }
 
@@ -367,8 +394,21 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
                   <> ( replicate 2 emptyArrow ) <> singleton { title: "\\", quantity: show $ initialFoodShared state , details: "of Food Shared" } <> ( replicate 3 emptyArrow )
                   <> ( replicate 7 emptyArrow )
 
+arrayArrow (SystemState { current: RainwaterHarvestingTank, state } ) =
+                     ( replicate 7 emptyArrow )
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 2 emptyArrow ) <> singleton { title: "_", quantity: show $ negQty $ harvestableRainwater state, details: "of Rainfall" }
+                                                <> singleton emptyArrow
+                                                <> singleton { title: "_", quantity: show $ overflowTank state, details: "of Wastewater" }
+                  <> ( replicate 6 emptyArrow )
+                  <> ( replicate 7 emptyArrow )
 
-
+arrayArrow _  = ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
+             <> ( replicate 10 emptyArrow )
+             <> ( replicate  9 emptyArrow )
 
 --
 -- arrayArrow [ a, b, c ]  = ( replicate 10 emptyArrow )
@@ -384,13 +424,6 @@ arrayArrow (SystemState { current: EatingBinningWormCompostingFoodSharing, state
 --                         <> ( replicate  3 emptyArrow ) <> singleton a <> ( replicate 1 emptyArrow ) <> singleton b <> ( replicate 3 emptyArrow )
 --                         <> ( replicate 10 emptyArrow )
 --                         <> ( replicate  4 emptyArrow ) <> singleton d <> ( replicate  4 emptyArrow )
-
-arrayArrow _  = ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
-             <> ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
-             <> ( replicate 10 emptyArrow )
-             <> ( replicate  9 emptyArrow )
 
 arrows :: forall e. Boolean -> Boolean -> SystemState -> Markup e
 arrows hover grid state = do

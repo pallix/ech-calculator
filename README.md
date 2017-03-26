@@ -21,3 +21,25 @@ hs .
 ```
 
 Then go to http://127.0.0.1:8080
+
+## Gnuplot
+
+`pulp psci`
+
+```
+> import Repl
+> plotData $ mapFoldStates $ scanNexus systemStateEx
+```
+
+# Offline Deployment Setup
+
+Requirements
+ - Android as a local hotspot
+   - Swiftp to transfer files
+   - SimpleHTTPServer to serve files.
+ - OSX
+   - lftp to recurse transfer
+
+```
+scripts/dist.sh
+```

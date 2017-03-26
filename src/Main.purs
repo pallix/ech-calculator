@@ -2,49 +2,40 @@ module Main where
 
 import Prelude
 import Calculator.Layout (interface)
-import Calculator.Model ( nexusSystem
-                        , initProcessParams
-                        , State(..)
-                        , Matter(..)
-                        , MatterProperty(..)
-                        , Entry(..)
-                        , SystemState(..)
-                        , Scale(..)
-                        , Time(..)
-                        , SystemScale(..)
-                        , Quantity(..)
-                        , Ratio(..)
-                        , Process(..)
-                        , Transform(..)
-                        , SystemParams(..)
-                        , ProcessParams(..)
-                        , Options(..)
-                        , SurfaceArea(..))
+import Calculator.Model (Entry(..), Matter(..), MatterProperty(..), Options(..), Process(..), ProcessParams(..), Quantity(..), Ratio(..), Scale(..), State(..), SurfaceArea(..), SystemParams(..), SystemScale(..), SystemState(..), Time(..), Transform(..), initProcessParams)
+import Calculator.Nexus (nexusSystem)
+import Calculator.TimeEx (tw)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
-import Debug.Trace (spy)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import Data.Array (cons, snoc)
+import Data.Date (canonicalDate)
+import Data.Date.Component (Month(..))
+import Data.Enum (toEnum)
 import Data.Foldable (foldMap)
 import Data.Int (toNumber, fromNumber)
-import Data.Tuple (Tuple(..))
-import Data.Maybe (maybe)
+import Data.Map (empty)
+import Data.Maybe (fromJust, maybe)
 import Data.Monoid (mempty)
 import Data.Monoid.Additive (Additive(Additive))
 import Data.Monoid.Multiplicative (Multiplicative(Multiplicative))
 import Data.NonEmpty ((:|))
 import Data.Traversable (traverse)
+import Data.Tuple (Tuple(..))
+import Debug.Trace (spy)
 import Flare (UI, lift, fieldset, numberSlider, intSlider, liftSF, select, button, buttons, boolean, string, radioGroup, foldp, (<**>), runFlareWith)
 import Flare.Smolder (runFlareHTML)
 import Graphics.Canvas (CANVAS)
 import Graphics.Drawing (Point, rgb, rgba, translate, white)
 import Graphics.Drawing.Font (font, sansSerif, bold)
 import Math (cos, sin, pi)
+import Partial.Unsafe (unsafePartial)
 import Signal.Channel (CHANNEL)
 import Signal.DOM (animationFrame)
 import Signal.Time (since)
 import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
+import Time (TimeInterval(..), TimePeriod(..), TimeWindow(..), defaultTi)
 
 -- data Action = Food
 --             | Bin
@@ -52,6 +43,7 @@ import Text.Smolder.Markup (on, (#!), Markup, with, text, (!))
 --             | Garden
 --             | FoodGarden
 --             | Reset
+
 --
 -- label :: Action -> String
 -- label Food = "Food"
@@ -106,16 +98,16 @@ systemParamsWithConstants = SystemParams <$> { houseHoldSize: _
                                            , estateFlatsOneBedroom : 70
                                            , estateFlatsTwoBedroom : 23
                                            , estateFlatsThreeBedroom : 15
+                                           , estateSurfaceArea: SurfaceArea 12011.50
                                            }
 
 systemParams = systemParamsWithConstants ( 0 )
 
-initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0}
+initState = State [ Entry {process: Shopping, matter: Food, matterProperty: Shopped, quantity: Weight Food 585.0, interval: defaultTi}
                     -- surface are of the estate = 12 000m² * 1000mm (1Meter) of water in Liters
-                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0}
-                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0}
+                  , Entry {process: Raining, matter: Water, matterProperty: GreyWater, quantity: Volume Water $ 12000.0 * 1000.0, interval: defaultTi}
+                  , Entry {process: TapWaterSupplying, matter: Water, matterProperty: TapWater, quantity: Volume Water 100000000000000000000000000000000000.0, interval: defaultTi}
                   ]
-
 
 scaleToString PersonScale = "Person"
 scaleToString HouseholdScale = "HouseHold"
@@ -134,15 +126,25 @@ controllableParam numberHouseholdEating
                                                      , binningParam = initProcessParams.binningParam { numberCompactors = numberCompactors }
                                                      , wormCompostingParam = initProcessParams.wormCompostingParam { numberWormeries = numberWormeries  }
                                                      , foodGardeningParam = initProcessParams.foodGardeningParam { surfaceArea = gardenSurface }
-                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { surfaceArea = roofSurface }
+                                                     , rainwaterCollectingParam = initProcessParams.rainwaterCollectingParam { numberOfBlocks = roofSurface }
                                                      , foodSharingParam = initProcessParams.foodSharingParam { numberSharingHouseholds = numberSharingHouseholds }}
 
 ratio ( Ratio _ { ratio } ) = ratio
 
-systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
-systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state }
+dStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
 
-mkScale s t = { scale : s, time: t}
+systemState :: Options -> SystemScale -> SystemParams -> ProcessParams -> State -> SystemState
+systemState current scale systemParams processParams state = SystemState { scale, systemParams, processParams, current, state, timeseries: empty, interval: TimeInterval { date: dStart, period: OneMonth } }
+
+dateStart = unsafePartial $ canonicalDate (fromJust $ toEnum 2012) January (fromJust $ toEnum 1)
+-- TODO specify a real time window here
+mkScale s t = { scale : s
+              , time: t
+              , period: OneDay  -- <--- TO FIX
+              , window: TimeWindow { start: dateStart
+                                   , end: unsafePartial $ canonicalDate (fromJust $ toEnum 2012) April (fromJust $ toEnum 1)
+                                   }
+              }
 
 areaToInt :: SurfaceArea -> Number
 areaToInt ( SurfaceArea surfaceArea ) = surfaceArea
@@ -159,9 +161,12 @@ ui = interface <$> ( boolean "Info" false )
                                                                                                                  <*> ( intSlider "numberCompactors" 0 121 ( initProcessParams.binningParam.numberCompactors ) )
                                                                                                                  <*> ( intSlider "numberWormeries" 0 10 ( initProcessParams.wormCompostingParam.numberWormeries ) )
                                                                                                                  <*> ( SurfaceArea <$> ( numberSlider "gardenSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.foodGardeningParam.surfaceArea ) ) )
-                                                                                                                 <*> ( SurfaceArea <$> ( numberSlider "roofSurface" 0.0 100.0 1.0 ( areaToInt initProcessParams.rainwaterCollectingParam.surfaceArea ) ) )
+                                                                                                                 <*> (intSlider "roofSurface" 0 100 initProcessParams.rainwaterCollectingParam.numberOfBlocks
+                                                                                                                     )
                                                                                                                  <*> ( intSlider "numberSharingHouseholds" 0 121 ( initProcessParams.foodSharingParam.numberSharingHouseholds ) ) ) )
-                                                          <*> ( pure initState ) ) )
+                                             <*> pure initState
+                                               )
+                     <*> pure (TimeInterval { date: dateStart, period: OneDay})) -- <--- TO FIX
 
 --
 -- ui opt = interface <$> ( boolean "Info" true )
