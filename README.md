@@ -43,3 +43,11 @@ Requirements
 ```
 scripts/dist.sh
 ```
+
+## Credits
+
+Icons on the LCA Calculator from thenounproject.com : “Food Shopping”, “Managed Waste” symbol by Edward Boatman, “Cooking” symbol by Creative Stall, “Waste Bin”, "Food Sharing" by OCHA Visual Information Unit, “Composting” by Gemma Garner, “Food Garden” by To Uyen, “Tap Water” by Symbolon, "Rain" by AlePio.
+
+## License
+
+Mozilla Public License Version 2.0
